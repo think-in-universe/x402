@@ -6,9 +6,9 @@ import {
   PaymentPayloadV1,
 } from "../../shared/types";
 import { Address } from "viem";
-import { getUsdcAddressForChain } from "../../shared/usdc";
+import { getUsdcAddressForChain } from "../../shared/evm/usdc";
 import { requestSettle, requestVerify } from "..";
-import { decodePayment } from "../../shared/sign";
+import { decodePayment } from "../../client/exact/evm/sign";
 import { paymentNeededDetailsToJsonSafe } from "../../shared/types/convert";
 
 export function paymentMiddleware(

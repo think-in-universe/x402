@@ -14,14 +14,17 @@
         "sourceMap": true,
         "resolveJsonModule": true,
         "allowJs": true,
-        "checkJs": true
+        "checkJs": true,
+        "paths": {
+            "@/*": ["./src/*"]
+        }
     },
     "include": [
         "**/*.ts"
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist"   
     ]
 }
 

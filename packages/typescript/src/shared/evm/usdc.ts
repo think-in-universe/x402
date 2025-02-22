@@ -3,11 +3,11 @@ import { abi } from "./erc20PermitABI";
 import { config } from "./config";
 
 export function getUsdcAddress(client: PublicClient): Address {
-  return config[client.chain?.id as keyof typeof config].usdcAddress as Address;
+  return config[client.chain!.id.toString()].usdcAddress as Address;
 }
 
 export function getUsdcAddressForChain(chainId: number): Address {
-  return config[chainId as keyof typeof config].usdcAddress as Address;
+  return config[chainId.toString()].usdcAddress as Address;
 }
 
 // Function to get the current nonce for an address

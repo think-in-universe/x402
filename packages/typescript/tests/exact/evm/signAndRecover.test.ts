@@ -1,11 +1,11 @@
 import { Address } from "viem";
 import { expect, test, describe } from "vitest";
-import { createPayment } from "../src/client/client";
-import { verify } from "../src/facilitator/facilitator";
+import { createPayment } from "../../../src/client/exact/evm/client";
+import { verify } from "../../../src/facilitator/facilitator";
 import { baseSepolia } from "viem/chains";
-import { Resource, PaymentNeededDetails } from "../src/shared/types";
-import { getUsdcAddressForChain } from "../src/shared/usdc";
-import { botWallet } from "../src/shared/wallet";
+import { Resource, PaymentNeededDetails } from "../../../src/shared/types";
+import { getUsdcAddressForChain } from "../../../src/shared/evm/usdc";
+import { botWallet } from "../../../src/shared/evm/wallet";
 
 describe("sign and recover", () => {
   const wallet = botWallet;

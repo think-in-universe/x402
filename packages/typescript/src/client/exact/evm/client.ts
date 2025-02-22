@@ -1,7 +1,7 @@
-import { PaymentNeededDetails, PaymentPayloadV1 } from "../shared/types";
-import { getVersion } from "../shared/usdc";
-import { createNonce, encodePayment, signAuthorization } from "../shared/sign";
-import { SignerWallet } from "../shared/wallet";
+import { PaymentNeededDetails, PaymentPayloadV1 } from "@/shared/types";
+import { getVersion } from "@/shared/evm/usdc";
+import { createNonce, encodePayment, signAuthorization } from "./sign";
+import { SignerWallet } from "@/shared/evm/wallet";
 
 export async function createPayment(
   client: SignerWallet,

@@ -1,9 +1,12 @@
 import { WalletClient, Hex, toHex } from "viem";
-import { config } from "./config";
-import { AuthorizationParameters, paymentPayloadV1Schema } from "./types";
-import { PaymentPayloadV1 } from "./types";
+import { config } from "../../../shared/evm/config";
+import {
+  AuthorizationParameters,
+  paymentPayloadV1Schema,
+} from "../../../shared/types";
+import { PaymentPayloadV1 } from "../../../shared/types";
 import { z } from "zod";
-import { paymentPayloadV1FromObj } from "./types/convert";
+import { paymentPayloadV1FromObj } from "../../../shared/types/convert";
 
 export const authorizationTypes = {
   TransferWithAuthorization: [
@@ -14,12 +17,6 @@ export const authorizationTypes = {
     { name: "validBefore", type: "uint256" },
     { name: "nonce", type: "bytes32" },
   ],
-  // EIP712Domain: [
-  //   { name: "name", type: "string" },
-  //   { name: "version", type: "string" },
-  //   { name: "chainId", type: "uint256" },
-  //   { name: "verifyingContract", type: "address" },
-  // ],
 };
 
 export const authorizationPrimaryType = "TransferWithAuthorization";

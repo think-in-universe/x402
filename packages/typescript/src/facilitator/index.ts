@@ -1,13 +1,11 @@
-export * from "./facilitator";
-
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 
-import { SignerWallet } from "../shared/wallet";
+import { SignerWallet } from "../shared/evm/wallet";
 import { PaymentNeededDetails } from "../shared/types";
-import { settle, verify } from "./facilitator";
+import { settle, verify } from "@/facilitator/exact/evm";
 import { paymentNeededDetailsFromObj } from "../shared/types/convert";
-import { decodePayment } from "../shared/sign";
+import { decodePayment } from "../client/exact/evm/sign";
 
 type VerifyRequest = {
   payload: string;
