@@ -91,7 +91,7 @@ export type PaymentExecutionResponse = {
   success: boolean;
   error?: string | undefined;
   txHash?: Hex | undefined;
-  chainId?: number | undefined;
+  networkId?: string | undefined;
 };
 
 // Verifier
