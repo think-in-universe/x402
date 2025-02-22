@@ -1,5 +1,5 @@
 import { Address, Hex, PublicClient } from "viem";
-import { abi } from "./erc20PermitABI";
+import { usdcABI as abi } from "./erc20PermitABI";
 import { config } from "./config";
 
 export function getUsdcAddress(client: PublicClient): Address {

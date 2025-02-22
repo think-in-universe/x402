@@ -1,18 +1,16 @@
-import { PublicClient } from "viem";
+import { Address, Chain, PublicClient, Transport } from "viem";
+import { SettleResponse, PaymentDetails, VerifyResponse } from "@/shared/types";
+import { PaymentPayload } from "@/shared/types/exact/evm";
+
+import { getUsdcAddressForChain, getUSDCBalance } from "@/shared/evm/usdc";
+import { usdcABI as abi } from "@/shared/evm/erc20PermitABI";
+import { ConnectedClient, SignerWallet } from "@/shared/evm/wallet";
 import {
-  PaymentExecutionResponse,
-  PaymentNeededDetails,
-  PaymentPayloadV1,
-  ValidPaymentResponse,
-} from "../shared/types";
-
-import { getUsdcAddressForChain, getUSDCBalance } from "../shared/usdc";
-import { abi } from "../shared/erc20PermitABI";
-import { SignerWallet } from "../shared/wallet";
-import { authorizationTypes, authorizationPrimaryType } from "../shared/sign";
-import { config } from "../shared/config";
-
-const PROTOCOL_VERSION = 1;
+  authorizationTypes,
+  authorizationPrimaryType,
+} from "@/shared/evm/eip3009";
+import { config } from "@/shared/evm/config";
+import { SCHEME } from "@/shared/types/exact";
 
 /**
  * Verifies a payment payload against the required payment details
@@ -29,10 +27,10 @@ const PROTOCOL_VERSION = 1;
  * - Ensures payment amount meets required minimum
  */
 export async function verify(
-  client: PublicClient,
-  payload: PaymentPayloadV1,
-  paymentDetails: PaymentNeededDetails
-): Promise<ValidPaymentResponse> {
+  client: ConnectedClient,
+  payload: PaymentPayload,
+  paymentDetails: PaymentDetails
+): Promise<VerifyResponse> {
   /* TODO: work with security team on brainstorming more verification steps
   verification steps:
     - ✅ verify payload version
@@ -47,41 +45,50 @@ export async function verify(
     */
 
   // Verify payload version
-  if (
-    payload.version !== PROTOCOL_VERSION ||
-    paymentDetails.version !== PROTOCOL_VERSION
-  ) {
+  if (payload.scheme !== SCHEME || paymentDetails.scheme !== SCHEME) {
     return {
       isValid: false,
-      invalidReason: `Incompatible payload version. payload: ${payload.version}, paymentDetails: ${paymentDetails.version}, supported: ${PROTOCOL_VERSION}`,
+      invalidReason: `Incompatible payload scheme. payload: ${payload.scheme}, paymentDetails: ${paymentDetails.scheme}, supported: ${SCHEME}`,
     };
   }
 
-  const usdcName = config[payload.payload.params.chainId].usdcName;
+  let usdcName: string;
+  let chainId: number;
+  let usdcAddress: Address;
+  try {
+    usdcName = config[payload.networkId].usdcName;
+    chainId = parseInt(payload.networkId);
+    usdcAddress = getUsdcAddressForChain(chainId);
+  } catch (e) {
+    return {
+      isValid: false,
+      invalidReason: `Unsupported network id: ${payload.networkId}`,
+    };
+  }
 
   // Verify permit signature is recoverable for the owner address
   const permitTypedData = {
     types: authorizationTypes,
-    primaryType: authorizationPrimaryType,
+    primaryType: "TransferWithAuthorization",
     domain: {
       name: usdcName,
-      version: payload.payload.params.version,
-      chainId: payload.payload.params.chainId,
+      version: payload.payload.authorization.version,
+      chainId: chainId,
       // This implicitly verifies the usdc address is correct in the signature
-      verifyingContract: paymentDetails.usdcAddress,
+      verifyingContract: paymentDetails.usdcAddress as Address,
     },
     message: {
-      from: payload.payload.params.from,
-      to: payload.payload.params.to,
-      value: payload.payload.params.value,
-      validAfter: payload.payload.params.validAfter,
-      validBefore: payload.payload.params.validBefore,
-      nonce: payload.payload.params.nonce,
+      from: payload.payload.authorization.from,
+      to: payload.payload.authorization.to,
+      value: payload.payload.authorization.value,
+      validAfter: payload.payload.authorization.validAfter,
+      validBefore: payload.payload.authorization.validBefore,
+      nonce: payload.payload.authorization.nonce,
     },
   };
 
   const recoveredAddress = await client.verifyTypedData({
-    address: payload.payload.params.from,
+    address: payload.payload.authorization.from,
     ...permitTypedData,
     signature: payload.payload.signature,
   });
@@ -94,10 +101,7 @@ export async function verify(
   }
 
   // Verify usdc address is correct for the chain
-  if (
-    paymentDetails.usdcAddress !==
-    getUsdcAddressForChain(payload.payload.params.chainId)
-  ) {
+  if (paymentDetails.usdcAddress !== usdcAddress) {
     return {
       isValid: false,
       invalidReason: "Invalid usdc address",
@@ -106,7 +110,7 @@ export async function verify(
 
   // Verify deadline is not yet expired
   // Pad 3 block to account for round tripping
-  if (payload.payload.params.validBefore < Date.now() / 1000 + 6) {
+  if (payload.payload.authorization.validBefore < Date.now() / 1000 + 6) {
     return {
       isValid: false,
       invalidReason: "Deadline on permit isn't far enough in the future",
@@ -114,7 +118,7 @@ export async function verify(
   }
 
   // Verify deadline is not yet valid
-  if (payload.payload.params.validAfter > Date.now() / 1000) {
+  if (payload.payload.authorization.validAfter > Date.now() / 1000) {
     return {
       isValid: false,
       invalidReason: "Deadline on permit is in the future",
@@ -122,7 +126,10 @@ export async function verify(
   }
 
   // Verify client has enough funds to cover paymentDetails.maxAmountRequired
-  const balance = await getUSDCBalance(client, payload.payload.params.from);
+  const balance = await getUSDCBalance(
+    client,
+    payload.payload.authorization.from
+  );
 
   if (balance < paymentDetails.maxAmountRequired) {
     return {
@@ -132,7 +139,7 @@ export async function verify(
   }
 
   // Verify value in payload is enough to cover paymentDetails.maxAmountRequired
-  if (payload.payload.params.value < paymentDetails.maxAmountRequired) {
+  if (payload.payload.authorization.value < paymentDetails.maxAmountRequired) {
     return {
       isValid: false,
       invalidReason:
@@ -157,11 +164,9 @@ export async function verify(
  */
 export async function settle(
   wallet: SignerWallet,
-  payload: PaymentPayloadV1,
-  paymentDetails: PaymentNeededDetails
-): Promise<PaymentExecutionResponse> {
-  // TODO: probably should store stuff in a db here, but the txs can be recovered from chain if we must
-
+  payload: PaymentPayload,
+  paymentDetails: PaymentDetails
+): Promise<SettleResponse> {
   // re-verify to ensure the payment is still valid
   const valid = await verify(wallet, payload, paymentDetails);
 
@@ -173,16 +178,16 @@ export async function settle(
   }
 
   const tx = await wallet.writeContract({
-    address: payload.payload.params.usdcAddress,
+    address: paymentDetails.usdcAddress as Address,
     abi,
     functionName: "transferWithAuthorization",
     args: [
-      payload.payload.params.from,
-      payload.payload.params.to,
-      payload.payload.params.value,
-      payload.payload.params.validAfter,
-      payload.payload.params.validBefore,
-      payload.payload.params.nonce,
+      payload.payload.authorization.from,
+      payload.payload.authorization.to,
+      payload.payload.authorization.value,
+      payload.payload.authorization.validAfter,
+      payload.payload.authorization.validBefore,
+      payload.payload.authorization.nonce,
       payload.payload.signature,
     ],
   });
@@ -194,13 +199,13 @@ export async function settle(
       success: false,
       error: `Transaction failed`,
       txHash: tx,
-      chainId: payload.payload.params.chainId,
+      networkId: payload.networkId,
     };
   }
 
   return {
     success: true,
     txHash: tx,
-    chainId: payload.payload.params.chainId,
+    networkId: payload.networkId,
   };
 }

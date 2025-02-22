@@ -1,74 +1,80 @@
 import { Address } from "viem";
 import { expect, test, describe } from "vitest";
-import { createPayment } from "../../../src/client/exact/evm/client";
-import { verify } from "../../../src/facilitator/facilitator";
+import { createPayment } from "@/client/exact/evm/client";
+import { verify } from "@/facilitator/exact/evm";
 import { baseSepolia } from "viem/chains";
-import { Resource, PaymentNeededDetails } from "../../../src/shared/types";
-import { getUsdcAddressForChain } from "../../../src/shared/evm/usdc";
-import { botWallet } from "../../../src/shared/evm/wallet";
+import { Resource, PaymentDetails } from "@/shared/types";
+import { getUsdcAddressForChain } from "@/shared/evm/usdc";
+import { botWallet, testClient } from "@/shared/evm/wallet";
 
 describe("sign and recover", () => {
   const wallet = botWallet;
+  const client = testClient;
 
   test("happy path sign and recover", async () => {
-    const paymentDetails: PaymentNeededDetails = {
-      version: 1,
+    const paymentDetails: PaymentDetails = {
+      scheme: "exact",
+      networkId: baseSepolia.id.toString(),
       maxAmountRequired: BigInt(1 * 10 ** 6),
       resource: "https://example.com" as Resource,
       description: "example",
       mimeType: "text/plain",
-      resourceAddress: "0x0000000000000000000000000000000000000000" as Address,
-      requiredDeadlineSeconds: 30,
-      chainId: baseSepolia.id,
-      usdcAddress: getUsdcAddressForChain(wallet.chain?.id as number),
       outputSchema: null,
+      payToAddress: "0x0000000000000000000000000000000000000000" as Address,
+      requiredDeadlineSeconds: 30,
+      usdcAddress: getUsdcAddressForChain(wallet.chain?.id as number),
+      extra: null,
     };
 
     const payment = await createPayment(wallet, paymentDetails);
 
     console.log(payment);
 
-    const valid = await verify(wallet, payment, paymentDetails);
-    console.log(valid);
+    const valid = await verify(client, payment, paymentDetails);
+    console.log("valid", valid);
     expect(valid.isValid).toBe(true);
   });
 
   test("rejects incompatible payload version", async () => {
-    const paymentDetails: PaymentNeededDetails = {
-      version: 2, // Different version
+    const paymentDetails: PaymentDetails = {
+      scheme: "exact",
+      networkId: baseSepolia.id.toString(),
       maxAmountRequired: BigInt(1 * 10 ** 6),
       resource: "https://example.com" as Resource,
       description: "example",
       mimeType: "text/plain",
-      resourceAddress: "0x0000000000000000000000000000000000000000" as Address,
-      requiredDeadlineSeconds: 60,
-      chainId: baseSepolia.id,
-      usdcAddress: getUsdcAddressForChain(wallet.chain?.id as number),
+      payToAddress: "0x0000000000000000000000000000000000000000" as Address,
       outputSchema: null,
+      requiredDeadlineSeconds: 60,
+      usdcAddress: getUsdcAddressForChain(wallet.chain?.id as number),
+      extra: null,
     };
 
     const payment = await createPayment(
       wallet,
-      { ...paymentDetails, version: 1 } // Create payment with v1 but verify against v2
+      { ...paymentDetails, scheme: "invalid" } // Create payment with v1 but verify against v2
     );
 
     const valid = await verify(wallet, payment, paymentDetails);
     expect(valid.isValid).toBe(false);
-    expect(valid.invalidReason).toContain("Incompatible payload version");
+    expect(valid.invalidReason).toContain(
+      "Incompatible payload scheme. payload: invalid, paymentDetails: exact, supported: exact"
+    );
   });
 
   test("rejects invalid USDC address", async () => {
-    const paymentDetails: PaymentNeededDetails = {
-      version: 1,
+    const paymentDetails: PaymentDetails = {
+      scheme: "exact",
+      networkId: baseSepolia.id.toString(),
       maxAmountRequired: BigInt(1 * 10 ** 6),
       resource: "https://example.com" as Resource,
       description: "example",
       mimeType: "text/plain",
-      resourceAddress: "0x0000000000000000000000000000000000000000" as Address,
+      payToAddress: "0x0000000000000000000000000000000000000000" as Address,
       requiredDeadlineSeconds: 60,
-      chainId: baseSepolia.id,
-      usdcAddress: "0x1234567890123456789012345678901234567890" as Address, // Wrong address
       outputSchema: null,
+      usdcAddress: "0x1234567890123456789012345678901234567890" as Address, // Wrong address
+      extra: null,
     };
 
     const payment = await createPayment(wallet, paymentDetails);
@@ -79,17 +85,18 @@ describe("sign and recover", () => {
   });
 
   test("rejects invalid permit signature", async () => {
-    const paymentDetails: PaymentNeededDetails = {
-      version: 1,
+    const paymentDetails: PaymentDetails = {
+      scheme: "exact",
+      networkId: baseSepolia.id.toString(),
       maxAmountRequired: BigInt(1 * 10 ** 6),
       resource: "https://example.com" as Resource,
       description: "example",
       mimeType: "text/plain",
-      resourceAddress: "0x0000000000000000000000000000000000000000" as Address,
+      payToAddress: "0x0000000000000000000000000000000000000000" as Address,
       requiredDeadlineSeconds: 60,
-      chainId: baseSepolia.id,
       usdcAddress: getUsdcAddressForChain(wallet.chain?.id as number),
       outputSchema: null,
+      extra: null,
     };
 
     const payment = await createPayment(wallet, paymentDetails);
@@ -109,17 +116,18 @@ describe("sign and recover", () => {
   });
 
   test("rejects expired deadline", async () => {
-    const paymentDetails: PaymentNeededDetails = {
-      version: 1,
+    const paymentDetails: PaymentDetails = {
+      scheme: "exact",
+      networkId: baseSepolia.id.toString(),
       maxAmountRequired: BigInt(1 * 10 ** 6),
       resource: "https://example.com" as Resource,
       description: "example",
       mimeType: "text/plain",
-      resourceAddress: "0x0000000000000000000000000000000000000000" as Address,
+      payToAddress: "0x0000000000000000000000000000000000000000" as Address,
       requiredDeadlineSeconds: 1,
-      chainId: baseSepolia.id,
       usdcAddress: getUsdcAddressForChain(wallet.chain?.id as number),
       outputSchema: null,
+      extra: null,
     };
 
     const payment = await createPayment(wallet, paymentDetails);
@@ -132,17 +140,18 @@ describe("sign and recover", () => {
   });
 
   test("rejects insufficient funds", async () => {
-    const paymentDetails: PaymentNeededDetails = {
-      version: 1,
+    const paymentDetails: PaymentDetails = {
+      scheme: "exact",
+      networkId: baseSepolia.id.toString(),
       maxAmountRequired: BigInt(99999999999 * 10 ** 6), // Very large amount, greater than balance of wallet
       resource: "https://example.com" as Resource,
       description: "example",
       mimeType: "text/plain",
-      resourceAddress: "0x0000000000000000000000000000000000000000" as Address,
+      payToAddress: "0x0000000000000000000000000000000000000000" as Address,
       requiredDeadlineSeconds: 10,
-      chainId: baseSepolia.id,
       usdcAddress: getUsdcAddressForChain(wallet.chain?.id),
       outputSchema: null,
+      extra: null,
     };
 
     const payment = await createPayment(wallet, paymentDetails);
@@ -153,17 +162,18 @@ describe("sign and recover", () => {
   });
 
   test("rejects insufficient value in payload", async () => {
-    const paymentDetails: PaymentNeededDetails = {
-      version: 1,
+    const paymentDetails: PaymentDetails = {
+      scheme: "exact",
+      networkId: baseSepolia.id.toString(),
       maxAmountRequired: BigInt(2 * 10 ** 6),
       resource: "https://example.com" as Resource,
       description: "example",
       mimeType: "text/plain",
-      resourceAddress: "0x0000000000000000000000000000000000000000" as Address,
+      payToAddress: "0x0000000000000000000000000000000000000000" as Address,
       requiredDeadlineSeconds: 10,
-      chainId: baseSepolia.id,
       usdcAddress: getUsdcAddressForChain(wallet.chain?.id as number),
       outputSchema: null,
+      extra: null,
     };
 
     const payment = await createPayment(

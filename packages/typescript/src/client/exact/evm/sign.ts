@@ -7,19 +7,10 @@ import {
 import { PaymentPayloadV1 } from "../../../shared/types";
 import { z } from "zod";
 import { paymentPayloadV1FromObj } from "../../../shared/types/convert";
-
-export const authorizationTypes = {
-  TransferWithAuthorization: [
-    { name: "from", type: "address" },
-    { name: "to", type: "address" },
-    { name: "value", type: "uint256" },
-    { name: "validAfter", type: "uint256" },
-    { name: "validBefore", type: "uint256" },
-    { name: "nonce", type: "bytes32" },
-  ],
-};
-
-export const authorizationPrimaryType = "TransferWithAuthorization";
+import {
+  authorizationTypes,
+  authorizationPrimaryType,
+} from "@/shared/evm/eip3009";
 
 /**
  * Signs an EIP-3009 authorization for USDC transfer
