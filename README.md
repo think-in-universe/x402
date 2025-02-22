@@ -110,11 +110,14 @@ the payment details accepted for a resource.
   // Output schema of the resource response
   outputSchema?: object | null;
 
-  // Address of the routing account that facilitates payment
-  resourceAddress: string;
+  // Address to pay value to
+  payToAddress: string;
 
   // Maximum time in seconds for the resource server to respond
   maxTimeoutSeconds: number;
+
+  // Address of the USDC contract
+  usdcAddress: string;
 
   // Extra information about the payment details specific to the scheme
   extra: object | null;
@@ -136,21 +139,6 @@ the payment details accepted for a resource.
 
   // resource the client is paying for
   resource: string;
-}
-
-// Payment Execution Response
-{
-  // Whether the payment was successful
-  success: boolean;
-
-  // Error message from the facilitator server
-  error: string | null;
-
-  // Transaction hash of the settled payment
-  txHash: string | null;
-
-  // Network id of the blockchain the payment was settled on
-  networkId: string | null;
 }
 ```
 
@@ -183,9 +171,16 @@ Request body JSON:
 
 Response:
 {
+  // Whether the payment was successful
   success: boolean;
+
+  // Error message from the facilitator server
   error: string | null;
+
+  // Transaction hash of the settled payment
   txHash: string | null;
+
+  // Network id of the blockchain the payment was settled on
   networkId: string | null;
 }
 
