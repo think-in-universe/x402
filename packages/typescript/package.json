@@ -1,13 +1,10 @@
 {
-  "name": "base402",
+  "name": "x402",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "start": "tsx --env-file=.env index.ts",
-    "test": "vitest",
-    "example-facilitator": "tsx --env-file=.env example/facilitator.ts",
-    "example-resource": "tsx example/resource.ts",
-    "example-client": "tsx --env-file=.env example/client.ts"
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -22,7 +19,6 @@
   "dependencies": {
     "@hono/node-server": "^1.13.8",
     "axios": "^1.7.9",
-    "dotenv": "^16.4.7",
     "hono": "^4.7.1",
     "viem": "^2.23.1",
     "zod": "^3.24.2"
