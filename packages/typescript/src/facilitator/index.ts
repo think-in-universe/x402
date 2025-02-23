@@ -1,20 +1,20 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 
-import { SignerWallet } from "../shared/evm/wallet";
-import { PaymentNeededDetails } from "../shared/types";
+import { SignerWallet } from "@/shared/evm/wallet";
+import { PaymentDetails } from "@/shared/types";
 import { settle, verify } from "@/facilitator/exact/evm";
 import { paymentNeededDetailsFromObj } from "../shared/types/convert";
 import { decodePayment } from "../client/exact/evm/sign";
 
 type VerifyRequest = {
   payload: string;
-  details: PaymentNeededDetails;
+  details: PaymentDetails;
 };
 
 type SettleRequest = {
   payload: string;
-  details: PaymentNeededDetails;
+  details: PaymentDetails;
 };
 
 export function makeServer(wallet: SignerWallet): Hono {

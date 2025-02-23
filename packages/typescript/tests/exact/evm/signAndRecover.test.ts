@@ -106,7 +106,8 @@ describe("sign and recover", () => {
       ...payment,
       payload: {
         ...payment.payload,
-        signature: "0x1234" as `0x${string}`,
+        signature:
+          "0xf3f303070867dd381e0859de4ec39fb590c25ead665eaa3c3053d4aacb46d23a0d862ce6256d01549196317e120dd685efa4d1777f0849f4b6a05a4609f319cc1c" as `0x${string}`,
       },
     };
 

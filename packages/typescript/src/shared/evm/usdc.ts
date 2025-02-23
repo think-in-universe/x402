@@ -1,8 +1,21 @@
-import { Address, Hex, PublicClient } from "viem";
+import {
+  Account,
+  Address,
+  Chain,
+  Client,
+  Hex,
+  PublicClient,
+  Transport,
+} from "viem";
 import { usdcABI as abi } from "./erc20PermitABI";
 import { config } from "./config";
+import { ConnectedClient } from "./wallet";
 
-export function getUsdcAddress(client: PublicClient): Address {
+export function getUsdcAddress<
+  transport extends Transport,
+  chain extends Chain | undefined = undefined,
+  account extends Account | undefined = undefined
+>(client: Client<transport, chain, account>): Address {
   return config[client.chain!.id.toString()].usdcAddress as Address;
 }
 
@@ -16,7 +29,7 @@ export async function getPermitNonce(
   owner: Address
 ): Promise<Hex> {
   const nonce = await client.readContract({
-    address: getUsdcAddress(client),
+    address: getUsdcAddressForChain(client.chain!.id),
     abi,
     functionName: "nonces",
     args: [owner],
@@ -29,7 +42,11 @@ export async function getPermitNonce(
 let versionCache: string | null = null;
 
 // Function to get the USDC contract version
-export async function getVersion(client: PublicClient): Promise<string> {
+export async function getVersion<
+  transport extends Transport,
+  chain extends Chain,
+  account extends Account | undefined = undefined
+>(client: ConnectedClient<transport, chain, account>): Promise<string> {
   // Return cached version if available
   if (versionCache !== null) {
     return versionCache;
@@ -45,12 +62,16 @@ export async function getVersion(client: PublicClient): Promise<string> {
   return versionCache;
 }
 
-export async function getUSDCBalance(
-  client: PublicClient,
+export async function getUSDCBalance<
+  transport extends Transport,
+  chain extends Chain,
+  account extends Account | undefined = undefined
+>(
+  client: ConnectedClient<transport, chain, account>,
   address: Address
 ): Promise<bigint> {
   const balance = await client.readContract({
-    address: getUsdcAddress(client),
+    address: getUsdcAddressForChain(client.chain!.id),
     abi,
     functionName: "balanceOf",
     args: [address],

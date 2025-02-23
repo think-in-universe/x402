@@ -4,9 +4,9 @@
  */
 
 import axios from "axios";
-import { botWallet } from "../src/shared/wallet";
-import { createPayment, createPaymentHeader } from "../src/client";
-import { paymentNeededDetailsFromObj } from "../src/shared/types/convert";
+import { botWallet } from "@/shared/evm/wallet";
+import { createPayment, createPaymentHeader } from "@/client/exact/evm/client";
+import { paymentNeededDetailsFromObj } from "@/shared/types/convert";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

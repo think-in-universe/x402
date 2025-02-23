@@ -1,7 +1,14 @@
-import { Address, Chain, PublicClient, Transport } from "viem";
+import {
+  Account,
+  Address,
+  Chain,
+  parseAbi,
+  Transport,
+  verifyTypedData,
+  WalletClient,
+} from "viem";
 import { SettleResponse, PaymentDetails, VerifyResponse } from "@/shared/types";
 import { PaymentPayload } from "@/shared/types/exact/evm";
-
 import { getUsdcAddressForChain, getUSDCBalance } from "@/shared/evm/usdc";
 import { usdcABI as abi } from "@/shared/evm/erc20PermitABI";
 import { ConnectedClient, SignerWallet } from "@/shared/evm/wallet";
@@ -26,8 +33,12 @@ import { SCHEME } from "@/shared/types/exact";
  * - Verifies client has sufficient USDC balance
  * - Ensures payment amount meets required minimum
  */
-export async function verify(
-  client: ConnectedClient,
+export async function verify<
+  transport extends Transport,
+  chain extends Chain,
+  account extends Account | undefined = undefined
+>(
+  client: ConnectedClient<transport, chain, account>,
   payload: PaymentPayload,
   paymentDetails: PaymentDetails
 ): Promise<VerifyResponse> {
@@ -69,7 +80,7 @@ export async function verify(
   // Verify permit signature is recoverable for the owner address
   const permitTypedData = {
     types: authorizationTypes,
-    primaryType: "TransferWithAuthorization",
+    primaryType: "TransferWithAuthorization" as const,
     domain: {
       name: usdcName,
       version: payload.payload.authorization.version,
@@ -87,7 +98,7 @@ export async function verify(
     },
   };
 
-  const recoveredAddress = await client.verifyTypedData({
+  const recoveredAddress = await verifyTypedData({
     address: payload.payload.authorization.from,
     ...permitTypedData,
     signature: payload.payload.signature,
@@ -176,6 +187,15 @@ export async function settle(
       error: `Payment is no longer valid: ${valid.invalidReason}`,
     };
   }
+  const a = [
+    payload.payload.authorization.from,
+    payload.payload.authorization.to,
+    payload.payload.authorization.value,
+    payload.payload.authorization.validAfter,
+    payload.payload.authorization.validBefore,
+    payload.payload.authorization.nonce,
+    payload.payload.signature,
+  ];
 
   const tx = await wallet.writeContract({
     address: paymentDetails.usdcAddress as Address,

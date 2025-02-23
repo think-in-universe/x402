@@ -1,16 +1,14 @@
-import { WalletClient, Hex, toHex } from "viem";
-import { config } from "../../../shared/evm/config";
+import { WalletClient, Hex, toHex, Transport, Chain, Address } from "viem";
+import { config } from "@/shared/evm/config";
+
+import { PaymentDetails } from "@/shared/types";
 import {
   AuthorizationParameters,
-  paymentPayloadV1Schema,
-} from "../../../shared/types";
-import { PaymentPayloadV1 } from "../../../shared/types";
-import { z } from "zod";
-import { paymentPayloadV1FromObj } from "../../../shared/types/convert";
-import {
-  authorizationTypes,
-  authorizationPrimaryType,
-} from "@/shared/evm/eip3009";
+  PaymentPayload,
+  paymentPayloadSchema,
+} from "@/shared/types/exact/evm";
+import { paymentPayloadV1FromObj } from "@/shared/types/convert";
+import { authorizationTypes } from "@/shared/evm/eip3009";
 
 /**
  * Signs an EIP-3009 authorization for USDC transfer
@@ -27,8 +25,11 @@ import {
  * @param params.usdcAddress - The address of the USDC contract
  * @returns The signature for the authorization
  */
-export async function signAuthorization(
-  walletClient: WalletClient,
+export async function signAuthorization<
+  transport extends Transport,
+  chain extends Chain
+>(
+  walletClient: WalletClient<transport, chain>,
   {
     from,
     to,
@@ -36,12 +37,11 @@ export async function signAuthorization(
     validAfter,
     validBefore,
     nonce,
-    chainId,
     version,
-    usdcAddress,
-  }: AuthorizationParameters
+  }: AuthorizationParameters,
+  { usdcAddress, networkId }: PaymentDetails
 ): Promise<{ signature: Hex }> {
-  const usdcName = config[chainId].usdcName;
+  const usdcName = config[networkId].usdcName;
 
   const data = {
     account: walletClient.account!,
@@ -49,8 +49,8 @@ export async function signAuthorization(
     domain: {
       name: usdcName,
       version: version,
-      chainId: chainId,
-      verifyingContract: usdcAddress,
+      chainId: parseInt(networkId),
+      verifyingContract: usdcAddress as Address,
     },
     primaryType: "TransferWithAuthorization" as const,
     message: {
@@ -74,13 +74,13 @@ export function createNonce(): Hex {
   return toHex(crypto.getRandomValues(new Uint8Array(32)));
 }
 
-export function encodePayment(payment: PaymentPayloadV1): string {
+export function encodePayment(payment: PaymentPayload): string {
   const safe = {
     ...payment,
     payload: {
       ...payment.payload,
-      params: Object.fromEntries(
-        Object.entries(payment.payload.params).map(([key, value]) => [
+      authorization: Object.fromEntries(
+        Object.entries(payment.payload.authorization).map(([key, value]) => [
           key,
           typeof value === "bigint" ? value.toString() : value,
         ])
@@ -90,13 +90,13 @@ export function encodePayment(payment: PaymentPayloadV1): string {
   return safeBase64Encode(JSON.stringify(safe));
 }
 
-export function decodePayment(payment: string): PaymentPayloadV1 {
+export function decodePayment(payment: string): PaymentPayload {
   // TODO: setup proper zod validation
   const decoded = safeBase64Decode(payment);
   const parsed = JSON.parse(decoded);
 
   const obj = paymentPayloadV1FromObj(parsed);
-  const validated = paymentPayloadV1Schema.parse(obj);
+  const validated = paymentPayloadSchema.parse(obj);
   return validated;
 }
 

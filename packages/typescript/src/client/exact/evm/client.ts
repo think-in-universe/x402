@@ -3,10 +3,13 @@ import { PaymentPayload } from "@/shared/types/exact/evm";
 import { getVersion } from "@/shared/evm/usdc";
 import { createNonce, encodePayment, signAuthorization } from "./sign";
 import { SignerWallet } from "@/shared/evm/wallet";
-import { Address } from "viem";
+import { Address, Chain, Transport } from "viem";
 
-export async function createPayment(
-  client: SignerWallet,
+export async function createPayment<
+  transport extends Transport,
+  chain extends Chain
+>(
+  client: SignerWallet<chain, transport>,
   paymentDetails: PaymentDetails
 ): Promise<PaymentPayload> {
   const nonce = createNonce();
@@ -20,17 +23,19 @@ export async function createPayment(
     Math.floor(Date.now() / 1000 + paymentDetails.requiredDeadlineSeconds)
   );
 
-  const { signature } = await signAuthorization(client, {
-    from,
-    to: paymentDetails.payToAddress,
-    value: paymentDetails.maxAmountRequired,
-    validAfter,
-    validBefore,
-    nonce,
-    chainId: client.chain!.id,
-    version,
-    usdcAddress: paymentDetails.usdcAddress,
-  });
+  const { signature } = await signAuthorization(
+    client,
+    {
+      from,
+      to: paymentDetails.payToAddress as Address,
+      value: paymentDetails.maxAmountRequired,
+      validAfter,
+      validBefore,
+      nonce,
+      version,
+    },
+    paymentDetails
+  );
 
   return {
     x402Version: 1,

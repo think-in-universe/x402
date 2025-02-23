@@ -20,7 +20,7 @@ import { Hex } from "viem";
 
 // Create a public client for reading data
 export type SignerWallet<
-  chain extends Chain | undefined = Chain,
+  chain extends Chain = Chain,
   transport extends Transport = Transport,
   account extends Account | undefined = Account
 > = Client<
@@ -33,14 +33,9 @@ export type SignerWallet<
 
 export type ConnectedClient<
   transport extends Transport = Transport,
-  chain extends Chain = Chain
-> = Client<
-  transport,
-  chain,
-  Account,
-  RpcSchema,
-  PublicActions<transport, chain>
->;
+  chain extends Chain | undefined = Chain,
+  account extends Account | undefined = undefined
+> = PublicClient<transport, chain, account>;
 
 export const testClient: ConnectedClient<Transport, typeof baseSepolia> =
   createPublicClient({
