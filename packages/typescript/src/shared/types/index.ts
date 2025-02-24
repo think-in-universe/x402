@@ -1,4 +1,5 @@
 import { z } from "zod";
+export { toJsonSafe } from "./convert";
 
 const resourceSchema = z
   .string()
@@ -12,7 +13,7 @@ export const paymentDetailsSchema = z.object({
   // Network of the blockchain to send payment on
   networkId: z.string(),
   // Maximum amount required to pay for the resource as usdc dollars x 10**6
-  maxAmountRequired: z.bigint(),
+  maxAmountRequired: z.bigint({ coerce: true }),
   // URL of resource to pay for
   resource: resourceSchema,
   // Description of the resource

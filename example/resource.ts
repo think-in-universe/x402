@@ -1,6 +1,6 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import { paymentMiddleware } from "../src/server/hono";
+import { paymentMiddleware } from "x402/server/hono";
 
 const app = new Hono();
 const port = 4021;

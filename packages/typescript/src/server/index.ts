@@ -1,45 +1,41 @@
 import axios from "axios";
-import {
-  PaymentExecutionResponse,
-  PaymentNeededDetails,
-  PaymentPayloadV1,
-  ValidPaymentResponse,
-} from "../shared/types";
-import {
-  paymentNeededDetailsToJsonSafe,
-  paymentPayloadV1ToJsonSafe,
-} from "../shared/types/convert";
+import { PaymentDetails, SettleResponse, VerifyResponse } from "@/shared/types";
+import { toJsonSafe } from "../shared/types/convert";
 
-const defaultServer = "http://localhost:4020";
+export function useFacilitator(url: string = "http://localhost:4020") {
+  async function verify(
+    payload: string,
+    paymentDetails: PaymentDetails
+  ): Promise<VerifyResponse> {
+    const res = await axios.post(`${url}/verify`, {
+      payload: payload,
+      details: toJsonSafe(paymentDetails),
+    });
 
-export async function requestVerify(
-  payload: string,
-  paymentDetails: PaymentNeededDetails
-): Promise<ValidPaymentResponse> {
-  const res = await axios.post(`${defaultServer}/verify`, {
-    payload: payload,
-    details: paymentNeededDetailsToJsonSafe(paymentDetails),
-  });
+    if (res.status !== 200) {
+      throw new Error(`Failed to verify payment: ${res.statusText}`);
+    }
 
-  if (res.status !== 200) {
-    throw new Error(`Failed to verify payment: ${res.statusText}`);
+    return res.data as VerifyResponse;
   }
 
-  return res.data as ValidPaymentResponse;
-}
+  async function settle(
+    payload: string,
+    paymentDetails: PaymentDetails
+  ): Promise<SettleResponse> {
+    const res = await axios.post(`${url}/settle`, {
+      payload: payload,
+      details: toJsonSafe(paymentDetails),
+    });
 
-export async function requestSettle(
-  payload: string,
-  paymentDetails: PaymentNeededDetails
-): Promise<PaymentExecutionResponse> {
-  const res = await axios.post(`${defaultServer}/settle`, {
-    payload: payload,
-    details: paymentNeededDetailsToJsonSafe(paymentDetails),
-  });
+    if (res.status !== 200) {
+      throw new Error(`Failed to settle payment: ${res.statusText}`);
+    }
 
-  if (res.status !== 200) {
-    throw new Error(`Failed to settle payment: ${res.statusText}`);
+    return res.data as SettleResponse;
   }
 
-  return res.data as PaymentExecutionResponse;
+  return { verify, settle };
 }
+
+export const { verify, settle } = useFacilitator();

@@ -2,14 +2,13 @@ import type { Context, Next, MiddlewareHandler } from "hono";
 import {
   Money,
   moneySchema,
-  PaymentNeededDetails,
-  PaymentPayloadV1,
+  PaymentDetails,
+  toJsonSafe,
 } from "../../shared/types";
 import { Address } from "viem";
 import { getUsdcAddressForChain } from "../../shared/evm/usdc";
-import { requestSettle, requestVerify } from "..";
+import { settle, verify } from "..";
 import { decodePayment } from "../../client/exact/evm/sign";
-import { paymentNeededDetailsToJsonSafe } from "../../shared/types/convert";
 
 export function paymentMiddleware(
   amount: Money,
@@ -27,17 +26,18 @@ export function paymentMiddleware(
     );
   }
 
-  const paymentDetails: PaymentNeededDetails = {
-    version: 1,
+  const paymentDetails: PaymentDetails = {
+    scheme: "exact",
+    networkId: testnet ? "84532" : "8453",
     maxAmountRequired: BigInt(parsedAmount.data * 10 ** 6),
     resource: "http://localhost:4021/joke", // TODO: make this dynamic
     description,
     mimeType,
-    resourceAddress: address,
+    payToAddress: address,
     requiredDeadlineSeconds: maxDeadlineSeconds,
     usdcAddress: getUsdcAddressForChain(testnet ? 84532 : 8453),
-    chainId: testnet ? 84532 : 1,
     outputSchema,
+    extra: null,
   };
   return async (c, next) => {
     const payment = c.req.header("X-PAYMENT");
@@ -45,18 +45,18 @@ export function paymentMiddleware(
       return Response.json(
         {
           error: "X-PAYMENT header is required",
-          paymentDetails: paymentNeededDetailsToJsonSafe(paymentDetails),
+          paymentDetails: toJsonSafe(paymentDetails),
         },
         { status: 402 }
       );
     }
 
-    const response = await requestVerify(payment, paymentDetails);
+    const response = await verify(payment, paymentDetails);
     if (!response.isValid) {
       return Response.json(
         {
           error: response.invalidReason,
-          paymentDetails: paymentNeededDetailsToJsonSafe(paymentDetails),
+          paymentDetails: toJsonSafe(paymentDetails),
         },
         { status: 402 }
       );
@@ -64,12 +64,12 @@ export function paymentMiddleware(
 
     await next();
 
-    const settle = await requestSettle(payment, paymentDetails);
-    if (!settle.success) {
+    const settleResponse = await settle(payment, paymentDetails);
+    if (!settleResponse.success) {
       return Response.json(
         {
-          error: settle.error,
-          paymentDetails: paymentNeededDetailsToJsonSafe(paymentDetails),
+          error: settleResponse.error,
+          paymentDetails: toJsonSafe(paymentDetails),
         },
         { status: 402 }
       );

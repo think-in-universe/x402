@@ -7,7 +7,6 @@ import {
   PaymentPayload,
   paymentPayloadSchema,
 } from "@/shared/types/exact/evm";
-import { paymentPayloadV1FromObj } from "@/shared/types/convert";
 import { authorizationTypes } from "@/shared/evm/eip3009";
 
 /**
@@ -91,11 +90,22 @@ export function encodePayment(payment: PaymentPayload): string {
 }
 
 export function decodePayment(payment: string): PaymentPayload {
-  // TODO: setup proper zod validation
   const decoded = safeBase64Decode(payment);
   const parsed = JSON.parse(decoded);
 
-  const obj = paymentPayloadV1FromObj(parsed);
+  const obj = {
+    ...parsed,
+    payload: {
+      signature: parsed.payload.signature,
+      authorization: {
+        ...parsed.payload.authorization,
+        value: BigInt(parsed.payload.authorization.value),
+        validAfter: BigInt(parsed.payload.authorization.validAfter),
+        validBefore: BigInt(parsed.payload.authorization.validBefore),
+      },
+    },
+  };
+
   const validated = paymentPayloadSchema.parse(obj);
   return validated;
 }

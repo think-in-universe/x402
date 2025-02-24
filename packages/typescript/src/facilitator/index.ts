@@ -2,9 +2,8 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 
 import { SignerWallet } from "@/shared/evm/wallet";
-import { PaymentDetails } from "@/shared/types";
+import { PaymentDetails, paymentDetailsSchema } from "@/shared/types";
 import { settle, verify } from "@/facilitator/exact/evm";
-import { paymentNeededDetailsFromObj } from "../shared/types/convert";
 import { decodePayment } from "../client/exact/evm/sign";
 
 type VerifyRequest = {
@@ -25,7 +24,7 @@ export function makeServer(wallet: SignerWallet): Hono {
     // TODO: add zod validation
     const req: VerifyRequest = await c.req.json();
 
-    const paymentDetails = paymentNeededDetailsFromObj(req.details);
+    const paymentDetails = paymentDetailsSchema.parse(req.details);
     const payload = decodePayment(req.payload);
 
     const valid = await verify(wallet, payload, paymentDetails);
@@ -33,10 +32,9 @@ export function makeServer(wallet: SignerWallet): Hono {
   });
 
   app.post("/settle", async (c) => {
-    // TODO: add zod validation
     const req: SettleRequest = await c.req.json();
 
-    const paymentDetails = paymentNeededDetailsFromObj(req.details);
+    const paymentDetails = paymentDetailsSchema.parse(req.details);
     const payload = decodePayment(req.payload);
 
     const res = await settle(wallet, payload, paymentDetails);

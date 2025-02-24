@@ -5,11 +5,9 @@
 
 import axios from "axios";
 import { botWallet } from "x402/shared/evm/wallet";
-import {
-  createPayment,
-  createPaymentHeader,
-} from "x402/src/client/exact/evm/client";
-import { paymentNeededDetailsFromObj } from "x402/src/shared/types/convert";
+import {} from "x402/client";
+import { server } from "x402/server";
+import { paymentDetailsSchema } from "../packages/typescript/dist/shared/types";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -36,7 +34,7 @@ console.log(res.data.paymentDetails);
 
 const wallet = botWallet;
 
-const paymentDetails = paymentNeededDetailsFromObj(res.data.paymentDetails);
+const paymentDetails = paymentDetailsSchema.parse(res.data.paymentDetails);
 
 const payload = await createPaymentHeader(wallet, paymentDetails);
 
