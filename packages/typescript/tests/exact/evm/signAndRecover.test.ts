@@ -1,6 +1,6 @@
 import { Address } from "viem";
 import { expect, test, describe } from "vitest";
-import { createPayment } from "../../../src/client/exact/evm/client";
+import { createPayment } from "../../../src/exact/evm/client";
 import { verify } from "../../../src/exact/evm/facilitator";
 import { baseSepolia } from "viem/chains";
 import { Resource, PaymentDetails } from "../../../src/types";

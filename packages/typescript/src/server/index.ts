@@ -20,16 +20,18 @@ export async function verify(
   payload: string,
   paymentDetails: PaymentDetails
 ): Promise<VerifyResponse> {
-  if (paymentDetails.scheme !== "exact") {
-    return {
-      isValid: false,
-      invalidReason: `Incompatible payload scheme. payload: ${paymentDetails.scheme}, supported: exact`,
-    };
+  if (
+    paymentDetails.scheme == "exact" &&
+    supportedEVMNetworks.includes(paymentDetails.networkId)
+  ) {
+    const payment = decodePayment(payload);
+    const valid = await verifyExact(client, payment, paymentDetails);
+    return valid;
   }
-
-  const payment = decodePayment(payload);
-  const valid = await verifyExact(client, payment, paymentDetails);
-  return valid;
+  return {
+    isValid: false,
+    invalidReason: `Incompatible payload scheme. payload: ${paymentDetails.scheme}, supported: exact`,
+  };
 }
 
 /**
@@ -45,11 +47,12 @@ export async function settle(
   payload: string,
   paymentDetails: PaymentDetails
 ): Promise<SettleResponse> {
+  const payment = decodePayment(payload);
+
   if (
-    paymentDetails.scheme === "exact" &&
-    !supportedEVMNetworks.includes(paymentDetails.networkId)
+    paymentDetails.scheme == "exact" &&
+    supportedEVMNetworks.includes(paymentDetails.networkId)
   ) {
-    const payment = decodePayment(payload);
     return settleExact(client, payment, paymentDetails);
   }
 

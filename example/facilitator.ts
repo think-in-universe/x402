@@ -35,9 +35,16 @@ app.post("/verify", async (c) => {
   // TODO: add zod validation
   const req: VerifyRequest = await c.req.json();
 
+  console.log("verifying request", {
+    payload: req.payload,
+    details: req.details,
+  });
+
   const paymentDetails = paymentDetailsSchema.parse(req.details);
 
   const valid = await verify(wallet, req.payload, paymentDetails);
+
+  console.log("verification result", valid);
   return c.json(valid);
 });
 
@@ -46,9 +53,14 @@ app.post("/settle", async (c) => {
 
   const paymentDetails = paymentDetailsSchema.parse(req.details);
 
+  console.log("settling request", {
+    payload: req.payload,
+    details: paymentDetails,
+  });
+
   const res = await settle(wallet, req.payload, paymentDetails);
 
-  console.log("Payment processed", res);
+  console.log("settlement result", res);
   return c.json(res);
 });
 

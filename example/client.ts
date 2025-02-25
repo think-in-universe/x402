@@ -48,12 +48,13 @@ const payload = await createPaymentHeader(wallet, paymentDetails);
 const res2 = await axios.get(resourceUrl, {
   headers: {
     "X-PAYMENT": payload,
+    "Access-Control-Expose-Headers": "X-PAYMENT-RESPONSE",
   },
   validateStatus: () => true,
 });
 
 const settleResponse = settleResponseFromHeader(
-  res2.headers["X-PAYMENT-RESPONSE"]
+  res2.headers["x-payment-response"]
 );
 
 console.log("Settlement response", settleResponse);

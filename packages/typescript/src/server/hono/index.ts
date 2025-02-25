@@ -42,39 +42,43 @@ export function paymentMiddleware(
   return async (c, next) => {
     const payment = c.req.header("X-PAYMENT");
     if (!payment) {
-      return Response.json(
+      c.res = Response.json(
         {
           error: "X-PAYMENT header is required",
           paymentDetails: toJsonSafe(paymentDetails),
         },
         { status: 402 }
       );
+      return;
     }
 
     const response = await verify(payment, paymentDetails);
     if (!response.isValid) {
-      return Response.json(
+      c.res = Response.json(
         {
           error: response.invalidReason,
           paymentDetails: toJsonSafe(paymentDetails),
         },
         { status: 402 }
       );
+      return;
     }
 
     await next();
 
     const settleResponse = await settle(payment, paymentDetails);
     if (!settleResponse.success) {
-      return Response.json(
+      c.res = Response.json(
         {
           error: settleResponse.error,
           paymentDetails: toJsonSafe(paymentDetails),
         },
         { status: 402 }
       );
+      return;
     }
 
-    c.header("X-PAYMENT-RESPONSE", settleResponseHeader(settleResponse));
+    const responseHeader = settleResponseHeader(settleResponse);
+    c.header("X-PAYMENT-RESPONSE", responseHeader);
   };
 }

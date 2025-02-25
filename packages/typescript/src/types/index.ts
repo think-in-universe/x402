@@ -101,7 +101,6 @@ export function settleResponseHeader(response: SettleResponse): string {
 }
 
 export function settleResponseFromHeader(header: string): SettleResponse {
-  console.log("header", header);
   const decoded = safeBase64Decode(header);
   return JSON.parse(decoded) as SettleResponse;
 }

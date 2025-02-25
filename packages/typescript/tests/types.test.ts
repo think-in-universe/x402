@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { PaymentDetails, paymentDetailsSchema } from "../src/types";
-import { toJsonSafe } from "../src/types/convert";
+import { toJsonSafe } from "../src/types";
 
 describe("types conversion", () => {
   test("PaymentNeededDetails serialization", () => {

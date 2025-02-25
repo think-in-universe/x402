@@ -3,7 +3,7 @@ import { PaymentDetails, Resource } from "../../../src/types";
 import { baseSepolia } from "viem/chains";
 import { botWallet, facilitatorWallet } from "../../../src/shared/evm/wallet";
 import { Address } from "viem";
-import { createPayment } from "../../../src/client/exact/evm/client";
+import { createPayment } from "../../../src/exact/evm/client";
 import {
   getUsdcAddressForChain,
   getUSDCBalance,
