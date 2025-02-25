@@ -14,7 +14,7 @@ app.use(
     {
       description: "joke",
       mimeType: "text/plain",
-      // facilitatorUrl: "http://localhost:3000/api",
+      facilitatorUrl: "http://localhost:3000/facilitator",
     }
   )
 );
