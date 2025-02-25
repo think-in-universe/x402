@@ -4,11 +4,12 @@
 
 import { z } from "zod";
 import { Address, Hex } from "viem";
-import { makePaymentPayloadSchema } from "@/shared/types";
+
+import { makePaymentPayloadSchema } from "../../types";
 
 export type AuthorizationSignature = Hex;
 
-const authorizationSchema = z.object({
+export const authorizationSchema = z.object({
   from: z.custom<Address>(),
   to: z.custom<Address>(),
   value: z.bigint(),

@@ -1,9 +1,9 @@
 import { Address } from "viem";
 import { expect, test, describe } from "vitest";
 import { createPayment } from "../../../src/client/exact/evm/client";
-import { verify } from "../../../src/facilitator/exact/evm";
+import { verify } from "../../../src/exact/evm/facilitator";
 import { baseSepolia } from "viem/chains";
-import { Resource, PaymentDetails } from "../../../src/shared/types";
+import { Resource, PaymentDetails } from "../../../src/types";
 import { getUsdcAddressForChain } from "../../../src/shared/evm/usdc";
 import { botWallet, testClient } from "../../../src/shared/evm/wallet";
 

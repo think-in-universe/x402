@@ -1,13 +1,9 @@
 import { WalletClient, Hex, toHex, Transport, Chain, Address } from "viem";
-import { config } from "@/shared/evm/config";
 
-import { PaymentDetails } from "@/shared/types";
-import {
-  AuthorizationParameters,
-  PaymentPayload,
-  paymentPayloadSchema,
-} from "@/shared/types/exact/evm";
-import { authorizationTypes } from "@/shared/evm/eip3009";
+import { config } from "../../shared/evm/config";
+import { PaymentDetails } from "../../types";
+import { AuthorizationParameters } from "./types";
+import { authorizationTypes } from "../../shared/evm/eip3009";
 
 /**
  * Signs an EIP-3009 authorization for USDC transfer
@@ -71,55 +67,4 @@ export async function signAuthorization<
 
 export function createNonce(): Hex {
   return toHex(crypto.getRandomValues(new Uint8Array(32)));
-}
-
-export function encodePayment(payment: PaymentPayload): string {
-  const safe = {
-    ...payment,
-    payload: {
-      ...payment.payload,
-      authorization: Object.fromEntries(
-        Object.entries(payment.payload.authorization).map(([key, value]) => [
-          key,
-          typeof value === "bigint" ? value.toString() : value,
-        ])
-      ),
-    },
-  };
-  return safeBase64Encode(JSON.stringify(safe));
-}
-
-export function decodePayment(payment: string): PaymentPayload {
-  const decoded = safeBase64Decode(payment);
-  const parsed = JSON.parse(decoded);
-
-  const obj = {
-    ...parsed,
-    payload: {
-      signature: parsed.payload.signature,
-      authorization: {
-        ...parsed.payload.authorization,
-        value: BigInt(parsed.payload.authorization.value),
-        validAfter: BigInt(parsed.payload.authorization.validAfter),
-        validBefore: BigInt(parsed.payload.authorization.validBefore),
-      },
-    },
-  };
-
-  const validated = paymentPayloadSchema.parse(obj);
-  return validated;
-}
-
-function safeBase64Encode(data: string): string {
-  if (typeof window !== "undefined") {
-    return window.btoa(data);
-  }
-  return Buffer.from(data).toString("base64");
-}
-
-function safeBase64Decode(data: string): string {
-  if (typeof window !== "undefined") {
-    return window.atob(data);
-  }
-  return Buffer.from(data, "base64").toString("utf-8");
 }

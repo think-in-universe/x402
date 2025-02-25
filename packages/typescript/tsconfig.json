@@ -15,10 +15,7 @@
         "sourceMap": true,
         "resolveJsonModule": true,
         "allowJs": true,
-        "checkJs": true,
-        "paths": {
-            "@/*": ["./src/*"]
-        }
+        "checkJs": true
     },
     "include": [
         "src/**/*.ts"

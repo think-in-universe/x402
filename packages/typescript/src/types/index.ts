@@ -1,5 +1,7 @@
 import { z } from "zod";
-export { toJsonSafe } from "./convert";
+import { safeBase64Encode, safeBase64Decode } from "../shared";
+
+export { SignerWallet } from "../shared/evm/wallet";
 
 const resourceSchema = z
   .string()
@@ -94,6 +96,16 @@ export type SettleResponse = {
   networkId?: string | undefined;
 };
 
+export function settleResponseHeader(response: SettleResponse): string {
+  return safeBase64Encode(JSON.stringify(response));
+}
+
+export function settleResponseFromHeader(header: string): SettleResponse {
+  console.log("header", header);
+  const decoded = safeBase64Decode(header);
+  return JSON.parse(decoded) as SettleResponse;
+}
+
 export type VerifyResponse = {
   isValid: boolean;
   invalidReason?: string | undefined;
@@ -112,3 +124,28 @@ export type Money = z.input<typeof moneySchema>;
 export type Resource = `${string}://${string}`;
 
 /** end Utility Types */
+
+export function toJsonSafe<T extends object>(data: T): object {
+  if (typeof data !== "object") {
+    throw new Error("Data is not an object");
+  }
+
+  function convert(value: unknown): unknown {
+    if (value !== null && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, val]) => [key, convert(val)])
+      );
+    }
+
+    if (Array.isArray(value)) {
+      return value.map(convert);
+    }
+
+    if (typeof value === "bigint") {
+      return value.toString();
+    }
+    return value;
+  }
+
+  return convert(data) as object;
+}

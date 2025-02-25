@@ -1,17 +1,24 @@
 /**
- * Note: this is all stuff that we would wrap up in agent kit.
+ * Note: this is all stuff that we would wrap up in agentkit / other client packages.
  * This code is also purposely longer than it needs to be to show the flow of the payment.
  */
-
 import axios from "axios";
-import { botWallet } from "x402/shared/evm/wallet";
-import {} from "x402/client";
-import { server } from "x402/server";
-import { paymentDetailsSchema } from "../packages/typescript/dist/shared/types";
+import { paymentDetailsSchema, settleResponseFromHeader } from "x402/types";
+import { createPaymentHeader } from "x402/exact/evm";
+import { baseSepolia } from "viem/chains";
+import { privateKeyToAccount } from "viem/accounts";
+import { http, publicActions, createWalletClient } from "viem";
+import { Hex } from "viem";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+const botWallet = createWalletClient({
+  chain: baseSepolia,
+  transport: http(),
+  account: privateKeyToAccount(process.env.PRIVATE_KEY as Hex),
+}).extend(publicActions);
 
 const resourceUrl = "http://localhost:4021/joke";
 
@@ -44,6 +51,12 @@ const res2 = await axios.get(resourceUrl, {
   },
   validateStatus: () => true,
 });
+
+const settleResponse = settleResponseFromHeader(
+  res2.headers["X-PAYMENT-RESPONSE"]
+);
+
+console.log("Settlement response", settleResponse);
 
 console.log(`Received status code: ${res2.status}`);
 console.log(res2.data);

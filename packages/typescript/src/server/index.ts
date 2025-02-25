@@ -1,41 +1,60 @@
-import axios from "axios";
-import { PaymentDetails, SettleResponse, VerifyResponse } from "@/shared/types";
-import { toJsonSafe } from "../shared/types/convert";
+import { decodePayment } from "../exact/evm";
+import { ConnectedClient, SignerWallet } from "../shared/evm/wallet";
+import { PaymentDetails, SettleResponse, VerifyResponse } from "../types";
+import { verify as verifyExact, settle as settleExact } from "../exact/evm";
 
-export function useFacilitator(url: string = "http://localhost:4020") {
-  async function verify(
-    payload: string,
-    paymentDetails: PaymentDetails
-  ): Promise<VerifyResponse> {
-    const res = await axios.post(`${url}/verify`, {
-      payload: payload,
-      details: toJsonSafe(paymentDetails),
-    });
+export * as hono from "./hono";
 
-    if (res.status !== 200) {
-      throw new Error(`Failed to verify payment: ${res.statusText}`);
-    }
+const supportedEVMNetworks = ["84532"];
 
-    return res.data as VerifyResponse;
+/**
+ * Verifies a payment payload against the required payment details regardless of the scheme
+ * this function wraps all verify functions for each specific scheme
+ * @param client - The public client used for blockchain interactions
+ * @param payload - The signed payment payload containing transfer parameters and signature
+ * @param paymentDetails - The payment requirements that the payload must satisfy
+ * @returns A ValidPaymentRequest indicating if the payment is valid and any invalidation reason
+ */
+export async function verify(
+  client: ConnectedClient,
+  payload: string,
+  paymentDetails: PaymentDetails
+): Promise<VerifyResponse> {
+  if (paymentDetails.scheme !== "exact") {
+    return {
+      isValid: false,
+      invalidReason: `Incompatible payload scheme. payload: ${paymentDetails.scheme}, supported: exact`,
+    };
   }
 
-  async function settle(
-    payload: string,
-    paymentDetails: PaymentDetails
-  ): Promise<SettleResponse> {
-    const res = await axios.post(`${url}/settle`, {
-      payload: payload,
-      details: toJsonSafe(paymentDetails),
-    });
-
-    if (res.status !== 200) {
-      throw new Error(`Failed to settle payment: ${res.statusText}`);
-    }
-
-    return res.data as SettleResponse;
-  }
-
-  return { verify, settle };
+  const payment = decodePayment(payload);
+  const valid = await verifyExact(client, payment, paymentDetails);
+  return valid;
 }
 
-export const { verify, settle } = useFacilitator();
+/**
+ * Settles a payment payload against the required payment details regardless of the scheme
+ * this function wraps all settle functions for each specific scheme
+ * @param client - The signer wallet used for blockchain interactions
+ * @param payload - The signed payment payload containing transfer parameters and signature
+ * @param paymentDetails - The payment requirements that the payload must satisfy
+ * @returns A SettleResponse indicating if the payment is settled and any settlement reason
+ */
+export async function settle(
+  client: SignerWallet,
+  payload: string,
+  paymentDetails: PaymentDetails
+): Promise<SettleResponse> {
+  if (
+    paymentDetails.scheme === "exact" &&
+    !supportedEVMNetworks.includes(paymentDetails.networkId)
+  ) {
+    const payment = decodePayment(payload);
+    return settleExact(client, payment, paymentDetails);
+  }
+
+  return {
+    success: false,
+    error: `Incompatible payload scheme. payload: ${paymentDetails.scheme}, supported: exact`,
+  };
+}

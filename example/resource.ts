@@ -1,13 +1,13 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import { paymentMiddleware } from "x402/server/hono";
+import { hono } from "x402/server";
 
 const app = new Hono();
 const port = 4021;
 
 app.use(
   "/joke",
-  paymentMiddleware("$0.01", "0x209693Bc6afc0C5328bA36FaF03C514EF312287C")
+  hono.paymentMiddleware("$0.01", "0x209693Bc6afc0C5328bA36FaF03C514EF312287C")
 );
 
 app.get("/joke", (c) => {

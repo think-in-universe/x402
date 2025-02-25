@@ -1,6 +1,6 @@
 {
   "name": "x402",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "main": "dist/index.js",
   "scripts": {
     "start": "tsx --env-file=.env index.ts",
@@ -37,16 +37,20 @@
       "default": "./dist/server/index.js"
     },
     "./client": {
-      "types": "./dist/client/index.d.ts",
-      "default": "./dist/client/index.js"
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
     },
-    "./shared": {
-      "types": "./dist/shared/index.d.ts",
-      "default": "./dist/shared/index.js"
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/types/index.js"
     },
-    "./facilitator": {
-      "types": "./dist/facilitator/index.d.ts",
-      "default": "./dist/facilitator/index.js"
+    "./exact": {
+      "types": "./dist/exact/index.d.ts",
+      "default": "./dist/exact/index.js"
+    },
+    "./exact/evm": {
+      "types": "./dist/exact/evm/index.d.ts",
+      "default": "./dist/exact/evm/index.js"
     }
   },
   "types": "dist/index.d.ts",

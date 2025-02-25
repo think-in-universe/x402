@@ -1,5 +1,5 @@
 import { expect, test, describe } from "vitest";
-import { PaymentDetails, Resource } from "../../../src/shared/types";
+import { PaymentDetails, Resource } from "../../../src/types";
 import { baseSepolia } from "viem/chains";
 import { botWallet, facilitatorWallet } from "../../../src/shared/evm/wallet";
 import { Address } from "viem";
@@ -8,7 +8,7 @@ import {
   getUsdcAddressForChain,
   getUSDCBalance,
 } from "../../../src/shared/evm/usdc";
-import { settle, verify } from "../../../src/facilitator/exact/evm";
+import { settle, verify } from "../../../src/exact/evm/facilitator";
 
 describe("settlePayment", () => {
   const wallet = botWallet;

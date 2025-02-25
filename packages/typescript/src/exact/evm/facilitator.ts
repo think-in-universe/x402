@@ -1,23 +1,12 @@
-import {
-  Account,
-  Address,
-  Chain,
-  parseAbi,
-  Transport,
-  verifyTypedData,
-  WalletClient,
-} from "viem";
-import { SettleResponse, PaymentDetails, VerifyResponse } from "@/shared/types";
-import { PaymentPayload } from "@/shared/types/exact/evm";
-import { getUsdcAddressForChain, getUSDCBalance } from "@/shared/evm/usdc";
-import { usdcABI as abi } from "@/shared/evm/erc20PermitABI";
-import { ConnectedClient, SignerWallet } from "@/shared/evm/wallet";
-import {
-  authorizationTypes,
-  authorizationPrimaryType,
-} from "@/shared/evm/eip3009";
-import { config } from "@/shared/evm/config";
-import { SCHEME } from "@/shared/types/exact";
+import { Account, Address, Chain, Transport, verifyTypedData } from "viem";
+import { SettleResponse, PaymentDetails, VerifyResponse } from "../../types";
+import { PaymentPayload } from "../../exact/evm/types";
+import { getUsdcAddressForChain, getUSDCBalance } from "../../shared/evm/usdc";
+import { usdcABI as abi } from "../../shared/evm/erc20PermitABI";
+import { ConnectedClient, SignerWallet } from "../../shared/evm/wallet";
+import { authorizationTypes } from "../../shared/evm/eip3009";
+import { config } from "../../shared/evm/config";
+import { SCHEME } from "../../exact";
 
 /**
  * Verifies a payment payload against the required payment details

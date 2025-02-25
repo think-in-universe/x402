@@ -1,14 +1,14 @@
-import type { Context, Next, MiddlewareHandler } from "hono";
+import type { MiddlewareHandler } from "hono";
 import {
   Money,
   moneySchema,
   PaymentDetails,
   toJsonSafe,
-} from "../../shared/types";
+  settleResponseHeader,
+} from "../../types";
 import { Address } from "viem";
 import { getUsdcAddressForChain } from "../../shared/evm/usdc";
-import { settle, verify } from "..";
-import { decodePayment } from "../../client/exact/evm/sign";
+import { settle, verify } from "../../client";
 
 export function paymentMiddleware(
   amount: Money,
@@ -74,5 +74,7 @@ export function paymentMiddleware(
         { status: 402 }
       );
     }
+
+    c.header("X-PAYMENT-RESPONSE", settleResponseHeader(settleResponse));
   };
 }
