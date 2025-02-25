@@ -22,9 +22,9 @@ export async function POST(req: Request) {
 
   const paymentDetails = paymentDetailsSchema.parse(body.details);
 
-  const valid = await settle(wallet, body.payload, paymentDetails);
+  const response = await settle(wallet, body.payload, paymentDetails);
 
-  return Response.json({ valid });
+  return Response.json(response);
 }
 
 export async function GET(req: Request) {

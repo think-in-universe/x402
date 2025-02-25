@@ -1,5 +1,5 @@
 import { paymentDetailsSchema, PaymentDetails, SignerWallet } from "x402/types";
-import { createClient, http } from "viem";
+import { createClient, http, publicActions } from "viem";
 import { baseSepolia } from "viem/chains";
 import { verify } from "x402/server";
 
@@ -11,7 +11,7 @@ type VerifyRequest = {
 const client = createClient({
   chain: baseSepolia,
   transport: http(),
-});
+}).extend(publicActions);
 
 export async function POST(req: Request) {
   const body: VerifyRequest = await req.json();
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
   const valid = await verify(client, body.payload, paymentDetails);
 
-  return Response.json({ valid });
+  return Response.json(valid);
 }
 
 export async function GET(req: Request) {
