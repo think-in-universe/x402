@@ -1,12 +1,5 @@
 import { paymentDetailsSchema, PaymentDetails, SignerWallet } from "x402/types";
-import {
-  createWalletClient,
-  Hex,
-  http,
-  publicActions,
-  createClient,
-} from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+import { createClient, http } from "viem";
 import { baseSepolia } from "viem/chains";
 import { verify } from "x402/server";
 
@@ -14,14 +7,6 @@ type VerifyRequest = {
   payload: string;
   details: PaymentDetails;
 };
-
-const wallet: SignerWallet = createWalletClient({
-  chain: baseSepolia,
-  transport: http(),
-  account: privateKeyToAccount(
-    process.env.FACILITATOR_WALLET_PRIVATE_KEY as Hex
-  ),
-}).extend(publicActions);
 
 const client = createClient({
   chain: baseSepolia,
