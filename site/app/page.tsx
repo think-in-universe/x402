@@ -63,7 +63,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="container px-4 pt-20 lg:pt-28 lg:pb-20">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-5xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
+          <h1 className="text-5xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text inline-block">
             x402
           </h1>
           <p className="text-xl text-gray-400 mb-8 font-mono">
@@ -89,7 +89,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="container px-4 py-20">
+      <section className="container px-4 pb-20">
         <div className="max-w-6xl mx-auto">
           {/* What is it? */}
           <div className="relative">
@@ -123,29 +123,18 @@ export default function Home() {
                   With x402, users can pay for resources via API without
                   registration, emails, OAuth, or complex signatures.
                 </p>
-                <p className="text-gray-300 leading-relaxed text-lg mb-8">
-                  TODO: old flow vs new flow
-                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-gray-400">
+                  {whatIsItFeatures.map((feature, index) => (
+                    <FeatureItem key={index} {...feature} />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="xl:full-bleed lg:unset-full-bleed bg-blue-500/5">
-        <div className="container px-4 py-10">
-          <div className="max-w-6xl mx-auto lg:pl-12">
-            <h2 className="text-2xl font-bold text-blue-400 mb-8">Features</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-gray-400">
-              {whatIsItFeatures.map((feature, index) => (
-                <FeatureItem key={index} {...feature} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="container px-4 py-20">
+      <section className="container px-4 pb-20">
         <div className="max-w-6xl mx-auto">
           {/* Why it matters */}
           <div className="relative">
