@@ -16,8 +16,6 @@ export function FeatureItem({
     iconClasses += ` w-8 h-8 ${iconBgColor}`;
   }
 
-  console.log(iconClasses);
-
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3">
