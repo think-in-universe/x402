@@ -22,7 +22,7 @@ export function FeatureItem({
         <div className={iconClasses}>{icon}</div>
         <div>
           {title && <h4 className="font-semibold text-gray-200">{title}</h4>}
-          <p className="text-gray-400">{description}</p>
+          <p className="text-gray-400 max-w-sm">{description}</p>
         </div>
       </div>
     </div>
