@@ -7,6 +7,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { FeatureItem } from './components/FeatureItem';
 import GithubIcon from './assets/github.svg';
+import WordmarkCondensed from './assets/x402_wordmark_dark_condensed.svg';
 import { Section } from './components/Section';
 import { BackgroundVideo } from './components/BackgroundVideo';
 
@@ -73,26 +74,34 @@ export default function Home() {
         <section className="max-w-6xl mx-auto px-4 pb-16 pt-20 lg:pt-28 lg:pb-20">
           <div className="text-center">
             <h1 className="text-5xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text inline-block">
-              x402
+              <WordmarkCondensed alt="x402 Payment Protocol" />
             </h1>
             <p className="text-xl text-gray-400 mb-8 font-mono">
               An open protocol for internet-native payments
             </p>
-            <div className="flex flex-wrap gap-4 justify-center">
+            <div className="flex flex-wrap gap-4 mb-8 justify-center">
               <a
                 href="/whitepaper.pdf"
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-mono transition-colors"
+                className="px-6 py-3 border-2 border-gray-700 hover:border-blue-600 rounded-lg font-mono transition-colors"
               >
-                Read the Whitepaper
+                Read the whitepaper
               </a>
               <Link
                 href="https://github.com/coinbase/x402"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg font-mono transition-colors flex items-center gap-2"
+                className="px-6 py-3 border-2 border-gray-700 hover:border-blue-600 rounded-lg font-mono transition-colors flex items-center gap-2"
               >
                 <GithubIcon className="w-5 h-5 mr-1" fill="currentColor" />
                 View on GitHub
+              </Link>
+            </div>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link
+                href="/protected"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-mono transition-colors"
+              >
+                Live demo
               </Link>
             </div>
           </div>
