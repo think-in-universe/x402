@@ -2,18 +2,21 @@ import { useState, useEffect } from 'react';
 
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Initialize on client-side only
-    const media = window.matchMedia(query);
-    setMatches(media.matches);
+    setMounted(true);
+    const mediaQuery = window.matchMedia(query);
+    setMatches(mediaQuery.matches);
 
-    // Update matches when viewport changes
     const listener = (e: MediaQueryListEvent) => setMatches(e.matches);
-    media.addEventListener('change', listener);
+    mediaQuery.addEventListener('change', listener);
 
-    return () => media.removeEventListener('change', listener);
+    return () => mediaQuery.removeEventListener('change', listener);
   }, [query]);
+
+  // Return false during SSR, actual value after mount
+  if (!mounted) return false;
 
   return matches;
 }
