@@ -1,15 +1,11 @@
 import { Address, Chain, Transport } from "viem";
 import { SignerWallet } from "../../../types/shared/evm";
-import { PaymentPayload, PaymentRequirements } from "../../../types/verify";
+import { PaymentPayload, PaymentRequirements, UnsignedPaymentPayload } from "../../../types/verify";
 import { createNonce, signAuthorization } from "./sign";
 import { encodePayment } from "./utils/paymentUtils";
 
-export async function createPayment<transport extends Transport, chain extends Chain>(
-  client: SignerWallet<chain, transport>,
-  paymentRequirements: PaymentRequirements,
-): Promise<PaymentPayload> {
+export function preparePaymentHeader(from: Address, paymentRequirements: PaymentRequirements): UnsignedPaymentPayload {
   const nonce = createNonce();
-  const from = client!.account!.address;
 
   const validAfter = BigInt(
     Math.floor(Date.now() / 1000) - 5, // 1 block (2s) before to account for block timestamping
@@ -18,25 +14,12 @@ export async function createPayment<transport extends Transport, chain extends C
     Math.floor(Date.now() / 1000 + paymentRequirements.maxTimeoutSeconds),
   ).toString();
 
-  const { signature } = await signAuthorization(
-    client,
-    {
-      from,
-      to: paymentRequirements.payTo as Address,
-      value: paymentRequirements.maxAmountRequired,
-      validAfter,
-      validBefore,
-      nonce,
-    },
-    paymentRequirements,
-  );
-
   return {
     x402Version: 1,
     scheme: paymentRequirements.scheme,
     network: paymentRequirements.network,
     payload: {
-      signature,
+      signature: undefined,
       authorization: {
         from,
         to: paymentRequirements.payTo as Address,
@@ -47,6 +30,31 @@ export async function createPayment<transport extends Transport, chain extends C
       },
     },
   };
+}
+
+export async function signPaymentHeader<transport extends Transport, chain extends Chain>(client: SignerWallet<chain, transport>, paymentRequirements: PaymentRequirements, unsignedPaymentHeader: UnsignedPaymentPayload): Promise<PaymentPayload> {
+  const { signature } = await signAuthorization(
+    client,
+    unsignedPaymentHeader.payload.authorization,
+    paymentRequirements,
+  );
+
+  return {
+    ...unsignedPaymentHeader,
+    payload: {
+      ...unsignedPaymentHeader.payload,
+      signature
+    }
+  }
+}
+
+export async function createPayment<transport extends Transport, chain extends Chain>(
+  client: SignerWallet<chain, transport>,
+  paymentRequirements: PaymentRequirements,
+): Promise<PaymentPayload> {
+  const from = client!.account!.address;
+  const unsignedPaymentHeader = preparePaymentHeader(from, paymentRequirements);
+  return signPaymentHeader(client, paymentRequirements, unsignedPaymentHeader);
 }
 
 export async function createPaymentHeader(

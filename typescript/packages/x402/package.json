@@ -34,15 +34,30 @@
   },
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
-    },
     "./shared": {
       "types": "./dist/esm/shared/index.d.ts",
       "import": "./dist/esm/shared/index.js",
       "require": "./dist/cjs/shared/index.js"
+    },
+    "./client": {
+      "types": "./dist/esm/client/index.d.ts",
+      "import": "./dist/esm/client/index.js",
+      "require": "./dist/cjs/client/index.js"
+    },
+    "./verify": {
+      "types": "./dist/esm/verify/index.d.ts",
+      "import": "./dist/esm/verify/index.js",
+      "require": "./dist/cjs/verify/index.js"
+    },
+    "./facilitator": {
+      "types": "./dist/esm/facilitator/index.d.ts",
+      "import": "./dist/esm/facilitator/index.js",
+      "require": "./dist/cjs/facilitator/index.js"
+    },
+    "./types": {
+      "types": "./dist/esm/types/index.d.ts",
+      "import": "./dist/esm/types/index.js",
+      "require": "./dist/cjs/types/index.js"
     }
   },
   "files": [

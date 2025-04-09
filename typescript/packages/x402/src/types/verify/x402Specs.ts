@@ -55,6 +55,9 @@ export const PaymentPayloadSchema = z.object({
   payload: ExactEvmPayloadSchema,
 })
 export type PaymentPayload = z.infer<typeof PaymentPayloadSchema>;
+export type UnsignedPaymentPayload = Omit<PaymentPayload, 'payload'> & {
+  payload: Omit<ExactEvmPayload, 'signature'> & { signature: undefined }
+};
 
 // x402VerifyResponse
 export const VerifyResponseSchema = z.object({
