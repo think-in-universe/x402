@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "checkJs": false
+  },
+  "include": [
+    "src",
+    "../x402-hono/src/index.ts",
+    "src/shared/paywall.ts"
+  ]
+}
