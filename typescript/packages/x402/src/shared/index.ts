@@ -1,15 +1,16 @@
 export * as evm from "./evm";
+export * from "./paywall";
 
 export function safeBase64Encode(data: string): string {
-  if (typeof window !== "undefined") {
-    return window.btoa(data);
-  }
+  // if (typeof window !== "undefined") {
+  //   return window.btoa(data);
+  // }
   return Buffer.from(data).toString("base64");
 }
 
 export function safeBase64Decode(data: string): string {
-  if (typeof window !== "undefined") {
-    return window.atob(data);
-  }
+  // if (typeof window !== "undefined") {
+  //   return window.atob(data);
+  // }
   return Buffer.from(data, "base64").toString("utf-8");
 }

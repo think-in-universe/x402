@@ -22,7 +22,7 @@
     "express": "^5.0.1",
     "hono": "^4.7.2",
     "viem": "^2.23.5",
-    "x402": "file:../packages/typescript/x402"
+    "x402": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.13.5",

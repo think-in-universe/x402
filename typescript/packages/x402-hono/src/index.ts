@@ -6,12 +6,11 @@ import {
   toJsonSafe,
   settleResponseHeader,
   Resource,
-} from "../types";
+} from "../../x402/src/types";
 import { Address } from "viem";
-import { getUsdcAddressForChain } from "../shared/evm/usdc";
-import { useFacilitator } from "../client";
-import { getPaywallHtml } from "../shared/paywall";
-export { getPaywallHtml } from "../shared/paywall"
+import { getUsdcAddressForChain } from "../../x402/src/shared/evm/usdc";
+import { useFacilitator } from "../../x402/src";
+import { getPaywallHtml } from "../../x402/src/shared/paywall";
 
 interface PaymentMiddlewareOptions {
   description?: string;

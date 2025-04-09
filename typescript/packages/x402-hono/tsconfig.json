@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": [
+      "ES2020",
+      "DOM"
+    ]
+  },
+  "include": [
+    "src",
+    "../x402/src/shared/paywall.ts"
+  ]
+}
