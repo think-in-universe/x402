@@ -6,18 +6,18 @@ import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 
 import { verify, settle } from "x402/facilitator";
-import { paymentDetailsSchema, PaymentDetails } from "x402/types";
+import { PaymentRequirementsSchema, PaymentRequirements } from "x402/types";
 
 const port = 4020;
 
 type VerifyRequest = {
   payload: string;
-  details: PaymentDetails;
+  details: PaymentRequirements;
 };
 
 type SettleRequest = {
   payload: string;
-  details: PaymentDetails;
+  details: PaymentRequirements;
 };
 
 const wallet = createWalletClient({
@@ -38,9 +38,9 @@ app.post("/verify", async c => {
     details: req.details,
   });
 
-  const paymentDetails = paymentDetailsSchema.parse(req.details);
+  const paymentRequirements = PaymentRequirementsSchema.parse(req.details);
 
-  const valid = await verify(wallet, req.payload, paymentDetails);
+  const valid = await verify(wallet, req.payload, paymentRequirements);
 
   console.log("verification result", valid);
   return c.json(valid);
@@ -49,14 +49,14 @@ app.post("/verify", async c => {
 app.post("/settle", async c => {
   const req: SettleRequest = await c.req.json();
 
-  const paymentDetails = paymentDetailsSchema.parse(req.details);
+  const paymentRequirements = PaymentRequirementsSchema.parse(req.details);
 
   console.log("settling request", {
     payload: req.payload,
-    details: paymentDetails,
+    details: paymentRequirements,
   });
 
-  const res = await settle(wallet, req.payload, paymentDetails);
+  const res = await settle(wallet, req.payload, paymentRequirements);
 
   console.log("settlement result", res);
   return c.json(res);

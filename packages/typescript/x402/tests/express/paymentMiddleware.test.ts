@@ -1,10 +1,14 @@
 import { describe, test, expect } from "vitest";
 import { paymentMiddleware } from "../../src/express/index";
-import { createSignerSepolia } from "../../src/shared/evm/wallet";
+import { createSignerSepolia, SignerWallet } from "../../src/shared/evm/wallet";
 import { createPaymentHeader } from "../../src/schemes/exact/evm/client";
 import { getUsdcAddressForChain } from "../../src/shared/evm/usdc";
-import { moneySchema, PaymentDetails } from "../../src/types";
+import { moneySchema, PaymentRequirements } from "../../src/types";
 import { Address, Hex } from "viem";
+import { config } from "dotenv";
+
+config();
+
 
 // Helpers to simulate Express req, res, and next.
 const createReq = (headers: Record<string, string>, originalUrl = "/integration-test") => {
@@ -48,30 +52,31 @@ const payToAddress = process.env.RESOURCE_WALLET_ADDRESS as Address;
 const facilitatorUrl = "https://x402.org/facilitator";
 
 // Define test parameters that match what the middleware will compute.
-const testAmount = "$0.001"; 
+const testAmount = "$0.001";
 const testDescription = "Integration Test Payment";
 const testMimeType = "application/json";
 const testDeadline = 60; // seconds
 const testResource = "https://x402.org/protected"; // Example resource URL - should his be changed?
 
-// Helper to build PaymentDetails exactly as the middleware will
-const buildPaymentDetails = (reqUrl: `${string}://${string}`, testnet: boolean): PaymentDetails => {
+// Helper to build PaymentRequirements exactly as the middleware will
+const buildPaymentRequirements = (reqUrl: `${string}://${string}`, testnet: boolean): PaymentRequirements => {
   const parsed = moneySchema.safeParse(testAmount);
   if (!parsed.success) {
     throw new Error(`Invalid amount in test: ${testAmount}`);
   }
+  const usdcAmount = BigInt(parsed.data * 10 ** 6);
   return {
     scheme: "exact",
-    networkId: testnet ? "84532" : "8453",
-    maxAmountRequired: BigInt(parsed.data * 10 ** 6),
+    network: testnet ? "base-sepolia" : "base",
+    maxAmountRequired: usdcAmount.toString(),
     resource: reqUrl,
     description: testDescription,
     mimeType: testMimeType,
-    payToAddress: payToAddress,
-    requiredDeadlineSeconds: testDeadline,
-    usdcAddress: getUsdcAddressForChain(testnet ? 84532 : 8453),
-    outputSchema: null,
-    extra: null,
+    payTo: payToAddress,
+    maxTimeoutSeconds: testDeadline,
+    asset: getUsdcAddressForChain(testnet ? 84532 : 8453),
+    outputSchema: undefined,
+    extra: undefined,
   };
 };
 
@@ -118,15 +123,15 @@ describe("paymentMiddleware integration tests (live Sepolia)", () => {
     await middleware(req, res, next);
     expect(res.statusCode).toBe(402);
     expect(res.body.error).toBe("X-PAYMENT header is required");
-    expect(res.body.paymentDetails).toBeDefined();
+    expect(res.body.paymentRequirements).toBeDefined();
   }, 30000);
 
   test("proceeds when valid X-PAYMENT header is provided (valid payment)", async () => {
     // Build the payment details exactly as middleware would.
     const reqUrl = testResource;
-    const paymentDetails = buildPaymentDetails(reqUrl, true);
+    const paymentRequirements = buildPaymentRequirements(reqUrl, true);
     // Use createPaymentHeader (live) to generate a valid payment token.
-    const paymentToken = await createPaymentHeader(wallet, paymentDetails);
+    const paymentToken = await createPaymentHeader(wallet as SignerWallet, paymentRequirements);
 
     const middleware = paymentMiddleware(testAmount, payToAddress, {
       description: testDescription,

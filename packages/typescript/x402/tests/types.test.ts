@@ -1,26 +1,26 @@
 import { describe, test, expect } from "vitest";
-import { PaymentDetails, paymentDetailsSchema } from "../src/types";
+import { PaymentRequirements, PaymentRequirementsSchema } from "../src/types";
 import { toJsonSafe } from "../src/types";
 
 describe("types conversion", () => {
   test("PaymentNeededDetails serialization", () => {
-    const details: PaymentDetails = {
+    const requirements: PaymentRequirements = {
       scheme: "exact",
-      networkId: "1",
-      maxAmountRequired: BigInt(1000),
+      network: "base-sepolia",
+      maxAmountRequired: "1000",
       resource: "https://api.example.com/resource",
       description: "Test resource",
       mimeType: "application/json",
-      outputSchema: null,
-      payToAddress: "0x123" as `0x${string}`,
-      requiredDeadlineSeconds: 30,
-      usdcAddress: "0x456" as `0x${string}`,
-      extra: null,
+      outputSchema: undefined,
+      payTo: "0x123" as `0x${string}`,
+      maxTimeoutSeconds: 30,
+      asset: "0x456" as `0x${string}`,
+      extra: undefined,
     };
 
-    const json = toJsonSafe(details);
+    const json = toJsonSafe(requirements);
 
-    const restored = paymentDetailsSchema.parse(json);
-    expect(restored).toEqual(details);
+    const restored = PaymentRequirementsSchema.parse(json);
+    expect(restored).toEqual(requirements);
   });
 });

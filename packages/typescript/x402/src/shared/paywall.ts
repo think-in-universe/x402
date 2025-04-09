@@ -1,6 +1,6 @@
 interface PaywallOptions {
   amount: number;
-  paymentDetails: any;
+  paymentRequirements: any;
   currentUrl: string;
   testnet: boolean;
 }
@@ -8,7 +8,7 @@ interface PaywallOptions {
 export function getPaywallHtml({
   amount,
   testnet,
-  paymentDetails,
+  paymentRequirements,
   currentUrl,
 }: PaywallOptions): string {
   return `<!DOCTYPE html>
@@ -145,7 +145,7 @@ export function getPaywallHtml({
   try {
     // Initialize x402 namespace
     window.x402 = {
-      paymentDetails: ${JSON.stringify(paymentDetails)},
+      paymentRequirements: ${JSON.stringify(paymentRequirements)},
       isTestnet: ${testnet},
       currentUrl: "${currentUrl}",
       state: {
@@ -163,10 +163,14 @@ export function getPaywallHtml({
             usdcAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
             usdcName: "USDC",
           }
+        },
+        networkToChainId: {
+          "base-sepolia": 84532,
+          "base": 8453
         }
       }
     };
-    console.log('Payment details initialized:', window.x402.paymentDetails);
+    console.log('Payment requirements initialized:', window.x402.paymentRequirements);
   } catch (error) {
     console.error('Error initializing x402:', error.message);
   };
@@ -233,6 +237,13 @@ export function getPaywallHtml({
     getUsdcAddressForChain: (chainId) => {
       return window.x402.config.chainConfig[chainId.toString()].usdcAddress;
     },
+    getNetworkId: (network) => {
+      const chainId = window.x402.config.networkToChainId[network];
+      if (!chainId) {
+        throw new Error('Unsupported network: ' + network);
+      }
+      return chainId;
+    },
     getVersion: async (publicClient, usdcAddress) => {
       const version = await publicClient.readContract({
         address: usdcAddress,
@@ -262,10 +273,10 @@ export function getPaywallHtml({
     },
   }
 
-  window.x402.utils.signAuthorization = async (walletClient, authorizationParameters, paymentDetails, publicClient) => {
-    const { networkId } = paymentDetails;
-    const usdcName = window.x402.config.chainConfig[networkId].usdcName;
-    const usdcAddress = window.x402.config.chainConfig[networkId].usdcAddress;
+  window.x402.utils.signAuthorization = async (walletClient, authorizationParameters, paymentRequirements, publicClient) => {
+    const chainId = getNetworkId(paymentRequirements.network);
+    const usdcName = window.x402.config.chainConfig[chainId].usdcName;
+    const usdcAddress = window.x402.config.chainConfig[chainId].usdcAddress;
     const version = await window.x402.utils.getVersion(publicClient, usdcAddress);
     const { from, to, value, validAfter, validBefore, nonce } = authorizationParameters;
     const data = {
@@ -274,7 +285,7 @@ export function getPaywallHtml({
       domain: {
         name: usdcName,
         version: version,
-        chainId: parseInt(networkId),
+        chainId: chainId,
         verifyingContract: usdcAddress,
       },
       primaryType: "TransferWithAuthorization",
@@ -296,53 +307,53 @@ export function getPaywallHtml({
   }
 
   window.x402.utils.createPayment = async (client, publicClient) => {
-    if (!window.x402.paymentDetails) {
-      throw new Error('Payment details not initialized');
+    if (!window.x402.paymentRequirements) {
+      throw new Error('Payment requirements not initialized');
     }
 
     const nonce = window.x402.utils.createNonce();
-    const version = await window.x402.utils.getVersion(publicClient, window.x402.utils.getUsdcAddressForChain(parseInt(window.x402.paymentDetails.networkId)));
+    const version = await window.x402.utils.getVersion(publicClient, window.x402.utils.getUsdcAddressForChain(getNetworkId(window.x402.paymentRequirements.network)));
     const from = client.account.address;
 
     const validAfter = BigInt(
       Math.floor(Date.now() / 1000) - 5 // 1 block (2s) before to account for block timestamping
     );
     const validBefore = BigInt(
-      Math.floor(Date.now() / 1000 + window.x402.paymentDetails.requiredDeadlineSeconds)
+      Math.floor(Date.now() / 1000 + window.x402.paymentRequirements.maxTimeoutSeconds)
     );
 
     const { signature } = await window.x402.utils.signAuthorization(
       client,
       {
         from,
-        to: window.x402.paymentDetails.payToAddress,
-        value: window.x402.paymentDetails.maxAmountRequired,
+        to: window.x402.paymentRequirements.payTo,
+        value: window.x402.paymentRequirements.maxAmountRequired,
         validAfter,
         validBefore,
         nonce,
         version,
       },
-      window.x402.paymentDetails,
+      window.x402.paymentRequirements,
       publicClient
     );
 
     return {
       x402Version: 1,
-      scheme: window.x402.paymentDetails.scheme,
-      networkId: window.x402.paymentDetails.networkId,
+      scheme: window.x402.paymentRequirements.scheme,
+      network: window.x402.paymentRequirements.network,
       payload: {
         signature,
         authorization: {
           from,
-          to: window.x402.paymentDetails.payToAddress,
-          value: window.x402.paymentDetails.maxAmountRequired,
+          to: window.x402.paymentRequirements.payTo,
+          value: window.x402.paymentRequirements.maxAmountRequired,
           validAfter,
           validBefore,
           nonce,
           version,
         },
       },
-      resource: window.x402.paymentDetails.resource,
+      resource: window.x402.paymentRequirements.resource,
     };
   }
 
@@ -454,9 +465,8 @@ export function getPaywallHtml({
         });
 
         if (balance === 0n) {
-          statusDiv.textContent = \`Your USDC balance is 0. Please make sure you have USDC tokens on ${
-            testnet ? "Base Sepolia" : "Base"
-          }.\`;
+          statusDiv.textContent = \`Your USDC balance is 0. Please make sure you have USDC tokens on ${testnet ? "Base Sepolia" : "Base"
+    }.\`;
           return;
         }
 
@@ -502,7 +512,7 @@ window.addEventListener('load', initializeApp);
   <div class="container">
     <div class="header">
       <h1 class="title">Payment Required</h1>
-      <p class="subtitle">${paymentDetails.description}. To access this content, please pay $${amount} Base Sepolia USDC.</p>
+      <p class="subtitle">${paymentRequirements.description}. To access this content, please pay $${amount} ${testnet ? "Base Sepolia" : "Base"} USDC.</p>
       <p class="instructions">Need Base Sepolia USDC? <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">Get some here.</a></p>
     </div>
 
