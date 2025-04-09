@@ -1,4 +1,4 @@
-import { WalletClient, Hex, toHex, Transport, Chain, Address } from "viem";
+import { Hex, toHex, Transport, Chain, Address } from "viem";
 
 import { config } from "../../../shared/evm/config.js";
 import { PaymentDetails } from "../../../types/index.js";
@@ -21,11 +21,13 @@ import { authorizationTypes } from "../../../shared/evm/eip3009.js";
  * @returns The signature for the authorization
  */
 export async function signAuthorization<transport extends Transport, chain extends Chain>(
-  walletClient: WalletClient<transport, chain>,
-  { from, to, value, validAfter, validBefore, nonce, version }: AuthorizationParameters,
-  { usdcAddress, networkId }: PaymentDetails,
+  walletClient: SignerWallet<chain, transport>,
+  { from, to, value, validAfter, validBefore, nonce }: ExactEvmPayloadAuthorization,
+  { asset, network }: PaymentRequirements,
 ): Promise<{ signature: Hex }> {
-  const usdcName = config[networkId].usdcName;
+  const chainId = getNetworkId(network);
+  const usdcName = config[chainId].usdcName;
+  const version = await getVersion(walletClient);
 
   const data = {
     account: walletClient.account!,
@@ -33,8 +35,8 @@ export async function signAuthorization<transport extends Transport, chain exten
     domain: {
       name: usdcName,
       version: version,
-      chainId: parseInt(networkId),
-      verifyingContract: usdcAddress as Address,
+      chainId: chainId,
+      verifyingContract: asset as Address,
     },
     primaryType: "TransferWithAuthorization" as const,
     message: {

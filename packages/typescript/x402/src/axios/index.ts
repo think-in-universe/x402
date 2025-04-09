@@ -15,8 +15,8 @@ export function withPaymentInterceptor(
       }
 
       try {
-        const { paymentDetails } = error.response.data as any;
-        const parsed = paymentDetailsSchema.parse(paymentDetails);
+        const { paymentRequirements } = error.response.data as any;
+        const parsed = PaymentRequirementsSchema.parse(paymentRequirements);
 
         const paymentHeader = await createPaymentHeader(walletClient, parsed);
 

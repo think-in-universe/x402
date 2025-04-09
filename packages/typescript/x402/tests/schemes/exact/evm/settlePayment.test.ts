@@ -14,25 +14,26 @@ describe("settlePayment", () => {
 
   test("happy path", async () => {
     const initialBalance = await getUSDCBalance(wallet, resourceAddress);
-    const paymentDetails: PaymentDetails = {
+
+    const paymentRequirements: PaymentRequirements = {
       scheme: "exact",
-      networkId: baseSepolia.id.toString(),
-      maxAmountRequired: BigInt(0.01 * 10 ** 6), // 0.01 USDC
+      network: "base-sepolia",
+      maxAmountRequired: "10000", // 0.01 USDC
       resource: "https://example.com" as Resource,
       description: "example",
       mimeType: "text/plain",
-      payToAddress: resourceAddress,
-      requiredDeadlineSeconds: 10,
-      usdcAddress: getUsdcAddressForChain(baseSepolia.id),
-      outputSchema: null,
-      extra: null,
+      payTo: resourceAddress,
+      maxTimeoutSeconds: 10,
+      asset: getUsdcAddressForChain(baseSepolia.id),
+      outputSchema: undefined,
+      extra: undefined,
     };
-    const payment = await createPayment(wallet, paymentDetails);
-    const valid = await verify(wallet, payment, paymentDetails);
+    const payment = await createPayment(wallet, paymentRequirements);
+    const valid = await verify(wallet, payment, paymentRequirements);
     expect(valid.isValid).toBe(true);
-    const result = await settle(facilitatorWallet, payment, paymentDetails);
+    const result = await settle(facilitatorWallet, payment, paymentRequirements);
     expect(result.success).toBe(true);
     const finalBalance = await getUSDCBalance(wallet, resourceAddress);
-    expect(finalBalance).toBe(initialBalance + paymentDetails.maxAmountRequired);
+    expect(finalBalance).toBe(initialBalance + BigInt(paymentRequirements.maxAmountRequired));
   });
 }, 10000);

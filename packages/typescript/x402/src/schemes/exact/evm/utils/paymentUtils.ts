@@ -10,7 +10,7 @@ export function encodePayment(payment: PaymentPayload): string {
       authorization: Object.fromEntries(
         Object.entries(payment.payload.authorization).map(([key, value]) => [
           key,
-          typeof value === "bigint" ? value.toString() : value,
+          typeof value === "bigint" ? (value as bigint).toString() : value,
         ]),
       ),
     },
@@ -35,6 +35,6 @@ export function decodePayment(payment: string): PaymentPayload {
     },
   };
 
-  const validated = paymentPayloadSchema.parse(obj);
+  const validated = PaymentPayloadSchema.parse(obj);
   return validated;
 }

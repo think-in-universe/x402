@@ -3,7 +3,7 @@ import { Address } from "viem";
 import {
   Money,
   moneySchema,
-  PaymentDetails,
+  PaymentRequirements,
   toJsonSafe,
   settleResponseHeader,
   Resource,
@@ -49,21 +49,21 @@ export function paymentMiddleware(
 
   return async (c, next) => {
     let resourceUrl = resource || (c.req.url as Resource);
-    const paymentDetails: PaymentDetails = {
+    const paymentRequirements: PaymentRequirements = {
       scheme: "exact",
-      networkId: testnet ? "84532" : "8453",
-      maxAmountRequired: BigInt(parsedAmount.data * 10 ** 6),
+      network: testnet ? "base-sepolia" : "base",
+      maxAmountRequired: parsedAmount.data.toString(),
       resource: resourceUrl,
       description,
       mimeType,
-      payToAddress: address,
-      requiredDeadlineSeconds: maxDeadlineSeconds,
-      usdcAddress: getUsdcAddressForChain(testnet ? 84532 : 8453),
-      outputSchema,
-      extra: null,
+      payTo: address,
+      maxTimeoutSeconds: maxDeadlineSeconds,
+      asset: getUsdcAddressForChain(testnet ? 84532 : 8453),
+      outputSchema: outputSchema || undefined,
+      extra: undefined,
     };
     console.log("Payment middleware checking request:", c.req.url);
-    console.log("Payment details:", paymentDetails);
+    console.log("Payment details:", paymentRequirements);
 
     const payment = c.req.header("X-PAYMENT");
     const userAgent = c.req.header("User-Agent") || "";
@@ -78,7 +78,7 @@ export function paymentMiddleware(
           customPaywallHtml ||
           getPaywallHtml({
             amount: parsedAmount.data,
-            paymentDetails: toJsonSafe(paymentDetails),
+            paymentRequirements: toJsonSafe(paymentRequirements),
             currentUrl: c.req.url,
             testnet,
           });
@@ -90,19 +90,19 @@ export function paymentMiddleware(
       return c.json(
         {
           error: "X-PAYMENT header is required",
-          paymentDetails: toJsonSafe(paymentDetails),
+          paymentRequirements: toJsonSafe(paymentRequirements),
         },
         402,
       );
     }
 
-    const response = await verify(payment, paymentDetails);
+    const response = await verify(payment, paymentRequirements);
     if (!response.isValid) {
       console.log("Invalid payment:", response.invalidReason);
       return c.json(
         {
           error: response.invalidReason,
-          paymentDetails: toJsonSafe(paymentDetails),
+          paymentRequirements: toJsonSafe(paymentRequirements),
         },
         402,
       );
@@ -112,7 +112,7 @@ export function paymentMiddleware(
     await next();
 
     try {
-      const settleResponse = await settle(payment, paymentDetails);
+      const settleResponse = await settle(payment, paymentRequirements);
       const responseHeader = settleResponseHeader(settleResponse);
 
       c.header("X-PAYMENT-RESPONSE", responseHeader);
@@ -122,7 +122,7 @@ export function paymentMiddleware(
       c.res = c.json(
         {
           error,
-          paymentDetails: toJsonSafe(paymentDetails),
+          paymentRequirements: toJsonSafe(paymentRequirements),
         },
         402,
       );

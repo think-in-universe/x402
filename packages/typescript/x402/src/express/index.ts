@@ -3,7 +3,7 @@ import { Address } from "viem";
 import {
   Money,
   moneySchema,
-  PaymentDetails,
+  PaymentRequirements,
   toJsonSafe,
   settleResponseHeader,
   Resource,
@@ -51,22 +51,22 @@ export function paymentMiddleware(
   return async (req: Request, res: Response, next: NextFunction) => {
     // Use req.originalUrl as the resource if none is provided
     const resourceUrl: Resource = resource || (req.originalUrl as Resource);
-    const paymentDetails: PaymentDetails = {
+    const paymentRequirements: PaymentRequirements = {
       scheme: "exact",
-      networkId: testnet ? "84532" : "8453",
-      maxAmountRequired: BigInt(parsedAmount.data * 10 ** 6),
+      network: testnet ? "base-sepolia" : "base",
+      maxAmountRequired: parsedAmount.data.toString(),
       resource: resourceUrl,
       description,
       mimeType,
-      payToAddress: address,
-      requiredDeadlineSeconds: maxDeadlineSeconds,
-      usdcAddress: getUsdcAddressForChain(testnet ? 84532 : 8453),
-      outputSchema,
-      extra: null,
+      payTo: address,
+      maxTimeoutSeconds: maxDeadlineSeconds,
+      asset: getUsdcAddressForChain(testnet ? 84532 : 8453),
+      outputSchema: outputSchema || undefined,
+      extra: undefined,
     };
 
     console.log("Payment middleware checking request:", req.originalUrl);
-    console.log("Payment details:", paymentDetails);
+    console.log("Payment details:", paymentRequirements);
 
     const payment = req.header("X-PAYMENT");
     const userAgent = req.header("User-Agent") || "";
@@ -81,7 +81,7 @@ export function paymentMiddleware(
           customPaywallHtml ||
           getPaywallHtml({
             amount: parsedAmount.data,
-            paymentDetails: toJsonSafe(paymentDetails),
+            paymentRequirements: toJsonSafe(paymentRequirements),
             currentUrl: req.originalUrl,
             testnet,
           });
@@ -89,24 +89,24 @@ export function paymentMiddleware(
       }
       return res.status(402).json({
         error: "X-PAYMENT header is required",
-        paymentDetails: toJsonSafe(paymentDetails),
+        paymentRequirements: toJsonSafe(paymentRequirements),
       });
     }
 
     try {
-      const response = await verify(payment, paymentDetails);
+      const response = await verify(payment, paymentRequirements);
       if (!response.isValid) {
         console.log("Invalid payment:", response.invalidReason);
         return res.status(402).json({
           error: response.invalidReason,
-          paymentDetails: toJsonSafe(paymentDetails),
+          paymentRequirements: toJsonSafe(paymentRequirements),
         });
       }
     } catch (error) {
       console.log("Error during payment verification:", error);
       return res.status(402).json({
         error,
-        paymentDetails: toJsonSafe(paymentDetails),
+        paymentRequirements: toJsonSafe(paymentRequirements),
       });
     }
 
@@ -115,7 +115,7 @@ export function paymentMiddleware(
     await next();
 
     try {
-      const settleResponse = await settle(payment, paymentDetails);
+      const settleResponse = await settle(payment, paymentRequirements);
       const responseHeader = settleResponseHeader(settleResponse);
       res.setHeader("X-PAYMENT-RESPONSE", responseHeader);
     } catch (error) {
@@ -124,7 +124,7 @@ export function paymentMiddleware(
       if (!res.headersSent) {
         return res.status(402).json({
           error,
-          paymentDetails: toJsonSafe(paymentDetails),
+          paymentRequirements: toJsonSafe(paymentRequirements),
         });
       }
     }

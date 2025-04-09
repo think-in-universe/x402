@@ -8,23 +8,23 @@ const supportedEVMNetworks = ["84532"];
 
 export async function createPaymentHeader(
   client: SignerWallet,
-  paymentDetails: PaymentDetails,
+  paymentRequirements: PaymentRequirements,
 ): Promise<string> {
   if (
-    paymentDetails.scheme === "exact" &&
-    supportedEVMNetworks.includes(paymentDetails.networkId)
+    paymentRequirements.scheme === "exact" &&
+    supportedEVMNetworks.includes(paymentRequirements.network)
   ) {
-    return await createPaymentHeaderExactEVM(client, paymentDetails);
+    return await createPaymentHeaderExactEVM(client, paymentRequirements);
   }
 
   throw new Error("Unsupported scheme");
 }
 
 export function useFacilitator(url: string = "https://x402.org/facilitator") {
-  async function verify(payload: string, paymentDetails: PaymentDetails): Promise<VerifyResponse> {
+  async function verify(payload: string, paymentRequirements: PaymentRequirements): Promise<VerifyResponse> {
     const res = await axios.post(`${url}/verify`, {
       payload: payload,
-      details: toJsonSafe(paymentDetails),
+      details: toJsonSafe(paymentRequirements),
     });
 
     if (res.status !== 200) {
@@ -34,10 +34,10 @@ export function useFacilitator(url: string = "https://x402.org/facilitator") {
     return res.data as VerifyResponse;
   }
 
-  async function settle(payload: string, paymentDetails: PaymentDetails): Promise<SettleResponse> {
+  async function settle(payload: string, paymentRequirements: PaymentRequirements): Promise<SettleResponse> {
     const res = await axios.post(`${url}/settle`, {
       payload: payload,
-      details: toJsonSafe(paymentDetails),
+      details: toJsonSafe(paymentRequirements),
     });
 
     if (res.status !== 200) {
