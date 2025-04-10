@@ -1,5 +1,4 @@
-import { PaymentDetails } from "../../../types";
-import { PaymentPayload } from "./types";
+import { PaymentRequirements, PaymentPayload } from "../../../types";
 import { getVersion } from "../../../shared/evm/usdc";
 import { createNonce, signAuthorization } from "./sign";
 import { encodePayment } from "./utils/paymentUtils";
@@ -8,57 +7,53 @@ import { Address, Chain, Transport } from "viem";
 
 export async function createPayment<transport extends Transport, chain extends Chain>(
   client: SignerWallet<chain, transport>,
-  paymentDetails: PaymentDetails,
+  paymentRequirements: PaymentRequirements,
 ): Promise<PaymentPayload> {
   const nonce = createNonce();
-  const version = await getVersion(client);
   const from = client!.account!.address;
 
   const validAfter = BigInt(
     Math.floor(Date.now() / 1000) - 5, // 1 block (2s) before to account for block timestamping
-  );
+  ).toString();
   const validBefore = BigInt(
-    Math.floor(Date.now() / 1000 + paymentDetails.requiredDeadlineSeconds),
-  );
+    Math.floor(Date.now() / 1000 + paymentRequirements.maxTimeoutSeconds),
+  ).toString();
 
   const { signature } = await signAuthorization(
     client,
     {
       from,
-      to: paymentDetails.payToAddress as Address,
-      value: paymentDetails.maxAmountRequired,
+      to: paymentRequirements.payTo as Address,
+      value: paymentRequirements.maxAmountRequired,
       validAfter,
       validBefore,
       nonce,
-      version,
     },
-    paymentDetails,
+    paymentRequirements,
   );
 
   return {
     x402Version: 1,
-    scheme: paymentDetails.scheme,
-    networkId: paymentDetails.networkId,
+    scheme: paymentRequirements.scheme,
+    network: paymentRequirements.network,
     payload: {
       signature,
       authorization: {
         from,
-        to: paymentDetails.payToAddress as Address,
-        value: paymentDetails.maxAmountRequired,
-        validAfter,
-        validBefore,
+        to: paymentRequirements.payTo as Address,
+        value: paymentRequirements.maxAmountRequired,
+        validAfter: validAfter.toString(),
+        validBefore: validBefore.toString(),
         nonce,
-        version,
       },
     },
-    resource: paymentDetails.resource,
   };
 }
 
 export async function createPaymentHeader(
   client: SignerWallet,
-  paymentDetails: PaymentDetails,
+  paymentRequirements: PaymentRequirements,
 ): Promise<string> {
-  const payment = await createPayment(client, paymentDetails);
+  const payment = await createPayment(client, paymentRequirements);
   return encodePayment(payment);
 }

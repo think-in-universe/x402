@@ -1,5 +1,5 @@
 import { AxiosInstance, AxiosError } from "axios";
-import { paymentDetailsSchema } from "../types";
+import { PaymentRequirementsSchema } from "../types";
 import { evm } from "../shared";
 import { createPaymentHeader } from "../client";
 
@@ -15,8 +15,8 @@ export function withPaymentInterceptor(
       }
 
       try {
-        const { paymentDetails } = error.response.data as any;
-        const parsed = paymentDetailsSchema.parse(paymentDetails);
+        const { paymentRequirements } = error.response.data as any;
+        const parsed = PaymentRequirementsSchema.parse(paymentRequirements);
 
         const paymentHeader = await createPaymentHeader(walletClient, parsed);
 
