@@ -1,8 +1,9 @@
 import { config } from 'dotenv';
-import { createWalletClient, http } from 'viem';
+import { createWalletClient, http, publicActions } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { withPaymentInterceptor } from "x402-axios"
 import axios from "axios"
+import { baseSepolia } from 'viem/chains';
 
 config();
 
@@ -25,16 +26,16 @@ const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
 const client = createWalletClient({
   account,
   transport: http(),
-});
+  chain: baseSepolia
+}).extend(publicActions);
 
-const api = axios.create({
+const api = withPaymentInterceptor(axios.create({
   baseURL: `${RESOURCE_SERVER_URL}`
-})
+}), client)
 
-withPaymentInterceptor(api, client)
-
-api.get(`${ENDPOINT_PATH}`).then(res => {
-  console.log(res.data)
-}).catch(err => {
-  console.log(err.response.data)
+api.get(`${ENDPOINT_PATH}`).then(response => {
+  console.log(response.headers)
+  console.log(response.data)
+}).catch(error => {
+  console.error(error.response?.data?.error)
 })
