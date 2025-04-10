@@ -1,12 +1,24 @@
+import { config } from 'dotenv';
 import express from 'express';
 import { verify, settle } from 'x402/facilitator';
 import { PaymentRequirementsSchema, PaymentRequirements, evm } from "x402/types";
-import { Hex } from 'viem';
+
+config();
+
+const {
+  PRIVATE_KEY,
+  PORT,
+} = process.env;
+
+if (!PRIVATE_KEY || !PORT) {
+  console.error('Missing required environment variables');
+  process.exit(1);
+}
 
 const { createClientSepolia, createSignerSepolia } = evm;
 
 const app = express();
-const port = 3000;
+const port = parseInt(PORT);
 
 // Configure express to parse JSON bodies
 app.use(express.json());
@@ -58,7 +70,7 @@ app.get('/settle', (req, res) => {
 
 app.post('/settle', async (req, res) => {
   try {
-    const signer = createSignerSepolia(process.env.PRIVATE_KEY as Hex);
+    const signer = createSignerSepolia(PRIVATE_KEY as `0x${string}`);
     const body: SettleRequest = req.body;
     const paymentRequirements = PaymentRequirementsSchema.parse(body.details);
     const response = await settle(signer, body.payload, paymentRequirements);
