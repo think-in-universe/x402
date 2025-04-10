@@ -1,6 +1,7 @@
 import { Address, Chain, Hex, toHex, Transport } from "viem";
 import { getNetworkId } from "../../../shared";
-import { authorizationTypes, config, getVersion, SignerWallet } from "../../../types/shared/evm";
+import { getVersion } from "../../../shared/evm";
+import { authorizationTypes, config, SignerWallet } from "../../../types/shared/evm";
 import { ExactEvmPayloadAuthorization, PaymentRequirements } from "../../../types/verify";
 /**
  * Signs an EIP-3009 authorization for USDC transfer
