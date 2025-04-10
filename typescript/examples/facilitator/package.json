@@ -6,6 +6,7 @@
     "dev": "tsx index.ts"
   },
   "dependencies": {
+    "dotenv": "^16.4.7",
     "express": "^4.18.2",
     "x402": "workspace:*"
   },

@@ -1,9 +1,10 @@
-import 'dotenv/config';
-
+import { config } from 'dotenv';
 import { createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { withPaymentInterceptor } from "x402-axios"
 import axios from "axios"
+
+config();
 
 const {
   RESOURCE_SERVER_URL,
