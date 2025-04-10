@@ -9,15 +9,16 @@ const {
   FACILITATOR_URL,
   ADDRESS,
   NETWORK,
+  PORT,
 } = process.env;
 
-if (!FACILITATOR_URL || !ADDRESS || !NETWORK) {
+if (!FACILITATOR_URL || !ADDRESS || !NETWORK || !PORT) {
   console.error('Missing required environment variables');
   process.exit(1);
 }
 
 const app = express();
-const port = 3000;
+const port = parseInt(PORT);
 
 const paymentMiddleware = configurePaymentMiddleware({
   facilitatorUrl: FACILITATOR_URL as Resource,
@@ -25,8 +26,15 @@ const paymentMiddleware = configurePaymentMiddleware({
   network: NETWORK as Network,
 })
 
-app.get('/weather', paymentMiddleware("$0.001"), (req, res) => {
-  res.send(`Sunny with a chance of rain`);
+app.get('/weather', paymentMiddleware("$0.001", {
+  resource: `http://localhost:${port}/weather`
+}), (req, res) => {
+  res.send({
+    report: {
+      weather: 'sunny',
+      temperature: 70,
+    },
+  });
 });
 
 app.listen(port, () => {
