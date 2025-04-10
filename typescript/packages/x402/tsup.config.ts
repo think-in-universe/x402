@@ -7,7 +7,8 @@ const baseConfig = {
     'shared/evm/index': 'src/shared/evm/index.ts',
     'client/index': 'src/client/index.ts',
     'verify/index': 'src/verify/index.ts',
-    'types/index': 'src/types/index.ts'
+    'facilitator/index': 'src/facilitator/index.ts',
+    'types/index': 'src/types/index.ts',
   },
   dts: {
     resolve: true,
@@ -19,14 +20,14 @@ const baseConfig = {
 export default defineConfig([
   {
     ...baseConfig,
-    format: "esm",
-    outDir: "dist/esm",
+    format: 'esm',
+    outDir: 'dist/esm',
     clean: true
   },
   {
     ...baseConfig,
-    format: "cjs",
-    outDir: "dist/cjs",
+    format: 'cjs',
+    outDir: 'dist/cjs',
     clean: false
   }
 ])
