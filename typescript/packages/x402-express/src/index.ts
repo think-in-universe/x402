@@ -20,11 +20,13 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         `Invalid amount (amount: ${amount}). Must be in the form "$3.10", 0.10, "0.001", ${parsedAmount.error}`
       );
     }
-    const maxAmountRequired = parsedAmount.data;
+    const parsedUsdAmount = parsedAmount.data;
+    const maxAmountRequired = parsedUsdAmount * 10 ** 6; // TODO: Determine asset, get decimals, and convert to atomic amount
 
     // Express middleware
     return async (req: Request, res: Response, next: NextFunction) => {
       // Use req.originalUrl as the resource if none is provided
+      // TODO: req.originalUrl is not always correct, and can just be the route, i.e. `/route`. Need to consider a better fallback.
       const resourceUrl: Resource = resource || (req.originalUrl as Resource);
       const paymentRequirements: PaymentRequirements = {
         scheme: "exact",
@@ -86,11 +88,26 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       }
 
       console.log("Payment verified, proceeding to next middleware or route handler");
+
+      type EndArgs =
+        | [cb?: () => void]
+        | [chunk: any, cb?: () => void]
+        | [chunk: any, encoding: BufferEncoding, cb?: () => void];
+
+      const originalEnd = res.end.bind(res);
+      let endArgs: EndArgs | null = null;
+
+      res.end = function (...args: EndArgs) {
+        endArgs = args;
+        return res; // maintain correct return type
+      };
+
       // Proceed to the next middleware or route handler
       await next();
 
       try {
         const settleResponse = await settle(payment, paymentRequirements);
+        console.log("Settlement response:", settleResponse);
         const responseHeader = settleResponseHeader(settleResponse);
         res.setHeader("X-PAYMENT-RESPONSE", responseHeader);
       } catch (error) {
@@ -101,6 +118,12 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
             error,
             paymentRequirements: toJsonSafe(paymentRequirements),
           });
+        }
+      }
+      finally {
+        res.end = originalEnd;
+        if (endArgs) {
+          originalEnd(...(endArgs as Parameters<typeof res.end>));
         }
       }
     };
