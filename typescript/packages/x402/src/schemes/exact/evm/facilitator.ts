@@ -1,6 +1,7 @@
 import { Account, Address, Chain, Hex, Transport, verifyTypedData } from "viem";
 import { getNetworkId } from "../../../shared";
-import { usdcABI as abi, authorizationTypes, config, ConnectedClient, getUsdcAddressForChain, getUSDCBalance, getVersion, SignerWallet } from "../../../types/shared/evm";
+import { getUsdcAddressForChain, getUSDCBalance, getVersion } from "../../../shared/evm";
+import { usdcABI as abi, authorizationTypes, config, ConnectedClient, SignerWallet } from "../../../types/shared/evm";
 import { PaymentPayload, PaymentRequirements, SettleResponse, VerifyResponse } from "../../../types/verify";
 import { SCHEME } from "../../exact";
 

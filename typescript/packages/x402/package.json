@@ -39,6 +39,11 @@
       "import": "./dist/esm/shared/index.js",
       "require": "./dist/cjs/shared/index.js"
     },
+    "./shared/evm": {
+      "types": "./dist/esm/shared/evm/index.d.ts",
+      "import": "./dist/esm/shared/evm/index.js",
+      "require": "./dist/cjs/shared/evm/index.js"
+    },
     "./client": {
       "types": "./dist/esm/client/index.d.ts",
       "import": "./dist/esm/client/index.js",
