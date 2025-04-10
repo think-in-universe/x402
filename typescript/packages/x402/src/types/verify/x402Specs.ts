@@ -4,7 +4,7 @@ import { NetworkSchema } from "../shared";
 const EvmMaxAtomicUnits = 18;
 const EvmAddressRegex = /^0x[0-9a-fA-F]{40}$/
 const MixedAddressRegex = /^0x[a-fA-F0-9]{40}|[A-Za-z0-9][A-Za-z0-9-]{0,34}[A-Za-z0-9]$/
-const HexEncodedRegex = /^0x[0-9a-fA-F]{40}$/
+const HexEncoded64ByteRegex = /^0x[0-9a-fA-F]{64}$/
 const EvmSignatureRegex = /^0x[0-9a-fA-F]{130}$/
 // Enums
 export const schemes = ["exact"] as const;
@@ -37,7 +37,7 @@ export const ExactEvmPayloadAuthorizationSchema = z.object({
   value: z.string().refine(isInteger).refine(hasMaxLength(EvmMaxAtomicUnits)),
   validAfter: z.string().refine(isInteger),
   validBefore: z.string().refine(isInteger),
-  nonce: z.string().regex(HexEncodedRegex),
+  nonce: z.string().regex(HexEncoded64ByteRegex),
 })
 export type ExactEvmPayloadAuthorization = z.infer<typeof ExactEvmPayloadAuthorizationSchema>;
 

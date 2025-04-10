@@ -27,9 +27,9 @@ export function decodePayment(payment: string): PaymentPayload {
       signature: parsed.payload.signature,
       authorization: {
         ...parsed.payload.authorization,
-        value: BigInt(parsed.payload.authorization.value),
-        validAfter: BigInt(parsed.payload.authorization.validAfter),
-        validBefore: BigInt(parsed.payload.authorization.validBefore),
+        value: parsed.payload.authorization.value,
+        validAfter: parsed.payload.authorization.validAfter,
+        validBefore: parsed.payload.authorization.validBefore,
       },
     },
   };
