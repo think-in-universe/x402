@@ -1,6 +1,6 @@
-import { PaymentRequirementsSchema, PaymentRequirements } from "x402/types";
-import { settle } from "x402/facilitator";
-import { evm } from "x402/shared";
+import { PaymentRequirementsSchema, PaymentRequirements } from "../../../../typescript/packages/x402/src/types/verify";
+import { settle } from "../../../../typescript/packages/x402/src/facilitator";
+import { createSignerSepolia } from "../../../../typescript/packages/x402/src/types/shared/evm/wallet";
 import { Hex } from "viem";
 
 type SettleRequest = {
@@ -10,7 +10,7 @@ type SettleRequest = {
 
 
 export async function POST(req: Request) {
-  const wallet = evm.wallet.createSignerSepolia(process.env.PRIVATE_KEY as Hex);
+  const wallet = createSignerSepolia(process.env.PRIVATE_KEY as Hex);
 
   const body: SettleRequest = await req.json();
 
