@@ -10,7 +10,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
 
   return function paymentMiddleware(
     amount: Money,
-    config: PaymentMiddlewareConfig
+    config: PaymentMiddlewareConfig = {}
   ) {
     const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } = config;
 
