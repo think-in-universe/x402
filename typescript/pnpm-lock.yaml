@@ -18,6 +18,28 @@ importers:
         specifier: ^5.8.3
         version: 5.8.3
 
+  examples/clients/script:
+    dependencies:
+      axios:
+        specifier: ^1.7.9
+        version: 1.8.4
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
+      viem:
+        specifier: ^2.23.1
+        version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
+      x402-axios:
+        specifier: workspace:*
+        version: link:../../../packages/x402-axios
+    devDependencies:
+      tsx:
+        specifier: ^4.7.0
+        version: 4.19.3
+      typescript:
+        specifier: ^5.3.0
+        version: 5.8.3
+
   examples/facilitator:
     dependencies:
       express:
@@ -27,9 +49,6 @@ importers:
         specifier: workspace:*
         version: link:../../packages/x402
     devDependencies:
-      tsup:
-        specifier: ^7.2.0
-        version: 7.3.0(postcss@8.5.3)(typescript@5.8.3)
       tsx:
         specifier: ^4.7.0
         version: 4.19.3
@@ -37,7 +56,7 @@ importers:
         specifier: ^5.3.0
         version: 5.8.3
 
-  examples/server/express:
+  examples/servers/express:
     dependencies:
       express:
         specifier: ^4.18.2
@@ -73,6 +92,37 @@ importers:
       viem:
         specifier: ^2.23.1
         version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
+      zod:
+        specifier: ^3.24.2
+        version: 3.24.2
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.4
+        version: 22.14.0
+      prettier:
+        specifier: 3.5.2
+        version: 3.5.2
+      tsx:
+        specifier: ^4.19.2
+        version: 4.19.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.8.3
+      vite-tsconfig-paths:
+        specifier: ^5.1.4
+        version: 5.1.4(typescript@5.8.3)(vite@6.2.5(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1))
+      vitest:
+        specifier: ^3.0.5
+        version: 3.1.1(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
+
+  packages/x402-axios:
+    dependencies:
+      viem:
+        specifier: ^2.23.1
+        version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
+      x402:
+        specifier: workspace:*
+        version: link:../x402
       zod:
         specifier: ^3.24.2
         version: 3.24.2
@@ -807,6 +857,10 @@ packages:
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
+
+  dotenv@16.4.7:
+    resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
+    engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -2190,6 +2244,8 @@ snapshots:
   dir-glob@3.0.1:
     dependencies:
       path-type: 4.0.0
+
+  dotenv@16.4.7: {}
 
   dunder-proto@1.0.1:
     dependencies:
