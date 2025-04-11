@@ -2,7 +2,7 @@ name: Run Unit Tests
 on: [pull_request]
 
 jobs:
-  test-agentkit-typescript:
+  test-x402-typescript:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,7 +21,7 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: ./typescript
 
-      - name: Install and test AgentKit.js
+      - name: Install and Test
         working-directory: ./typescript
         run: |
           pnpm install --frozen-lockfile
