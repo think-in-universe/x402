@@ -1,20 +1,19 @@
-import { PaymentRequirementsSchema, PaymentRequirements } from "x402/types";
-import { verify } from "x402/facilitator";
-import { evm } from "x402/shared";
+import { PaymentRequirementsSchema, PaymentRequirements } from "../../../../typescript/packages/x402/src/types/verify";
+import { verify } from "../../../../typescript/packages/x402/src/facilitator";
+import { createClientSepolia } from "../../../../typescript/packages/x402/src/types/shared/evm/wallet";
 
 type VerifyRequest = {
   payload: string;
   details: PaymentRequirements;
 };
 
-const client = evm.wallet.createClientSepolia();
+const client = createClientSepolia();
 
 export async function POST(req: Request) {
   const body: VerifyRequest = await req.json();
 
   const paymentRequirements = PaymentRequirementsSchema.parse(body.details);
 
-  // @ts-expect-error infinite instantiation
   const valid = await verify(client, body.payload, paymentRequirements);
 
   return Response.json(valid);
