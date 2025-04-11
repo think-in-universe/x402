@@ -4,10 +4,10 @@ import { ConnectedClient, SignerWallet } from "../types/shared/evm";
 import { PaymentRequirements, SettleResponse, VerifyResponse } from "../types/verify";
 import { Chain, Transport, Account } from "viem";
 
-
 /**
  * Verifies a payment payload against the required payment details regardless of the scheme
  * this function wraps all verify functions for each specific scheme
+ *
  * @param client - The public client used for blockchain interactions
  * @param payload - The signed payment payload containing transfer parameters and signature
  * @param paymentRequirements - The payment requirements that the payload must satisfy
@@ -22,7 +22,10 @@ export async function verify<
   payload: string,
   paymentRequirements: PaymentRequirements,
 ): Promise<VerifyResponse> {
-  if (paymentRequirements.scheme == "exact" && SupportedEVMNetworks.includes(paymentRequirements.network)) {
+  if (
+    paymentRequirements.scheme == "exact" &&
+    SupportedEVMNetworks.includes(paymentRequirements.network)
+  ) {
     const payment = decodePayment(payload);
     const valid = await verifyExact(client, payment, paymentRequirements);
     return valid;
@@ -36,6 +39,7 @@ export async function verify<
 /**
  * Settles a payment payload against the required payment details regardless of the scheme
  * this function wraps all settle functions for each specific scheme
+ *
  * @param client - The signer wallet used for blockchain interactions
  * @param payload - The signed payment payload containing transfer parameters and signature
  * @param paymentRequirements - The payment requirements that the payload must satisfy
@@ -48,7 +52,10 @@ export async function settle<transport extends Transport, chain extends Chain>(
 ): Promise<SettleResponse> {
   const payment = decodePayment(payload);
 
-  if (paymentRequirements.scheme == "exact" && SupportedEVMNetworks.includes(paymentRequirements.network)) {
+  if (
+    paymentRequirements.scheme == "exact" &&
+    SupportedEVMNetworks.includes(paymentRequirements.network)
+  ) {
     return settleExact(client, payment, paymentRequirements);
   }
 
