@@ -42,9 +42,6 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         extra: undefined,
       };
 
-      console.log("Payment middleware checking request:", req.originalUrl);
-      console.log("Payment details:", paymentRequirements);
-
       const payment = req.header("X-PAYMENT");
       const userAgent = req.header("User-Agent") || "";
       const acceptHeader = req.header("Accept") || "";
@@ -52,7 +49,6 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         acceptHeader.includes("text/html") && userAgent.includes("Mozilla");
 
       if (!payment) {
-        console.log("No payment header found, returning 402");
         if (isWebBrowser) {
           const html =
             customPaywallHtml ||
@@ -73,21 +69,17 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       try {
         const response = await verify(payment, paymentRequirements);
         if (!response.isValid) {
-          console.log("Invalid payment:", response.invalidReason);
           return res.status(402).json({
             error: response.invalidReason,
             paymentRequirements: toJsonSafe(paymentRequirements),
           });
         }
       } catch (error) {
-        console.log("Error during payment verification:", error);
         return res.status(402).json({
           error,
           paymentRequirements: toJsonSafe(paymentRequirements),
         });
       }
-
-      console.log("Payment verified, proceeding to next middleware or route handler");
 
       type EndArgs =
         | [cb?: () => void]
@@ -107,11 +99,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
 
       try {
         const settleResponse = await settle(payment, paymentRequirements);
-        console.log("Settlement response:", settleResponse);
         const responseHeader = settleResponseHeader(settleResponse);
         res.setHeader("X-PAYMENT-RESPONSE", responseHeader);
       } catch (error) {
-        console.log("Settlement failed:", error);
         // If settlement fails and the response hasn't been sent yet, return an error
         if (!res.headersSent) {
           return res.status(402).json({
