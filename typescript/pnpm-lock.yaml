@@ -39,6 +39,12 @@ importers:
       eslint:
         specifier: ^9.24.0
         version: 9.24.0
+      eslint-plugin-jsdoc:
+        specifier: ^50.6.9
+        version: 50.6.9(eslint@9.24.0)
+      eslint-plugin-prettier:
+        specifier: ^5.2.6
+        version: 5.2.6(eslint@9.24.0)(prettier@3.5.2)
       prettier:
         specifier: 3.5.2
         version: 3.5.2
@@ -64,6 +70,21 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/x402-fetch
     devDependencies:
+      '@eslint/js':
+        specifier: ^9.24.0
+        version: 9.24.0
+      eslint:
+        specifier: ^9.24.0
+        version: 9.24.0
+      eslint-plugin-jsdoc:
+        specifier: ^50.6.9
+        version: 50.6.9(eslint@9.24.0)
+      eslint-plugin-prettier:
+        specifier: ^5.2.6
+        version: 5.2.6(eslint@9.24.0)(prettier@3.5.2)
+      prettier:
+        specifier: 3.5.2
+        version: 3.5.2
       tsx:
         specifier: ^4.7.0
         version: 4.19.3
@@ -89,6 +110,12 @@ importers:
       eslint:
         specifier: ^9.24.0
         version: 9.24.0
+      eslint-plugin-jsdoc:
+        specifier: ^50.6.9
+        version: 50.6.9(eslint@9.24.0)
+      eslint-plugin-prettier:
+        specifier: ^5.2.6
+        version: 5.2.6(eslint@9.24.0)(prettier@3.5.2)
       prettier:
         specifier: 3.5.2
         version: 3.5.2
@@ -120,6 +147,12 @@ importers:
       eslint:
         specifier: ^9.24.0
         version: 9.24.0
+      eslint-plugin-jsdoc:
+        specifier: ^50.6.9
+        version: 50.6.9(eslint@9.24.0)
+      eslint-plugin-prettier:
+        specifier: ^5.2.6
+        version: 5.2.6(eslint@9.24.0)(prettier@3.5.2)
       prettier:
         specifier: 3.5.2
         version: 3.5.2
@@ -151,6 +184,21 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/x402-hono
     devDependencies:
+      '@eslint/js':
+        specifier: ^9.24.0
+        version: 9.24.0
+      eslint:
+        specifier: ^9.24.0
+        version: 9.24.0
+      eslint-plugin-jsdoc:
+        specifier: ^50.6.9
+        version: 50.6.9(eslint@9.24.0)
+      eslint-plugin-prettier:
+        specifier: ^5.2.6
+        version: 5.2.6(eslint@9.24.0)(prettier@3.5.2)
+      prettier:
+        specifier: 3.5.2
+        version: 3.5.2
       tsup:
         specifier: ^7.2.0
         version: 7.3.0(postcss@8.5.3)(typescript@5.8.3)
@@ -308,9 +356,21 @@ importers:
         specifier: ^3.24.2
         version: 3.24.2
     devDependencies:
+      '@eslint/js':
+        specifier: ^9.24.0
+        version: 9.24.0
       '@types/node':
         specifier: ^22.13.4
         version: 22.14.0
+      eslint:
+        specifier: ^9.24.0
+        version: 9.24.0
+      eslint-plugin-jsdoc:
+        specifier: ^50.6.9
+        version: 50.6.9(eslint@9.24.0)
+      eslint-plugin-prettier:
+        specifier: ^5.2.6
+        version: 5.2.6(eslint@9.24.0)(prettier@3.5.2)
       prettier:
         specifier: 3.5.2
         version: 3.5.2
@@ -339,9 +399,21 @@ importers:
         specifier: ^3.24.2
         version: 3.24.2
     devDependencies:
+      '@eslint/js':
+        specifier: ^9.24.0
+        version: 9.24.0
       '@types/node':
         specifier: ^22.13.4
         version: 22.14.0
+      eslint:
+        specifier: ^9.24.0
+        version: 9.24.0
+      eslint-plugin-jsdoc:
+        specifier: ^50.6.9
+        version: 50.6.9(eslint@9.24.0)
+      eslint-plugin-prettier:
+        specifier: ^5.2.6
+        version: 5.2.6(eslint@9.24.0)(prettier@3.5.2)
       prettier:
         specifier: 3.5.2
         version: 3.5.2
