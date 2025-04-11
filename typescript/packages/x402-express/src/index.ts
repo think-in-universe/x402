@@ -5,7 +5,7 @@ import { getUsdcAddressForChain } from "x402/shared/evm";
 import { Money, Resource, GlobalConfig, PaymentMiddlewareConfig, moneySchema, PaymentRequirements, settleResponseHeader } from "x402/types"
 
 /**
- * Configures an Express middleware for handling 402 Payment Required responses.
+ * Enables APIs to be paid for using the x402 payment protocol.
  * 
  * This middleware:
  * 1. Validates payment headers and requirements
