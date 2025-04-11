@@ -3,19 +3,22 @@ import { getNetworkId } from "../../../shared";
 import { getVersion } from "../../../shared/evm";
 import { authorizationTypes, config, SignerWallet } from "../../../types/shared/evm";
 import { ExactEvmPayloadAuthorization, PaymentRequirements } from "../../../types/verify";
+import { getRandomValues } from "crypto";
+
 /**
  * Signs an EIP-3009 authorization for USDC transfer
+ *
  * @param walletClient - The wallet client that will sign the authorization
- * @param params - The authorization parameters
+ * @param params - The authorization parameters containing transfer details
  * @param params.from - The address tokens will be transferred from
  * @param params.to - The address tokens will be transferred to
  * @param params.value - The amount of USDC tokens to transfer (in base units)
  * @param params.validAfter - Unix timestamp after which the authorization becomes valid
  * @param params.validBefore - Unix timestamp before which the authorization is valid
  * @param params.nonce - Random 32-byte nonce to prevent replay attacks
- * @param params.chainId - The chain ID where the USDC contract exists
- * @param params.version - The USDC contract version
- * @param params.usdcAddress - The address of the USDC contract
+ * @param paymentRequirements - The payment requirements containing asset and network information
+ * @param paymentRequirements.asset - The address of the USDC contract
+ * @param paymentRequirements.network - The network where the USDC contract exists
  * @returns The signature for the authorization
  */
 export async function signAuthorization<transport extends Transport, chain extends Chain>(
@@ -54,6 +57,11 @@ export async function signAuthorization<transport extends Transport, chain exten
   };
 }
 
+/**
+ * Generates a random 32-byte nonce for use in authorization signatures
+ *
+ * @returns A random 32-byte nonce as a hex string
+ */
 export function createNonce(): Hex {
-  return toHex(crypto.getRandomValues(new Uint8Array(32)));
+  return toHex(getRandomValues(new Uint8Array(32)));
 }

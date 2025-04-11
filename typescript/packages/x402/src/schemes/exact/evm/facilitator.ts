@@ -1,23 +1,36 @@
 import { Account, Address, Chain, Hex, Transport, verifyTypedData } from "viem";
 import { getNetworkId } from "../../../shared";
 import { getUsdcAddressForChain, getUSDCBalance, getVersion } from "../../../shared/evm";
-import { usdcABI as abi, authorizationTypes, config, ConnectedClient, SignerWallet } from "../../../types/shared/evm";
-import { PaymentPayload, PaymentRequirements, SettleResponse, VerifyResponse } from "../../../types/verify";
+import {
+  usdcABI as abi,
+  authorizationTypes,
+  config,
+  ConnectedClient,
+  SignerWallet,
+} from "../../../types/shared/evm";
+import {
+  PaymentPayload,
+  PaymentRequirements,
+  SettleResponse,
+  VerifyResponse,
+} from "../../../types/verify";
 import { SCHEME } from "../../exact";
 
 /**
  * Verifies a payment payload against the required payment details
- * @param client - The public client used for blockchain interactions
- * @param payload - The signed payment payload containing transfer parameters and signature
- * @param paymentRequirements - The payment requirements that the payload must satisfy
- * @returns A ValidPaymentRequest indicating if the payment is valid and any invalidation reason
- * @remarks This function performs several verification steps:
+ *
+ * This function performs several verification steps:
  * - Verifies protocol version compatibility
  * - Validates the permit signature
  * - Confirms USDC contract address is correct for the chain
  * - Checks permit deadline is sufficiently in the future
  * - Verifies client has sufficient USDC balance
  * - Ensures payment amount meets required minimum
+ *
+ * @param client - The public client used for blockchain interactions
+ * @param payload - The signed payment payload containing transfer parameters and signature
+ * @param paymentRequirements - The payment requirements that the payload must satisfy
+ * @returns A ValidPaymentRequest indicating if the payment is valid and any invalidation reason
  */
 export async function verify<
   transport extends Transport,
@@ -56,8 +69,8 @@ export async function verify<
     chainId = getNetworkId(payload.network);
     usdcName = config[chainId.toString()].usdcName;
     usdcAddress = getUsdcAddressForChain(chainId);
-    version = await getVersion(client)
-  } catch (e) {
+    version = await getVersion(client);
+  } catch {
     return {
       isValid: false,
       invalidReason: `invalid_network`,
@@ -90,29 +103,31 @@ export async function verify<
   if (!recoveredAddress) {
     return {
       isValid: false,
-      invalidReason: "invalid_scheme" //"Invalid permit signature",
+      invalidReason: "invalid_scheme", //"Invalid permit signature",
     };
   }
   // Verify usdc address is correct for the chain
   if (paymentRequirements.asset !== usdcAddress) {
     return {
       isValid: false,
-      invalidReason: "invalid_scheme" //"Invalid usdc address",
+      invalidReason: "invalid_scheme", //"Invalid usdc address",
     };
   }
   // Verify deadline is not yet expired
   // Pad 3 block to account for round tripping
-  if (BigInt(payload.payload.authorization.validBefore) < BigInt(Math.floor(Date.now() / 1000) + 6)) {
+  if (
+    BigInt(payload.payload.authorization.validBefore) < BigInt(Math.floor(Date.now() / 1000) + 6)
+  ) {
     return {
       isValid: false,
-      invalidReason: "invalid_scheme" //"Deadline on permit isn't far enough in the future",
+      invalidReason: "invalid_scheme", //"Deadline on permit isn't far enough in the future",
     };
   }
   // Verify deadline is not yet valid
   if (BigInt(payload.payload.authorization.validAfter) > BigInt(Math.floor(Date.now() / 1000))) {
     return {
       isValid: false,
-      invalidReason: "invalid_scheme" //"Deadline on permit is in the future",
+      invalidReason: "invalid_scheme", //"Deadline on permit is in the future",
     };
   }
   // Verify client has enough funds to cover paymentRequirements.maxAmountRequired
@@ -120,14 +135,14 @@ export async function verify<
   if (balance < BigInt(paymentRequirements.maxAmountRequired)) {
     return {
       isValid: false,
-      invalidReason: "insufficient_funds" //"Client does not have enough funds",
+      invalidReason: "insufficient_funds", //"Client does not have enough funds",
     };
   }
   // Verify value in payload is enough to cover paymentRequirements.maxAmountRequired
   if (BigInt(payload.payload.authorization.value) < BigInt(paymentRequirements.maxAmountRequired)) {
     return {
       isValid: false,
-      invalidReason: "invalid_scheme" //"Value in payload is not enough to cover paymentRequirements.maxAmountRequired",
+      invalidReason: "invalid_scheme", //"Value in payload is not enough to cover paymentRequirements.maxAmountRequired",
     };
   }
   return {
@@ -138,12 +153,14 @@ export async function verify<
 
 /**
  * Settles a payment by executing a USDC transferWithAuthorization transaction
+ *
+ * This function executes the actual USDC transfer using the signed authorization from the user.
+ * The facilitator wallet submits the transaction but does not need to hold or transfer any tokens itself.
+ *
  * @param wallet - The facilitator wallet that will submit the transaction
  * @param payload - The signed payment payload containing the transfer parameters and signature
  * @param paymentRequirements - The original payment details that were used to create the payload
  * @returns A PaymentExecutionResponse containing the transaction status and hash
- * @remarks This function executes the actual USDC transfer using the signed authorization from the user.
- * The facilitator wallet submits the transaction but does not need to hold or transfer any tokens itself.
  */
 export async function settle<transport extends Transport, chain extends Chain>(
   wallet: SignerWallet<chain, transport>,
@@ -158,7 +175,7 @@ export async function settle<transport extends Transport, chain extends Chain>(
       success: false,
       network: payload.network,
       transaction: "",
-      errorReason: "invalid_scheme" //`Payment is no longer valid: ${valid.invalidReason}`,
+      errorReason: "invalid_scheme", //`Payment is no longer valid: ${valid.invalidReason}`,
     };
   }
 
@@ -175,7 +192,7 @@ export async function settle<transport extends Transport, chain extends Chain>(
       payload.payload.authorization.nonce as Hex,
       payload.payload.signature as Hex,
     ],
-    chain: wallet.chain as any,
+    chain: wallet.chain as Chain,
   });
 
   const receipt = await wallet.waitForTransactionReceipt({ hash: tx });
@@ -183,7 +200,7 @@ export async function settle<transport extends Transport, chain extends Chain>(
   if (receipt.status !== "success") {
     return {
       success: false,
-      errorReason: 'invalid_scheme', //`Transaction failed`,
+      errorReason: "invalid_scheme", //`Transaction failed`,
       transaction: tx,
       network: payload.network,
     };
