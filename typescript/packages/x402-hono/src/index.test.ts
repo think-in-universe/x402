@@ -44,13 +44,10 @@ describe('configurePaymentMiddleware()', () => {
   }
 
   beforeEach(() => {
-    // Reset mocks
     vi.resetAllMocks()
 
-    // Setup Hono app
     app = new Hono()
 
-    // Setup context mock
     mockContext = {
       req: {
         url: '/test',
@@ -66,21 +63,14 @@ describe('configurePaymentMiddleware()', () => {
       html: vi.fn()
     } as unknown as Context
 
-    // Setup next function mock
     mockNext = vi.fn()
-
-    // Setup facilitator mocks
     mockVerify = vi.fn() as any
     mockSettle = vi.fn() as any
     (useFacilitator as any).mockReturnValue({
       verify: mockVerify,
       settle: mockSettle
     });
-
-    // Setup paywall HTML mock
     (getPaywallHtml as any).mockReturnValue('<html>Paywall</html>');
-
-    // Create middleware
     middleware = configurePaymentMiddleware(globalConfig)(1.0, middlewareConfig)
   })
 
