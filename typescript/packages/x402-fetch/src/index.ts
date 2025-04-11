@@ -3,7 +3,7 @@ import { evm } from "x402/types";
 import { createPaymentHeader } from "x402/client";
 
 /**
- * Creates a wrapped fetch function that automatically handles 402 Payment Required responses.
+ * Enables the payment of APIs using the x402 payment protocol.
  * 
  * This function wraps the native fetch API to automatically handle 402 Payment Required responses
  * by creating and sending a payment header. It will:
