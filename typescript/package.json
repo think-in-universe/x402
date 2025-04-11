@@ -6,6 +6,10 @@
   "main": "index.js",
   "scripts": {
     "build": "turbo run build",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "lint:check": "turbo run lint:check",
+    "format:check": "turbo run format:check",
     "test": "turbo run test"
   },
   "keywords": [],
