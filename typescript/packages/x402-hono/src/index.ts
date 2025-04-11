@@ -45,8 +45,6 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         outputSchema: outputSchema || undefined,
         extra: undefined,
       };
-      console.log("Payment middleware checking request:", c.req.url);
-      console.log("Payment details:", paymentRequirements);
 
       const payment = c.req.header("X-PAYMENT");
       const userAgent = c.req.header("User-Agent") || "";
@@ -54,7 +52,6 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       const isWebBrowser = acceptHeader.includes("text/html") && userAgent.includes("Mozilla");
 
       if (!payment) {
-        console.log("No payment header found, returning 402");
         // If it's a browser request, serve the paywall page
         if (isWebBrowser) {
           const html =
@@ -81,7 +78,6 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
 
       const response = await verify(payment, paymentRequirements);
       if (!response.isValid) {
-        console.log("Invalid payment:", response.invalidReason);
         return c.json(
           {
             error: response.invalidReason,
@@ -91,7 +87,6 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         );
       }
 
-      console.log("Payment verified, proceeding");
       await next();
 
       try {
@@ -100,7 +95,6 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
 
         c.header("X-PAYMENT-RESPONSE", responseHeader);
       } catch (error) {
-        console.log("Settlement failed:", error);
 
         c.res = c.json(
           {
