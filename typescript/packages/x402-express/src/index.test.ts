@@ -69,24 +69,24 @@ describe('configurePaymentMiddleware()', () => {
     // Setup facilitator mocks
     mockVerify = vi.fn() as any
     mockSettle = vi.fn() as any
-      ; (useFacilitator as any).mockReturnValue({
-        verify: mockVerify,
-        settle: mockSettle
-      })
+    (useFacilitator as any).mockReturnValue({
+      verify: mockVerify,
+      settle: mockSettle
+    });
 
-      // Setup paywall HTML mock
-      ; (getPaywallHtml as any).mockReturnValue('<html>Paywall</html>')
+    // Setup paywall HTML mock
+    (getPaywallHtml as any).mockReturnValue('<html>Paywall</html>');
 
     // Create middleware
     middleware = configurePaymentMiddleware(globalConfig)(1.0, middlewareConfig)
   })
 
   it('should return 402 with payment requirements when no payment header is present', async () => {
-    ; (mockReq.header as any).mockReturnValue(undefined)
-      ; (mockReq.header as any).mockImplementation((name: string) => {
-        if (name === 'Accept') return 'application/json'
-        return undefined
-      })
+    (mockReq.header as any).mockReturnValue(undefined);
+    (mockReq.header as any).mockImplementation((name: string) => {
+      if (name === 'Accept') return 'application/json'
+      return undefined
+    });
 
     await middleware(mockReq as Request, mockRes as Response, mockNext)
 
@@ -100,11 +100,11 @@ describe('configurePaymentMiddleware()', () => {
   })
 
   it('should return HTML paywall for browser requests', async () => {
-    ; (mockReq.header as any).mockImplementation((name: string) => {
+    (mockReq.header as any).mockImplementation((name: string) => {
       if (name === 'Accept') return 'text/html'
       if (name === 'User-Agent') return 'Mozilla/5.0'
       return undefined
-    })
+    });
 
     await middleware(mockReq as Request, mockRes as Response, mockNext)
 
@@ -113,13 +113,13 @@ describe('configurePaymentMiddleware()', () => {
   })
 
   it('should verify payment and proceed if valid', async () => {
-    const validPayment = 'valid-payment-header'
-      ; (mockReq.header as any).mockImplementation((name: string) => {
-        if (name === 'X-PAYMENT') return validPayment
-        return undefined
-      })
+    const validPayment = 'valid-payment-header';
+    (mockReq.header as any).mockImplementation((name: string) => {
+      if (name === 'X-PAYMENT') return validPayment
+      return undefined
+    });
 
-      ; (mockVerify as any).mockResolvedValue({ isValid: true })
+    (mockVerify as any).mockResolvedValue({ isValid: true });
 
     await middleware(mockReq as Request, mockRes as Response, mockNext)
 
@@ -128,16 +128,16 @@ describe('configurePaymentMiddleware()', () => {
   })
 
   it('should return 402 if payment verification fails', async () => {
-    const invalidPayment = 'invalid-payment-header'
-      ; (mockReq.header as any).mockImplementation((name: string) => {
-        if (name === 'X-PAYMENT') return invalidPayment
-        return undefined
-      })
+    const invalidPayment = 'invalid-payment-header';
+    (mockReq.header as any).mockImplementation((name: string) => {
+      if (name === 'X-PAYMENT') return invalidPayment
+      return undefined
+    });
 
-      ; (mockVerify as any).mockResolvedValue({
-        isValid: false,
-        invalidReason: 'insufficient_funds'
-      })
+    (mockVerify as any).mockResolvedValue({
+      isValid: false,
+      invalidReason: 'insufficient_funds'
+    });
 
     await middleware(mockReq as Request, mockRes as Response, mockNext)
 
@@ -151,24 +151,24 @@ describe('configurePaymentMiddleware()', () => {
   })
 
   it('should handle settlement after response', async () => {
-    const validPayment = 'valid-payment-header'
-      ; (mockReq.header as any).mockImplementation((name: string) => {
-        if (name === 'X-PAYMENT') return validPayment
-        return undefined
-      })
+    const validPayment = 'valid-payment-header';
+    (mockReq.header as any).mockImplementation((name: string) => {
+      if (name === 'X-PAYMENT') return validPayment
+      return undefined
+    });
 
-      ; (mockVerify as any).mockResolvedValue({ isValid: true })
-      ; (mockSettle as any).mockResolvedValue({
-        success: true,
-        transaction: '0x123',
-        network: 'base-sepolia'
-      })
+    (mockVerify as any).mockResolvedValue({ isValid: true });
+    (mockSettle as any).mockResolvedValue({
+      success: true,
+      transaction: '0x123',
+      network: 'base-sepolia'
+    });
 
     // Mock response.end to capture arguments
-    const endArgs: any[] = []
-      ; (mockRes.end as any).mockImplementation((...args: any[]) => {
-        endArgs.push(args)
-      })
+    const endArgs: any[] = [];
+    (mockRes.end as any).mockImplementation((...args: any[]) => {
+      endArgs.push(args)
+    });
 
     await middleware(mockReq as Request, mockRes as Response, mockNext)
 
@@ -180,14 +180,14 @@ describe('configurePaymentMiddleware()', () => {
   })
 
   it('should handle settlement failure before response is sent', async () => {
-    const validPayment = 'valid-payment-header'
-      ; (mockReq.header as any).mockImplementation((name: string) => {
-        if (name === 'X-PAYMENT') return validPayment
-        return undefined
-      })
+    const validPayment = 'valid-payment-header';
+    (mockReq.header as any).mockImplementation((name: string) => {
+      if (name === 'X-PAYMENT') return validPayment
+      return undefined
+    });
 
-      ; (mockVerify as any).mockResolvedValue({ isValid: true })
-      ; (mockSettle as any).mockRejectedValue(new Error('Settlement failed'))
+    (mockVerify as any).mockResolvedValue({ isValid: true });
+    (mockSettle as any).mockRejectedValue(new Error('Settlement failed'));
 
     await middleware(mockReq as Request, mockRes as Response, mockNext)
 
@@ -201,21 +201,21 @@ describe('configurePaymentMiddleware()', () => {
   })
 
   it('should handle settlement failure after response is sent', async () => {
-    const validPayment = 'valid-payment-header'
-      ; (mockReq.header as any).mockImplementation((name: string) => {
-        if (name === 'X-PAYMENT') return validPayment
-        return undefined
-      })
+    const validPayment = 'valid-payment-header';
+    (mockReq.header as any).mockImplementation((name: string) => {
+      if (name === 'X-PAYMENT') return validPayment
+      return undefined
+    });
 
-      ; (mockVerify as any).mockResolvedValue({ isValid: true })
-      ; (mockSettle as any).mockRejectedValue(new Error('Settlement failed'))
-    mockRes.headersSent = true
+    (mockVerify as any).mockResolvedValue({ isValid: true });
+    (mockSettle as any).mockRejectedValue(new Error('Settlement failed'));
+    mockRes.headersSent = true;
 
     // Mock response.end to capture arguments
-    const endArgs: any[] = []
-      ; (mockRes.end as any).mockImplementation((...args: any[]) => {
-        endArgs.push(args)
-      })
+    const endArgs: any[] = [];
+    (mockRes.end as any).mockImplementation((...args: any[]) => {
+      endArgs.push(args)
+    });
 
     await middleware(mockReq as Request, mockRes as Response, mockNext)
 

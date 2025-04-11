@@ -84,9 +84,9 @@ describe('withPaymentInterceptor()', () => {
     const paymentHeader = 'payment-header-value'
     const successResponse = { data: 'success' } as AxiosResponse
 
-    const { createPaymentHeader } = await import('x402/client')
-      ; (createPaymentHeader as any).mockResolvedValue(paymentHeader)
-      ; (mockAxiosClient.request as any).mockResolvedValue(successResponse)
+    const { createPaymentHeader } = await import('x402/client');
+    (createPaymentHeader as any).mockResolvedValue(paymentHeader);
+    (mockAxiosClient.request as any).mockResolvedValue(successResponse);
 
     const error = createAxiosError(402, createErrorConfig(), { paymentRequirements: validPaymentRequirements })
 
@@ -115,9 +115,9 @@ describe('withPaymentInterceptor()', () => {
   })
 
   it('should reject if payment header creation fails', async () => {
-    const paymentError = new Error('Payment failed')
-    const { createPaymentHeader } = await import('x402/client')
-      ; (createPaymentHeader as any).mockRejectedValue(paymentError)
+    const paymentError = new Error('Payment failed');
+    const { createPaymentHeader } = await import('x402/client');
+    (createPaymentHeader as any).mockRejectedValue(paymentError);
 
     const error = createAxiosError(402, createErrorConfig(), { paymentRequirements: validPaymentRequirements })
     await expect(interceptor(error)).rejects.toBe(paymentError)
