@@ -46,8 +46,8 @@ describe('fetchWithPayment()', () => {
   })
 
   it('should return the original response for non-402 status codes', async () => {
-    const successResponse = createResponse(200, { data: 'success' })
-      ; (mockFetch as any).mockResolvedValue(successResponse)
+    const successResponse = createResponse(200, { data: 'success' });
+    (mockFetch as any).mockResolvedValue(successResponse);
 
     const result = await wrappedFetch('https://api.example.com')
 
@@ -59,11 +59,11 @@ describe('fetchWithPayment()', () => {
     const paymentHeader = 'payment-header-value'
     const successResponse = createResponse(200, { data: 'success' })
 
-    const { createPaymentHeader } = await import('x402/client')
-      ; (createPaymentHeader as any).mockResolvedValue(paymentHeader)
-      ; (mockFetch as any)
-        .mockResolvedValueOnce(createResponse(402, { paymentRequirements: validPaymentRequirements }))
-        .mockResolvedValueOnce(successResponse)
+    const { createPaymentHeader } = await import('x402/client');
+    (createPaymentHeader as any).mockResolvedValue(paymentHeader);
+    (mockFetch as any)
+      .mockResolvedValueOnce(createResponse(402, { paymentRequirements: validPaymentRequirements }))
+      .mockResolvedValueOnce(successResponse);
 
     const result = await wrappedFetch('https://api.example.com', {
       method: 'GET',
@@ -85,8 +85,8 @@ describe('fetchWithPayment()', () => {
   })
 
   it('should not retry if already retried', async () => {
-    const errorResponse = createResponse(402, { paymentRequirements: validPaymentRequirements })
-      ; (mockFetch as any).mockResolvedValue(errorResponse)
+    const errorResponse = createResponse(402, { paymentRequirements: validPaymentRequirements });
+    (mockFetch as any).mockResolvedValue(errorResponse);
 
     await expect(wrappedFetch('https://api.example.com', {
       __is402Retry: true
@@ -94,8 +94,8 @@ describe('fetchWithPayment()', () => {
   })
 
   it('should reject if missing request config', async () => {
-    const errorResponse = createResponse(402, { paymentRequirements: validPaymentRequirements })
-      ; (mockFetch as any).mockResolvedValue(errorResponse)
+    const errorResponse = createResponse(402, { paymentRequirements: validPaymentRequirements });
+    (mockFetch as any).mockResolvedValue(errorResponse);
 
     await expect(wrappedFetch('https://api.example.com')).rejects.toThrow('Missing fetch request configuration')
   })
@@ -106,8 +106,8 @@ describe('fetchWithPayment()', () => {
         ...validPaymentRequirements,
         maxAmountRequired: '200000' // 0.2 USDC, which exceeds our default max of 0.1 USDC
       }
-    })
-      ; (mockFetch as any).mockResolvedValue(errorResponse)
+    });
+    (mockFetch as any).mockResolvedValue(errorResponse);
 
     await expect(wrappedFetch('https://api.example.com', {
       method: 'GET'
@@ -115,10 +115,10 @@ describe('fetchWithPayment()', () => {
   })
 
   it('should reject if payment header creation fails', async () => {
-    const paymentError = new Error('Payment failed')
-    const { createPaymentHeader } = await import('x402/client')
-      ; (createPaymentHeader as any).mockRejectedValue(paymentError)
-      ; (mockFetch as any).mockResolvedValue(createResponse(402, { paymentRequirements: validPaymentRequirements }))
+    const paymentError = new Error('Payment failed');
+    const { createPaymentHeader } = await import('x402/client');
+    (createPaymentHeader as any).mockRejectedValue(paymentError);
+    (mockFetch as any).mockResolvedValue(createResponse(402, { paymentRequirements: validPaymentRequirements }));
 
     await expect(wrappedFetch('https://api.example.com', {
       method: 'GET'
