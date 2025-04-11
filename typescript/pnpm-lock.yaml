@@ -311,6 +311,9 @@ importers:
 
   packages/x402-axios:
     dependencies:
+      axios:
+        specifier: ^1.7.9
+        version: 1.8.4
       viem:
         specifier: ^2.23.1
         version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
@@ -363,6 +366,9 @@ importers:
 
   packages/x402-express:
     dependencies:
+      express:
+        specifier: ^4.18.2
+        version: 4.21.2
       viem:
         specifier: ^2.23.1
         version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
@@ -467,6 +473,9 @@ importers:
 
   packages/x402-hono:
     dependencies:
+      hono:
+        specifier: ^4.7.1
+        version: 4.7.6
       viem:
         specifier: ^2.23.1
         version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
