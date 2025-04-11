@@ -4,6 +4,38 @@ import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
 import { getUsdcAddressForChain } from "x402/shared/evm";
 import { Money, Resource, GlobalConfig, PaymentMiddlewareConfig, moneySchema, PaymentRequirements, settleResponseHeader } from "x402/types"
 
+/**
+ * Enables APIs to be paid for using the x402 payment protocol.
+ * 
+ * This middleware:
+ * 1. Validates payment headers and requirements
+ * 2. Serves a paywall page for browser requests
+ * 3. Returns JSON payment requirements for API requests
+ * 4. Verifies and settles payments
+ * 5. Sets appropriate response headers
+ * 6. Handles response streaming by intercepting the end() method
+ * 
+ * @param globalConfig - Global configuration for the payment middleware
+ * @param globalConfig.facilitatorUrl - URL of the payment facilitator service
+ * @param globalConfig.address - Address to receive payments
+ * @param globalConfig.network - Network identifier (e.g. 'base-sepolia')
+ * 
+ * @returns A function that creates an Express middleware handler for a specific payment amount
+ * 
+ * @example
+ * ```typescript
+ * const middleware = configurePaymentMiddleware({
+ *   facilitatorUrl: 'https://facilitator.example.com',
+ *   address: '0x123...',
+ *   network: 'base-sepolia'
+ * })(1.0, {
+ *   description: 'Access to premium content',
+ *   mimeType: 'application/json'
+ * });
+ * 
+ * app.use('/premium', middleware);
+ * ```
+ */
 export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
   const { facilitatorUrl, address, network } = globalConfig;
   const { settle, verify } = useFacilitator(facilitatorUrl);
@@ -42,9 +74,6 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         extra: undefined,
       };
 
-      console.log("Payment middleware checking request:", req.originalUrl);
-      console.log("Payment details:", paymentRequirements);
-
       const payment = req.header("X-PAYMENT");
       const userAgent = req.header("User-Agent") || "";
       const acceptHeader = req.header("Accept") || "";
@@ -52,7 +81,6 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         acceptHeader.includes("text/html") && userAgent.includes("Mozilla");
 
       if (!payment) {
-        console.log("No payment header found, returning 402");
         if (isWebBrowser) {
           const html =
             customPaywallHtml ||
@@ -73,21 +101,17 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       try {
         const response = await verify(payment, paymentRequirements);
         if (!response.isValid) {
-          console.log("Invalid payment:", response.invalidReason);
           return res.status(402).json({
             error: response.invalidReason,
             paymentRequirements: toJsonSafe(paymentRequirements),
           });
         }
       } catch (error) {
-        console.log("Error during payment verification:", error);
         return res.status(402).json({
           error,
           paymentRequirements: toJsonSafe(paymentRequirements),
         });
       }
-
-      console.log("Payment verified, proceeding to next middleware or route handler");
 
       type EndArgs =
         | [cb?: () => void]
@@ -107,11 +131,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
 
       try {
         const settleResponse = await settle(payment, paymentRequirements);
-        console.log("Settlement response:", settleResponse);
         const responseHeader = settleResponseHeader(settleResponse);
         res.setHeader("X-PAYMENT-RESPONSE", responseHeader);
       } catch (error) {
-        console.log("Settlement failed:", error);
         // If settlement fails and the response hasn't been sent yet, return an error
         if (!res.headersSent) {
           return res.status(402).json({
