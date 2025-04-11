@@ -13,7 +13,7 @@ import {
 import { useFacilitator } from "x402/verify";
 
 /**
- * Configures a Hono middleware for handling 402 Payment Required responses.
+ * Enables APIs to be paid for using the x402 payment protocol.
  * 
  * This middleware:
  * 1. Validates payment headers and requirements
