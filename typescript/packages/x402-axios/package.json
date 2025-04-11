@@ -21,14 +21,14 @@
   "repository": "https://github.com/coinbase/x402",
   "description": "x402 Payment Protocol",
   "devDependencies": {
-    "@types/node": "^22.13.4",
     "@eslint/js": "^9.24.0",
-    "eslint": "^9.24.0",
-    "eslint-plugin-jsdoc": "^50.6.9",
-    "eslint-plugin-prettier": "^5.2.6",
+    "@types/node": "^22.13.4",
     "@typescript-eslint/eslint-plugin": "^8.29.1",
     "@typescript-eslint/parser": "^8.29.1",
+    "eslint": "^9.24.0",
     "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jsdoc": "^50.6.9",
+    "eslint-plugin-prettier": "^5.2.6",
     "prettier": "3.5.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
@@ -36,6 +36,7 @@
     "vitest": "^3.0.5"
   },
   "dependencies": {
+    "axios": "^1.7.9",
     "viem": "^2.23.1",
     "x402": "workspace:*",
     "zod": "^3.24.2"
