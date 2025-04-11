@@ -69,5 +69,4 @@ export default [
       "jsdoc/require-hyphen-before-param-description": ["error", "always"],
     },
   },
-  js.configs.recommended,
 ];

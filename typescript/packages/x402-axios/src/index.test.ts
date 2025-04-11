@@ -17,7 +17,8 @@ vi.mock("x402/client", () => ({
 describe("withPaymentInterceptor()", () => {
   let mockAxiosClient: AxiosInstance;
   let mockWalletClient: typeof evm.SignerWallet;
-  let interceptor: () => Promise<AxiosResponse>;
+  let interceptor: (error: AxiosError) => Promise<AxiosResponse>;
+
   const validPaymentRequirements: PaymentRequirements = {
     scheme: "exact",
     network: "base-sepolia",
