@@ -91,7 +91,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
             customPaywallHtml ||
             getPaywallHtml({
               amount: parsedAmount.data,
-              paymentRequirements: toJsonSafe(paymentRequirements),
+              paymentRequirements: toJsonSafe(paymentRequirements) as Parameters<
+                typeof getPaywallHtml
+              >[0]["paymentRequirements"],
               currentUrl: req.originalUrl,
               testnet: network === "base-sepolia",
             });
