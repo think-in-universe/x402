@@ -4,7 +4,7 @@ import { evm } from "x402/types";
 import { createPaymentHeader } from "x402/client";
 
 /**
- * Adds a payment interceptor to an Axios instance to automatically handle 402 Payment Required responses.
+ * Enables the payment of APIs using the x402 payment protocol.
  * 
  * When a request receives a 402 response:
  * 1. Extracts payment requirements from the response
