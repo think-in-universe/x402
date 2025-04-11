@@ -4,6 +4,38 @@ import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
 import { getUsdcAddressForChain } from "x402/shared/evm";
 import { Money, Resource, GlobalConfig, PaymentMiddlewareConfig, moneySchema, PaymentRequirements, settleResponseHeader } from "x402/types"
 
+/**
+ * Configures an Express middleware for handling 402 Payment Required responses.
+ * 
+ * This middleware:
+ * 1. Validates payment headers and requirements
+ * 2. Serves a paywall page for browser requests
+ * 3. Returns JSON payment requirements for API requests
+ * 4. Verifies and settles payments
+ * 5. Sets appropriate response headers
+ * 6. Handles response streaming by intercepting the end() method
+ * 
+ * @param globalConfig - Global configuration for the payment middleware
+ * @param globalConfig.facilitatorUrl - URL of the payment facilitator service
+ * @param globalConfig.address - Address to receive payments
+ * @param globalConfig.network - Network identifier (e.g. 'base-sepolia')
+ * 
+ * @returns A function that creates an Express middleware handler for a specific payment amount
+ * 
+ * @example
+ * ```typescript
+ * const middleware = configurePaymentMiddleware({
+ *   facilitatorUrl: 'https://facilitator.example.com',
+ *   address: '0x123...',
+ *   network: 'base-sepolia'
+ * })(1.0, {
+ *   description: 'Access to premium content',
+ *   mimeType: 'application/json'
+ * });
+ * 
+ * app.use('/premium', middleware);
+ * ```
+ */
 export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
   const { facilitatorUrl, address, network } = globalConfig;
   const { settle, verify } = useFacilitator(facilitatorUrl);
