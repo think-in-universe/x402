@@ -2,11 +2,19 @@ import { Request, Response, NextFunction } from "express";
 import { useFacilitator } from "x402/verify";
 import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
 import { getUsdcAddressForChain } from "x402/shared/evm";
-import { Money, Resource, GlobalConfig, PaymentMiddlewareConfig, moneySchema, PaymentRequirements, settleResponseHeader } from "x402/types"
+import {
+  Money,
+  Resource,
+  GlobalConfig,
+  PaymentMiddlewareConfig,
+  moneySchema,
+  PaymentRequirements,
+  settleResponseHeader,
+} from "x402/types";
 
 /**
  * Enables APIs to be paid for using the x402 payment protocol.
- * 
+ *
  * This middleware:
  * 1. Validates payment headers and requirements
  * 2. Serves a paywall page for browser requests
@@ -14,14 +22,14 @@ import { Money, Resource, GlobalConfig, PaymentMiddlewareConfig, moneySchema, Pa
  * 4. Verifies and settles payments
  * 5. Sets appropriate response headers
  * 6. Handles response streaming by intercepting the end() method
- * 
+ *
  * @param globalConfig - Global configuration for the payment middleware
  * @param globalConfig.facilitatorUrl - URL of the payment facilitator service
  * @param globalConfig.address - Address to receive payments
  * @param globalConfig.network - Network identifier (e.g. 'base-sepolia')
- * 
+ *
  * @returns A function that creates an Express middleware handler for a specific payment amount
- * 
+ *
  * @example
  * ```typescript
  * const middleware = configurePaymentMiddleware({
@@ -32,7 +40,7 @@ import { Money, Resource, GlobalConfig, PaymentMiddlewareConfig, moneySchema, Pa
  *   description: 'Access to premium content',
  *   mimeType: 'application/json'
  * });
- * 
+ *
  * app.use('/premium', middleware);
  * ```
  */
@@ -40,16 +48,14 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
   const { facilitatorUrl, address, network } = globalConfig;
   const { settle, verify } = useFacilitator(facilitatorUrl);
 
-  return function paymentMiddleware(
-    amount: Money,
-    config: PaymentMiddlewareConfig = {}
-  ) {
-    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } = config;
+  return function paymentMiddleware(amount: Money, config: PaymentMiddlewareConfig = {}) {
+    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
+      config;
 
     const parsedAmount = moneySchema.safeParse(amount);
     if (!parsedAmount.success) {
       throw new Error(
-        `Invalid amount (amount: ${amount}). Must be in the form "$3.10", 0.10, "0.001", ${parsedAmount.error}`
+        `Invalid amount (amount: ${amount}). Must be in the form "$3.10", 0.10, "0.001", ${parsedAmount.error}`,
       );
     }
     const parsedUsdAmount = parsedAmount.data;
@@ -77,8 +83,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       const payment = req.header("X-PAYMENT");
       const userAgent = req.header("User-Agent") || "";
       const acceptHeader = req.header("Accept") || "";
-      const isWebBrowser =
-        acceptHeader.includes("text/html") && userAgent.includes("Mozilla");
+      const isWebBrowser = acceptHeader.includes("text/html") && userAgent.includes("Mozilla");
 
       if (!payment) {
         if (isWebBrowser) {
@@ -86,7 +91,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
             customPaywallHtml ||
             getPaywallHtml({
               amount: parsedAmount.data,
-              paymentRequirements: toJsonSafe(paymentRequirements),
+              paymentRequirements: toJsonSafe(paymentRequirements) as Parameters<
+                typeof getPaywallHtml
+              >[0]["paymentRequirements"],
               currentUrl: req.originalUrl,
               testnet: network === "base-sepolia",
             });
@@ -113,10 +120,12 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         });
       }
 
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       type EndArgs =
         | [cb?: () => void]
         | [chunk: any, cb?: () => void]
         | [chunk: any, encoding: BufferEncoding, cb?: () => void];
+      /* eslint-enable @typescript-eslint/no-explicit-any */
 
       const originalEnd = res.end.bind(res);
       let endArgs: EndArgs | null = null;
@@ -141,13 +150,12 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
             paymentRequirements: toJsonSafe(paymentRequirements),
           });
         }
-      }
-      finally {
+      } finally {
         res.end = originalEnd;
         if (endArgs) {
           originalEnd(...(endArgs as Parameters<typeof res.end>));
         }
       }
     };
-  }
+  };
 }

@@ -14,21 +14,21 @@ import { useFacilitator } from "x402/verify";
 
 /**
  * Enables APIs to be paid for using the x402 payment protocol.
- * 
+ *
  * This middleware:
  * 1. Validates payment headers and requirements
  * 2. Serves a paywall page for browser requests
  * 3. Returns JSON payment requirements for API requests
  * 4. Verifies and settles payments
  * 5. Sets appropriate response headers
- * 
+ *
  * @param globalConfig - Global configuration for the payment middleware
  * @param globalConfig.facilitatorUrl - URL of the payment facilitator service
  * @param globalConfig.address - Address to receive payments
  * @param globalConfig.network - Network identifier (e.g. 'base-sepolia')
- * 
+ *
  * @returns A function that creates a Hono middleware handler for a specific payment amount
- * 
+ *
  * @example
  * ```typescript
  * const middleware = configurePaymentMiddleware({
@@ -39,7 +39,7 @@ import { useFacilitator } from "x402/verify";
  *   description: 'Access to premium content',
  *   mimeType: 'application/json'
  * });
- * 
+ *
  * app.use('/premium', middleware);
  * ```
  */
@@ -47,8 +47,12 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
   const { facilitatorUrl, address, network } = globalConfig;
   const { verify, settle } = useFacilitator(facilitatorUrl);
 
-  return function paymentMiddleware(amount: Money, config: PaymentMiddlewareConfig = {}): MiddlewareHandler {
-    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } = config;
+  return function paymentMiddleware(
+    amount: Money,
+    config: PaymentMiddlewareConfig = {},
+  ): MiddlewareHandler {
+    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
+      config;
 
     const parsedAmount = moneySchema.safeParse(amount);
     if (!parsedAmount.success) {
@@ -58,7 +62,6 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
     }
     const parsedUsdAmount = parsedAmount.data;
     const maxAmountRequired = parsedUsdAmount * 10 ** 6; // TODO: Determine asset, get decimals, and convert to atomic amount
-
 
     return async (c, next) => {
       let resourceUrl = resource || (c.req.url as Resource);
@@ -88,9 +91,11 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
             customPaywallHtml ||
             getPaywallHtml({
               amount: parsedAmount.data,
-              paymentRequirements: toJsonSafe(paymentRequirements),
+              paymentRequirements: toJsonSafe(paymentRequirements) as Parameters<
+                typeof getPaywallHtml
+              >[0]["paymentRequirements"],
               currentUrl: c.req.url,
-              testnet: network == 'base-sepolia',
+              testnet: network == "base-sepolia",
             });
 
           return c.html(html, 402);
@@ -125,7 +130,6 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
 
         c.header("X-PAYMENT-RESPONSE", responseHeader);
       } catch (error) {
-
         c.res = c.json(
           {
             error,
@@ -135,5 +139,5 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         );
       }
     };
-  }
+  };
 }

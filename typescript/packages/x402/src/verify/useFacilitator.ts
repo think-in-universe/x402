@@ -2,8 +2,24 @@ import { PaymentRequirements, SettleResponse, VerifyResponse } from "../types/ve
 import axios from "axios";
 import { toJsonSafe } from "../shared";
 
+/**
+ * Creates a facilitator client for interacting with the X402 payment facilitator service
+ *
+ * @param url - The base URL of the facilitator service (defaults to "https://x402.org/facilitator")
+ * @returns An object containing verify and settle functions for interacting with the facilitator
+ */
 export function useFacilitator(url: string = "https://x402.org/facilitator") {
-  async function verify(payload: string, paymentRequirements: PaymentRequirements): Promise<VerifyResponse> {
+  /**
+   * Verifies a payment payload with the facilitator service
+   *
+   * @param payload - The payment payload to verify
+   * @param paymentRequirements - The payment requirements to verify against
+   * @returns A promise that resolves to the verification response
+   */
+  async function verify(
+    payload: string,
+    paymentRequirements: PaymentRequirements,
+  ): Promise<VerifyResponse> {
     const res = await axios.post(`${url}/verify`, {
       payload: payload,
       details: toJsonSafe(paymentRequirements),
@@ -16,7 +32,17 @@ export function useFacilitator(url: string = "https://x402.org/facilitator") {
     return res.data as VerifyResponse;
   }
 
-  async function settle(payload: string, paymentRequirements: PaymentRequirements): Promise<SettleResponse> {
+  /**
+   * Settles a payment with the facilitator service
+   *
+   * @param payload - The payment payload to settle
+   * @param paymentRequirements - The payment requirements for the settlement
+   * @returns A promise that resolves to the settlement response
+   */
+  async function settle(
+    payload: string,
+    paymentRequirements: PaymentRequirements,
+  ): Promise<SettleResponse> {
     const res = await axios.post(`${url}/settle`, {
       payload: payload,
       details: toJsonSafe(paymentRequirements),

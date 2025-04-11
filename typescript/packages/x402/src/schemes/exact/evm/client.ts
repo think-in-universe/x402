@@ -4,7 +4,17 @@ import { PaymentPayload, PaymentRequirements, UnsignedPaymentPayload } from "../
 import { createNonce, signAuthorization } from "./sign";
 import { encodePayment } from "./utils/paymentUtils";
 
-export function preparePaymentHeader(from: Address, paymentRequirements: PaymentRequirements): UnsignedPaymentPayload {
+/**
+ * Prepares an unsigned payment header with the given sender address and payment requirements.
+ *
+ * @param from - The sender's address from which the payment will be made
+ * @param paymentRequirements - The payment requirements containing scheme and network information
+ * @returns An unsigned payment payload containing authorization details
+ */
+export function preparePaymentHeader(
+  from: Address,
+  paymentRequirements: PaymentRequirements,
+): UnsignedPaymentPayload {
   const nonce = createNonce();
 
   const validAfter = BigInt(
@@ -32,7 +42,19 @@ export function preparePaymentHeader(from: Address, paymentRequirements: Payment
   };
 }
 
-export async function signPaymentHeader<transport extends Transport, chain extends Chain>(client: SignerWallet<chain, transport>, paymentRequirements: PaymentRequirements, unsignedPaymentHeader: UnsignedPaymentPayload): Promise<PaymentPayload> {
+/**
+ * Signs a payment header using the provided client and payment requirements.
+ *
+ * @param client - The signer wallet instance used to sign the payment header
+ * @param paymentRequirements - The payment requirements containing scheme and network information
+ * @param unsignedPaymentHeader - The unsigned payment payload to be signed
+ * @returns A promise that resolves to the signed payment payload
+ */
+export async function signPaymentHeader<transport extends Transport, chain extends Chain>(
+  client: SignerWallet<chain, transport>,
+  paymentRequirements: PaymentRequirements,
+  unsignedPaymentHeader: UnsignedPaymentPayload,
+): Promise<PaymentPayload> {
   const { signature } = await signAuthorization(
     client,
     unsignedPaymentHeader.payload.authorization,
@@ -43,11 +65,18 @@ export async function signPaymentHeader<transport extends Transport, chain exten
     ...unsignedPaymentHeader,
     payload: {
       ...unsignedPaymentHeader.payload,
-      signature
-    }
-  }
+      signature,
+    },
+  };
 }
 
+/**
+ * Creates a complete payment payload by preparing and signing a payment header.
+ *
+ * @param client - The signer wallet instance used to create and sign the payment
+ * @param paymentRequirements - The payment requirements containing scheme and network information
+ * @returns A promise that resolves to the complete signed payment payload
+ */
 export async function createPayment<transport extends Transport, chain extends Chain>(
   client: SignerWallet<chain, transport>,
   paymentRequirements: PaymentRequirements,
@@ -57,6 +86,13 @@ export async function createPayment<transport extends Transport, chain extends C
   return signPaymentHeader(client, paymentRequirements, unsignedPaymentHeader);
 }
 
+/**
+ * Creates and encodes a payment header for the given client and payment requirements.
+ *
+ * @param client - The signer wallet instance used to create the payment header
+ * @param paymentRequirements - The payment requirements containing scheme and network information
+ * @returns A promise that resolves to the encoded payment header string
+ */
 export async function createPaymentHeader(
   client: SignerWallet,
   paymentRequirements: PaymentRequirements,

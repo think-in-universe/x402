@@ -1,10 +1,22 @@
+import { PaymentRequirements } from "../types/verify";
+
 interface PaywallOptions {
   amount: number;
-  paymentRequirements: any;
+  paymentRequirements: PaymentRequirements;
   currentUrl: string;
   testnet: boolean;
 }
 
+/**
+ * Generates an HTML paywall page that allows users to pay for content access
+ *
+ * @param options - The options for generating the paywall
+ * @param options.amount - The amount to be paid in USD
+ * @param options.paymentRequirements - The payment requirements for the content
+ * @param options.currentUrl - The URL of the content being accessed
+ * @param options.testnet - Whether to use testnet or mainnet
+ * @returns An HTML string containing the paywall page
+ */
 export function getPaywallHtml({
   amount,
   testnet,
@@ -465,8 +477,9 @@ export function getPaywallHtml({
         });
 
         if (balance === 0n) {
-          statusDiv.textContent = \`Your USDC balance is 0. Please make sure you have USDC tokens on ${testnet ? "Base Sepolia" : "Base"
-    }.\`;
+          statusDiv.textContent = \`Your USDC balance is 0. Please make sure you have USDC tokens on ${
+            testnet ? "Base Sepolia" : "Base"
+          }.\`;
           return;
         }
 
