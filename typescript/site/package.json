@@ -10,12 +10,12 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
-    "hono": "^4.0.0",
     "next": "^15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "viem": "^2.23.1",
-    "x402": "*"
+    "viem": "^2.26.2",
+    "x402": "workspace:*",
+    "x402-next": "workspace:*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
