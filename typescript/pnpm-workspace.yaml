@@ -1,5 +1,4 @@
 packages:
   - "packages/x402*"
   - "examples/facilitator"
-  - "examples/servers/*"
-  - "examples/clients/*"
+  - "examples/**/*"
