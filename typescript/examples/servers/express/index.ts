@@ -1,7 +1,6 @@
 import { config } from "dotenv";
 import express from "express";
-import { configurePaymentMiddleware } from "x402-express";
-import { Network, Resource } from "x402/types";
+import { configurePaymentMiddleware, Resource, Network } from "x402-express";
 
 config();
 
