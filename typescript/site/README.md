@@ -22,7 +22,6 @@ x402 is an open protocol for internet-native payments built around the HTTP 402 
 ### Prerequisites
 
 - Node.js 18+
-- npm
 - A wallet with testnet USDC (for testing)
 
 ### Installation
