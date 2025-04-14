@@ -14,7 +14,6 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "viem": "^2.26.2",
-    "x402": "workspace:*",
     "x402-next": "workspace:*"
   },
   "devDependencies": {

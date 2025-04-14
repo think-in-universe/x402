@@ -1,6 +1,5 @@
 import { Address } from "viem";
-import { createPaymentMiddleware } from "x402-next";
-import { Network, Resource } from "x402/types";
+import { createPaymentMiddleware, Network, Resource } from "x402-next";
 
 export const middleware = createPaymentMiddleware({
   facilitatorUrl: process.env.NEXT_PUBLIC_FACILITATOR_URL as Resource,
