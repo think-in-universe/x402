@@ -375,17 +375,17 @@ importers:
       vite:
         specifier: ^6.2.6
 <<<<<<< HEAD
+<<<<<<< HEAD
         version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
 =======
         version: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
 >>>>>>> fb8f217 (fix: added explicite vite dev dependency, as its a peer dep of vitest)
+=======
+        version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
+>>>>>>> 2a92b1f (fix: regenerate lock)
       vite-tsconfig-paths:
         specifier: ^5.1.4
-<<<<<<< HEAD
         version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1))
-=======
-        version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1))
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
       vitest:
         specifier: ^3.0.5
         version: 3.1.1(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
@@ -441,17 +441,17 @@ importers:
       vite:
         specifier: ^6.2.6
 <<<<<<< HEAD
+<<<<<<< HEAD
         version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
 =======
         version: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
 >>>>>>> fb8f217 (fix: added explicite vite dev dependency, as its a peer dep of vitest)
+=======
+        version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
+>>>>>>> 2a92b1f (fix: regenerate lock)
       vite-tsconfig-paths:
         specifier: ^5.1.4
-<<<<<<< HEAD
         version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1))
-=======
-        version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1))
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
       vitest:
         specifier: ^3.0.5
         version: 3.1.1(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
@@ -510,17 +510,17 @@ importers:
       vite:
         specifier: ^6.2.6
 <<<<<<< HEAD
+<<<<<<< HEAD
         version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
 =======
         version: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
 >>>>>>> fb8f217 (fix: added explicite vite dev dependency, as its a peer dep of vitest)
+=======
+        version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
+>>>>>>> 2a92b1f (fix: regenerate lock)
       vite-tsconfig-paths:
         specifier: ^5.1.4
-<<<<<<< HEAD
         version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1))
-=======
-        version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1))
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
       vitest:
         specifier: ^3.0.5
         version: 3.1.1(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
@@ -573,17 +573,17 @@ importers:
       vite:
         specifier: ^6.2.6
 <<<<<<< HEAD
+<<<<<<< HEAD
         version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
 =======
         version: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
 >>>>>>> fb8f217 (fix: added explicite vite dev dependency, as its a peer dep of vitest)
+=======
+        version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
+>>>>>>> 2a92b1f (fix: regenerate lock)
       vite-tsconfig-paths:
         specifier: ^5.1.4
-<<<<<<< HEAD
         version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1))
-=======
-        version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1))
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
       vitest:
         specifier: ^3.0.5
         version: 3.1.1(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
@@ -639,17 +639,17 @@ importers:
       vite:
         specifier: ^6.2.6
 <<<<<<< HEAD
+<<<<<<< HEAD
         version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
 =======
         version: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
 >>>>>>> fb8f217 (fix: added explicite vite dev dependency, as its a peer dep of vitest)
+=======
+        version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
+>>>>>>> 2a92b1f (fix: regenerate lock)
       vite-tsconfig-paths:
         specifier: ^5.1.4
-<<<<<<< HEAD
         version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1))
-=======
-        version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1))
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
       vitest:
         specifier: ^3.0.5
         version: 3.1.1(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
@@ -711,6 +711,61 @@ importers:
       vitest:
         specifier: ^3.0.5
         version: 3.1.1(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
+
+  site:
+    dependencies:
+      '@heroicons/react':
+        specifier: ^2.2.0
+        version: 2.2.0(react@19.1.0)
+      next:
+        specifier: ^15.2.4
+        version: 15.3.0(@babel/core@7.26.10)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react:
+        specifier: ^19.0.0
+        version: 19.1.0
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.1.0(react@19.1.0)
+      viem:
+        specifier: ^2.26.2
+        version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
+      x402:
+        specifier: workspace:*
+        version: link:../packages/x402
+      x402-next:
+        specifier: workspace:*
+        version: link:../packages/x402-next
+    devDependencies:
+      '@eslint/eslintrc':
+        specifier: ^3
+        version: 3.3.1
+      '@svgr/webpack':
+        specifier: ^8.1.0
+        version: 8.1.0(typescript@5.8.3)
+      '@types/node':
+        specifier: ^20
+        version: 20.17.30
+      '@types/react':
+        specifier: ^19
+        version: 19.1.1
+      '@types/react-dom':
+        specifier: ^19
+        version: 19.1.2(@types/react@19.1.1)
+      eslint:
+        specifier: ^9
+        version: 9.24.0(jiti@1.21.7)
+      eslint-config-next:
+        specifier: 15.1.7
+        version: 15.1.7(eslint@9.24.0(jiti@1.21.7))(typescript@5.8.3)
+      postcss:
+        specifier: ^8
+        version: 8.5.3
+      tailwindcss:
+        specifier: ^3.4.1
+        version: 3.4.17
+      typescript:
+        specifier: ^5
+        version: 5.8.3
 
 packages:
 
@@ -6294,21 +6349,13 @@ snapshots:
       chai: 5.2.0
       tinyrainbow: 2.0.0
 
-<<<<<<< HEAD
   '@vitest/mocker@3.1.1(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1))':
-=======
-  '@vitest/mocker@3.1.1(vite@6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1))':
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
     dependencies:
       '@vitest/spy': 3.1.1
       estree-walker: 3.0.3
       magic-string: 0.30.17
     optionalDependencies:
-<<<<<<< HEAD
       vite: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
-=======
-      vite: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
 
   '@vitest/pretty-format@3.1.1':
     dependencies:
@@ -8929,11 +8976,7 @@ snapshots:
       debug: 4.4.0
       es-module-lexer: 1.6.0
       pathe: 2.0.3
-<<<<<<< HEAD
       vite: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
-=======
-      vite: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -8948,30 +8991,18 @@ snapshots:
       - tsx
       - yaml
 
-<<<<<<< HEAD
   vite-tsconfig-paths@5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)):
-=======
-  vite-tsconfig-paths@5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)):
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
     dependencies:
       debug: 4.4.0
       globrex: 0.1.2
       tsconfck: 3.1.5(typescript@5.8.3)
     optionalDependencies:
-<<<<<<< HEAD
       vite: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
-=======
-      vite: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-<<<<<<< HEAD
   vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1):
-=======
-  vite@6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1):
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
     dependencies:
       esbuild: 0.25.2
       postcss: 8.5.3
@@ -8986,11 +9017,7 @@ snapshots:
   vitest@3.1.1(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1):
     dependencies:
       '@vitest/expect': 3.1.1
-<<<<<<< HEAD
       '@vitest/mocker': 3.1.1(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1))
-=======
-      '@vitest/mocker': 3.1.1(vite@6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1))
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
       '@vitest/pretty-format': 3.1.1
       '@vitest/runner': 3.1.1
       '@vitest/snapshot': 3.1.1
@@ -9006,13 +9033,8 @@ snapshots:
       tinyexec: 0.3.2
       tinypool: 1.0.2
       tinyrainbow: 2.0.0
-<<<<<<< HEAD
       vite: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
       vite-node: 3.1.1(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
-=======
-      vite: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
-      vite-node: 3.1.1(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> 37e57ab (fix: added explicite vite dev dependency, as its a peer dep of vitest)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.14.0
