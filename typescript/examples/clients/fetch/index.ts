@@ -20,9 +20,9 @@ const client = createWalletClient({
   chain: baseSepolia,
 }).extend(publicActions);
 
-const fetch2 = fetchWithPayment(fetch, client);
+const fetchWithPay = fetchWithPayment(fetch, client);
 
-fetch2(`${RESOURCE_SERVER_URL}${ENDPOINT_PATH}`, {
+fetchWithPay(`${RESOURCE_SERVER_URL}${ENDPOINT_PATH}`, {
   method: "GET",
 })
   .then(async response => {
