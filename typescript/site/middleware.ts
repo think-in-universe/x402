@@ -7,18 +7,16 @@ export const middleware = createPaymentMiddleware({
   address: process.env.RESOURCE_WALLET_ADDRESS as Address,
   network: process.env.NETWORK as Network,
   routes: {
-    '/protected': {
-      amount: '$0.01',
+    "/protected": {
+      amount: "$0.01",
       config: {
-        description: 'Access to protected content'
-      }
+        description: "Access to protected content",
+      },
     },
-  }
+  },
 });
 
 // Configure which paths the middleware should run on
 export const config = {
-  matcher: [
-    '/protected/:path*',
-  ]
+  matcher: ["/protected/:path*"],
 };
