@@ -13,26 +13,28 @@ This is an example Hono server that demonstrates how to use the `x402-hono` midd
 1. First, start the local facilitator server:
 ```bash
 cd examples/facilitator
-npm install
-npm dev
+pnpm install
+pnpm dev
 ```
 The facilitator will run on http://localhost:3002
 
-2. In a new terminal, install and start the example server:
-```bash
-cd examples/servers/hono
-npm install
-npm dev
-```
-The server will run on http://localhost:3001
 
-3. Create a `.env` file in the root directory with the following variables:
+2. Create a `.env` file in the root directory with the following variables:
 ```env
 FACILITATOR_URL=http://localhost:3002
 ADDRESS=0xYourEthereumAddress
 NETWORK=base # or "base-sepolia" for testnet
 PORT=3001
 ```
+
+3. In a new terminal, install and start the example server:
+```bash
+cd examples/servers/hono
+pnpm install
+pnpm dev
+```
+The server will run on http://localhost:3001
+
 
 ## Testing the Server
 
