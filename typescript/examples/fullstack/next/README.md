@@ -1,36 +1,129 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# x402-next Example App
 
-## Getting Started
+This is a Next.js application that demonstrates how to use the `x402-next` middleware to implement paywall functionality in your Next.js routes.
 
-First, run the development server:
+## Prerequisites
 
+- Node.js (v18 or higher)
+- A valid x402 facilitator URL (you can run the example facilitator at `examples/facilitator`)
+- A valid Ethereum address for receiving payments
+
+## Setup
+
+1. First, start the local facilitator server:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+cd ../facilitator
+pnpm install
 pnpm dev
-# or
-bun dev
+```
+The facilitator will run on http://localhost:3002
+
+2. In a new terminal, install and start the Next.js example:
+```bash
+pnpm install
+ppnpm dev
+```
+The Next.js app will run on http://localhost:3000
+
+3. Create a `.env.local` file in the Next.js project directory with the following variables:
+```env
+NEXT_PUBLIC_FACILITATOR_URL=http://localhost:3002
+RESOURCE_WALLET_ADDRESS=0xYourEthereumAddress
+NETWORK=base # or "base-sepolia" for testnet
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Example Routes
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The app includes protected routes that require payment to access:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Protected Page Route
+The `/protected` route requires a payment of $0.01 to access. The route is protected using the x402-next middleware:
 
-## Learn More
+```typescript
+// middleware.ts
+import { createPaymentMiddleware, Network } from "x402-next";
 
-To learn more about Next.js, take a look at the following resources:
+export const middleware = createPaymentMiddleware({
+  facilitatorUrl: process.env.NEXT_PUBLIC_FACILITATOR_URL,
+  address: process.env.RESOURCE_WALLET_ADDRESS,
+  network: process.env.NETWORK as Network,
+  routes: {
+    "/protected": {
+      amount: "$0.01",
+      config: {
+        description: "Access to protected content"
+      }
+    },
+  }
+});
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+// Configure which paths the middleware should run on
+export const config = {
+  matcher: [
+    "/protected/:path*",
+  ]
+};
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Response Format
 
-## Deploy on Vercel
+### Payment Required (402)
+```json
+{
+  "error": "X-PAYMENT header is required",
+  "paymentRequirements": {
+    "scheme": "exact",
+    "network": "base",
+    "maxAmountRequired": "1000",
+    "resource": "http://localhost:3000/protected",
+    "description": "Access to protected content",
+    "mimeType": "",
+    "payTo": "0xYourAddress",
+    "maxTimeoutSeconds": 60,
+    "asset": "0x...",
+    "outputSchema": null,
+    "extra": null
+  }
+}
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Successful Response
+```ts
+// Headers
+{
+  "X-PAYMENT-RESPONSE": "..." // Encoded response object
+}
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Extending the Example
+
+To add more protected routes, update the middleware configuration:
+
+```typescript
+export const middleware = createPaymentMiddleware({
+  facilitatorUrl: process.env.NEXT_PUBLIC_FACILITATOR_URL,
+  address: process.env.RESOURCE_WALLET_ADDRESS,
+  network: process.env.NETWORK as Network,
+  routes: {
+    "/protected": {
+      amount: "$0.01",
+      config: {
+        description: "Access to protected content"
+      }
+    },
+    "/api/premium": {
+      amount: "$0.10",
+      config: {
+        description: "Premium API access"
+      }
+    }
+  }
+});
+
+export const config = {
+  matcher: [
+    "/protected/:path*",
+    "/api/premium/:path*"
+  ]
+};
+```

@@ -185,3 +185,5 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     return response;
   };
 }
+
+export type { Resource, Network, GlobalConfig, PaymentMiddlewareConfig, Money } from "x402/types";
