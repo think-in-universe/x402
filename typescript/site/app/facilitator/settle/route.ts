@@ -7,7 +7,12 @@ type SettleRequest = {
   details: PaymentRequirements;
 };
 
-
+/**
+ * Handles POST requests to settle x402 payments
+ *
+ * @param req - The incoming request containing payment settlement details
+ * @returns A JSON response with the settlement result
+ */
 export async function POST(req: Request) {
   const wallet = evm.createSignerSepolia(process.env.PRIVATE_KEY as Hex);
 
@@ -20,6 +25,11 @@ export async function POST(req: Request) {
   return Response.json(response);
 }
 
+/**
+ * Provides API documentation for the settle endpoint
+ *
+ * @returns A JSON response describing the settle endpoint and its expected request body
+ */
 export async function GET() {
   return Response.json({
     endpoint: "/settle",
