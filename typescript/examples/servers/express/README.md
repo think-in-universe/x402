@@ -30,7 +30,7 @@ The server will run on http://localhost:3001
 ```env
 FACILITATOR_URL=http://localhost:3002
 ADDRESS=0xYourEthereumAddress
-NETWORK=base # or 'base-sepolia' for testnet
+NETWORK=base # or "base-sepolia" for testnet
 PORT=3001
 ```
 

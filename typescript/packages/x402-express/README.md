@@ -11,20 +11,20 @@ npm install x402 x402-express
 ## Quick Start
 
 ```typescript
-import express from 'express';
-import { configurePaymentMiddleware, Network } from 'x402-express';
+import express from "express";
+import { configurePaymentMiddleware, Network } from "x402-express";
 
 const app = express();
 
 // Configure the payment middleware
 const paymentMiddleware = configurePaymentMiddleware({
-  facilitatorUrl: 'https://your-facilitator-url.com',
-  address: '0xYourAddress',
-  network: 'base' as Network, // or 'base-sepolia' for testnet
+  facilitatorUrl: "https://your-facilitator-url.com",
+  address: "0xYourAddress",
+  network: "base" as Network, // or "base-sepolia" for testnet
 });
 
 // Apply the middleware to a route
-app.get('/protected-route', 
+app.get("/protected-route", 
   paymentMiddleware("$0.10", {
     description: "Access to premium content",
     resource: "https://your-api.com/protected-route"
@@ -45,7 +45,7 @@ The `configurePaymentMiddleware` function accepts a global configuration object 
 interface GlobalConfig {
   facilitatorUrl: string;  // URL of the x402 facilitator service
   address: `0x${string}`;  // Your receiving address
-  network: Network;        // 'base' or 'base-sepolia'
+  network: Network;        // "base" or "base-sepolia"
 }
 ```
 
