@@ -374,15 +374,7 @@ importers:
         version: 5.8.3
       vite:
         specifier: ^6.2.6
-<<<<<<< HEAD
-<<<<<<< HEAD
         version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
-=======
-        version: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> fb8f217 (fix: added explicite vite dev dependency, as its a peer dep of vitest)
-=======
-        version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> 2a92b1f (fix: regenerate lock)
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1))
@@ -440,15 +432,7 @@ importers:
         version: 5.8.3
       vite:
         specifier: ^6.2.6
-<<<<<<< HEAD
-<<<<<<< HEAD
         version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
-=======
-        version: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> fb8f217 (fix: added explicite vite dev dependency, as its a peer dep of vitest)
-=======
-        version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> 2a92b1f (fix: regenerate lock)
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1))
@@ -509,15 +493,7 @@ importers:
         version: 5.8.3
       vite:
         specifier: ^6.2.6
-<<<<<<< HEAD
-<<<<<<< HEAD
         version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
-=======
-        version: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> fb8f217 (fix: added explicite vite dev dependency, as its a peer dep of vitest)
-=======
-        version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> 2a92b1f (fix: regenerate lock)
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1))
@@ -572,15 +548,7 @@ importers:
         version: 5.8.3
       vite:
         specifier: ^6.2.6
-<<<<<<< HEAD
-<<<<<<< HEAD
         version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
-=======
-        version: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> fb8f217 (fix: added explicite vite dev dependency, as its a peer dep of vitest)
-=======
-        version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> 2a92b1f (fix: regenerate lock)
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1))
@@ -638,15 +606,7 @@ importers:
         version: 5.8.3
       vite:
         specifier: ^6.2.6
-<<<<<<< HEAD
-<<<<<<< HEAD
         version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
-=======
-        version: 6.2.6(@types/node@22.14.0)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> fb8f217 (fix: added explicite vite dev dependency, as its a peer dep of vitest)
-=======
-        version: 6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1)
->>>>>>> 2a92b1f (fix: regenerate lock)
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.8.3)(vite@6.2.6(@types/node@22.14.0)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.1))
