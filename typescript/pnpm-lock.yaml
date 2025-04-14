@@ -161,9 +161,6 @@ importers:
       express:
         specifier: ^4.18.2
         version: 4.21.2
-      x402:
-        specifier: workspace:*
-        version: link:../../../packages/x402
       x402-express:
         specifier: workspace:*
         version: link:../../../packages/x402-express
