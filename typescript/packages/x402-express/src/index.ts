@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { useFacilitator } from "x402/verify";
 import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
+import { exact } from "x402/schemes";
 import { getUsdcAddressForChain } from "x402/shared/evm";
 import {
   Money,
@@ -10,6 +11,7 @@ import {
   moneySchema,
   PaymentRequirements,
   settleResponseHeader,
+  PaymentPayload,
 } from "x402/types";
 
 /**
@@ -105,8 +107,18 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         });
       }
 
+      let decodedPayment: PaymentPayload;
       try {
-        const response = await verify(payment, paymentRequirements);
+        decodedPayment = exact.evm.decodePayment(payment);
+      } catch (error) {
+        return res.status(402).json({
+          error: error || "Invalid or malformed payment header",
+          paymentRequirements: toJsonSafe(paymentRequirements),
+        });
+      }
+
+      try {
+        const response = await verify(decodedPayment, paymentRequirements);
         if (!response.isValid) {
           return res.status(402).json({
             error: response.invalidReason,
@@ -139,7 +151,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       await next();
 
       try {
-        const settleResponse = await settle(payment, paymentRequirements);
+        const settleResponse = await settle(decodedPayment, paymentRequirements);
         const responseHeader = settleResponseHeader(settleResponse);
         res.setHeader("X-PAYMENT-RESPONSE", responseHeader);
       } catch (error) {

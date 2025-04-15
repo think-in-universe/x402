@@ -53,6 +53,11 @@
       "import": "./dist/esm/shared/evm/index.js",
       "require": "./dist/cjs/shared/evm/index.js"
     },
+    "./schemes": {
+      "types": "./dist/esm/schemes/index.d.ts",
+      "import": "./dist/esm/schemes/index.js",
+      "require": "./dist/cjs/schemes/index.js"
+    },
     "./client": {
       "types": "./dist/esm/client/index.d.ts",
       "import": "./dist/esm/client/index.js",
