@@ -44,13 +44,17 @@ export function fetchWithPayment(
       return response;
     }
 
-    const { paymentRequirements } = (await response.json()) as { paymentRequirements: unknown };
-    const parsed = PaymentRequirementsSchema.parse(paymentRequirements);
-    if (BigInt(parsed.maxAmountRequired) > maxValue) {
+    const { paymentRequirements } = (await response.json()) as { paymentRequirements: unknown[] };
+    const parsedPaymentRequirements = paymentRequirements.map(x => PaymentRequirementsSchema.parse(x));
+
+    // TODO: Improve selection between multiple payment requirements
+    const selectedPaymentRequirements = parsedPaymentRequirements[0];
+
+    if (BigInt(selectedPaymentRequirements.maxAmountRequired) > maxValue) {
       throw new Error("Payment amount exceeds maximum allowed");
     }
 
-    const paymentHeader = await createPaymentHeader(walletClient, parsed);
+    const paymentHeader = await createPaymentHeader(walletClient, selectedPaymentRequirements);
 
     if (!init) {
       throw new Error("Missing fetch request configuration");

@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getPaywallHtml } from "x402/shared";
-import { GlobalConfig, PaymentMiddlewareConfig } from "x402/types";
+import { exact } from "x402/schemes";
+import { GlobalConfig, PaymentMiddlewareConfig, PaymentPayload } from "x402/types";
 import { useFacilitator } from "x402/verify";
 import { configurePaymentMiddleware } from "./index";
 
@@ -41,6 +42,24 @@ describe("configurePaymentMiddleware()", () => {
     outputSchema: { type: "object" },
     resource: "https://api.example.com/resource",
   };
+
+  const validPayment: PaymentPayload = {
+    scheme: "exact",
+    x402Version: 1,
+    network: "base-sepolia",
+    payload: {
+      signature: "0x123",
+      authorization: {
+        from: "0x123",
+        to: "0x456",
+        value: "0x123",
+        validAfter: "0x123",
+        validBefore: "0x123",
+        nonce: "0x123",
+      },
+    },
+  };
+  const encodedValidPayment = exact.evm.encodePayment(validPayment);
 
   beforeEach(() => {
     // Reset mocks
@@ -113,9 +132,8 @@ describe("configurePaymentMiddleware()", () => {
   });
 
   it("should verify payment and proceed if valid", async () => {
-    const validPayment = "valid-payment-header";
     (mockReq.header as ReturnType<typeof vi.fn>).mockImplementation((name: string) => {
-      if (name === "X-PAYMENT") return validPayment;
+      if (name === "X-PAYMENT") return encodedValidPayment;
       return undefined;
     });
 
