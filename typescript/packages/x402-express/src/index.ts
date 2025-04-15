@@ -68,7 +68,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       // Use req.originalUrl as the resource if none is provided
       // TODO: req.originalUrl is not always correct, and can just be the route, i.e. `/route`. Need to consider a better fallback.
       const resourceUrl: Resource = resource || (req.originalUrl as Resource);
-      const paymentRequirements: PaymentRequirements = {
+      const paymentRequirements: PaymentRequirements[] = [{
         scheme: "exact",
         network,
         maxAmountRequired: maxAmountRequired.toString(),
@@ -80,7 +80,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         asset: getUsdcAddressForChain(getNetworkId(network)),
         outputSchema: outputSchema ?? undefined,
         extra: undefined,
-      };
+      }];
 
       const payment = req.header("X-PAYMENT");
       const userAgent = req.header("User-Agent") || "";
@@ -117,8 +117,16 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         });
       }
 
+      const selectedPaymentRequirements = paymentRequirements.find((value) => value.scheme === decodedPayment.scheme && value.network === decodedPayment.network);
+      if (!selectedPaymentRequirements) {
+        return res.status(402).json({
+          error: "Unable to find matching payment requirements",
+          paymentRequirements: toJsonSafe(paymentRequirements),
+        });
+      }
+
       try {
-        const response = await verify(decodedPayment, paymentRequirements);
+        const response = await verify(decodedPayment, selectedPaymentRequirements);
         if (!response.isValid) {
           return res.status(402).json({
             error: response.invalidReason,
@@ -151,7 +159,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       await next();
 
       try {
-        const settleResponse = await settle(decodedPayment, paymentRequirements);
+        const settleResponse = await settle(decodedPayment, selectedPaymentRequirements);
         const responseHeader = settleResponseHeader(settleResponse);
         res.setHeader("X-PAYMENT-RESPONSE", responseHeader);
       } catch (error) {

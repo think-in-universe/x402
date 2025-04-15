@@ -67,7 +67,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
 
     return async (c, next) => {
       let resourceUrl = resource || (c.req.url as Resource);
-      const paymentRequirements: PaymentRequirements = {
+      const paymentRequirements: PaymentRequirements[] = [{
         scheme: "exact",
         network,
         maxAmountRequired: maxAmountRequired.toString(),
@@ -79,7 +79,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         asset: getUsdcAddressForChain(getNetworkId(network)),
         outputSchema: outputSchema || undefined,
         extra: undefined,
-      };
+      }];
 
       const payment = c.req.header("X-PAYMENT");
       const userAgent = c.req.header("User-Agent") || "";
@@ -126,7 +126,18 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         );
       }
 
-      const response = await verify(decodedPayment, paymentRequirements);
+      const selectedPaymentRequirements = paymentRequirements.find((value) => value.scheme === decodedPayment.scheme && value.network === decodedPayment.network);
+      if (!selectedPaymentRequirements) {
+        return c.json(
+          {
+            error: "Unable to find matching payment requirements",
+            paymentRequirements: toJsonSafe(paymentRequirements),
+          },
+          402,
+        );
+      }
+
+      const response = await verify(decodedPayment, selectedPaymentRequirements);
       if (!response.isValid) {
         return c.json(
           {
@@ -140,7 +151,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       await next();
 
       try {
-        const settleResponse = await settle(decodedPayment, paymentRequirements);
+        const settleResponse = await settle(decodedPayment, selectedPaymentRequirements);
         const responseHeader = settleResponseHeader(settleResponse);
 
         c.header("X-PAYMENT-RESPONSE", responseHeader);
