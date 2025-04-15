@@ -1,4 +1,5 @@
 import type { MiddlewareHandler } from "hono";
+import { exact } from "x402/schemes";
 import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
 import { getUsdcAddressForChain } from "x402/shared/evm";
 import {
@@ -6,6 +7,7 @@ import {
   Money,
   moneySchema,
   PaymentMiddlewareConfig,
+  PaymentPayload,
   PaymentRequirements,
   Resource,
   settleResponseHeader,
@@ -111,7 +113,20 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         );
       }
 
-      const response = await verify(payment, paymentRequirements);
+      let decodedPayment: PaymentPayload;
+      try {
+        decodedPayment = exact.evm.decodePayment(payment);
+      } catch (error) {
+        return c.json(
+          {
+            error: error || "Invalid or malformed payment header",
+            paymentRequirements: toJsonSafe(paymentRequirements),
+          },
+          402,
+        );
+      }
+
+      const response = await verify(decodedPayment, paymentRequirements);
       if (!response.isValid) {
         return c.json(
           {
@@ -125,14 +140,14 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       await next();
 
       try {
-        const settleResponse = await settle(payment, paymentRequirements);
+        const settleResponse = await settle(decodedPayment, paymentRequirements);
         const responseHeader = settleResponseHeader(settleResponse);
 
         c.header("X-PAYMENT-RESPONSE", responseHeader);
       } catch (error) {
         c.res = c.json(
           {
-            error,
+            error: error || "Failed to settle payment",
             paymentRequirements: toJsonSafe(paymentRequirements),
           },
           402,

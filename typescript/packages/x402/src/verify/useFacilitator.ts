@@ -1,4 +1,9 @@
-import { PaymentRequirements, SettleResponse, VerifyResponse } from "../types/verify";
+import {
+  PaymentPayload,
+  PaymentRequirements,
+  SettleResponse,
+  VerifyResponse,
+} from "../types/verify";
 import axios from "axios";
 import { toJsonSafe } from "../shared";
 
@@ -17,11 +22,11 @@ export function useFacilitator(url: string = "https://x402.org/facilitator") {
    * @returns A promise that resolves to the verification response
    */
   async function verify(
-    payload: string,
+    payload: PaymentPayload,
     paymentRequirements: PaymentRequirements,
   ): Promise<VerifyResponse> {
     const res = await axios.post(`${url}/verify`, {
-      payload: payload,
+      payload: toJsonSafe(payload),
       details: toJsonSafe(paymentRequirements),
     });
 
@@ -40,11 +45,11 @@ export function useFacilitator(url: string = "https://x402.org/facilitator") {
    * @returns A promise that resolves to the settlement response
    */
   async function settle(
-    payload: string,
+    payload: PaymentPayload,
     paymentRequirements: PaymentRequirements,
   ): Promise<SettleResponse> {
     const res = await axios.post(`${url}/settle`, {
-      payload: payload,
+      payload: toJsonSafe(payload),
       details: toJsonSafe(paymentRequirements),
     });
 

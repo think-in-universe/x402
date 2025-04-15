@@ -1,7 +1,12 @@
-import { verify as verifyExact, settle as settleExact, decodePayment } from "../schemes/exact/evm";
+import { verify as verifyExact, settle as settleExact } from "../schemes/exact/evm";
 import { SupportedEVMNetworks } from "../types/shared";
 import { ConnectedClient, SignerWallet } from "../types/shared/evm";
-import { PaymentRequirements, SettleResponse, VerifyResponse } from "../types/verify";
+import {
+  PaymentPayload,
+  PaymentRequirements,
+  SettleResponse,
+  VerifyResponse,
+} from "../types/verify";
 import { Chain, Transport, Account } from "viem";
 
 /**
@@ -19,15 +24,14 @@ export async function verify<
   account extends Account | undefined,
 >(
   client: ConnectedClient<transport, chain, account>,
-  payload: string,
+  payload: PaymentPayload,
   paymentRequirements: PaymentRequirements,
 ): Promise<VerifyResponse> {
   if (
     paymentRequirements.scheme == "exact" &&
     SupportedEVMNetworks.includes(paymentRequirements.network)
   ) {
-    const payment = decodePayment(payload);
-    const valid = await verifyExact(client, payment, paymentRequirements);
+    const valid = await verifyExact(client, payload, paymentRequirements);
     return valid;
   }
   return {
@@ -47,16 +51,14 @@ export async function verify<
  */
 export async function settle<transport extends Transport, chain extends Chain>(
   client: SignerWallet<chain, transport>,
-  payload: string,
+  payload: PaymentPayload,
   paymentRequirements: PaymentRequirements,
 ): Promise<SettleResponse> {
-  const payment = decodePayment(payload);
-
   if (
     paymentRequirements.scheme == "exact" &&
     SupportedEVMNetworks.includes(paymentRequirements.network)
   ) {
-    return settleExact(client, payment, paymentRequirements);
+    return settleExact(client, payload, paymentRequirements);
   }
 
   return {
