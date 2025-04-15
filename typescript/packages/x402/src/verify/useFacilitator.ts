@@ -17,6 +17,8 @@ import { Resource } from "../types";
 export interface AuthOptions {
   apiKeyId: string;
   apiKeySecret: string;
+  verifyPath: `/${string}`;
+  settlePath: `/${string}`;
 }
 
 /**
@@ -42,7 +44,7 @@ export function useFacilitator(
     paymentRequirements: PaymentRequirements,
   ): Promise<VerifyResponse> {
     const res = await axios.post(
-      `${url}/verify`,
+      `${url}${authOptions?.verifyPath ?? "/verify"}`,
       {
         payload: toJsonSafe(payload),
         details: toJsonSafe(paymentRequirements),
@@ -80,7 +82,7 @@ export function useFacilitator(
     paymentRequirements: PaymentRequirements,
   ): Promise<SettleResponse> {
     const res = await axios.post(
-      `${url}/settle`,
+      `${url}${authOptions?.settlePath ?? "/settle"}`,
       {
         payload: toJsonSafe(payload),
         details: toJsonSafe(paymentRequirements),
