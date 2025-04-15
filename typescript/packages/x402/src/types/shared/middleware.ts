@@ -6,8 +6,12 @@ export type GlobalConfig = {
   facilitatorUrl?: Resource;
   address: Hex;
   network: Network;
-  apiKeyId?: string;
-  apiKeySecret?: string;
+  auth?: {
+    apiKeyId: string;
+    apiKeySecret: string;
+    verifyPath: `/${string}`;
+    settlePath: `/${string}`;
+  };
 };
 
 export type PaymentMiddlewareConfig = {
