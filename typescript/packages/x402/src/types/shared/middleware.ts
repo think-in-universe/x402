@@ -3,9 +3,11 @@ import { Network } from "./network";
 import { Resource } from "./resource";
 
 export type GlobalConfig = {
-  facilitatorUrl?: string;
+  facilitatorUrl?: Resource;
   address: Hex;
   network: Network;
+  apiKeyId?: string;
+  apiKeySecret?: string;
 };
 
 export type PaymentMiddlewareConfig = {
