@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import { useFacilitator } from "x402/verify";
 import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
 import { exact } from "x402/schemes";
@@ -29,6 +29,8 @@ import {
  * @param globalConfig.facilitatorUrl - URL of the payment facilitator service
  * @param globalConfig.address - Address to receive payments
  * @param globalConfig.network - Network identifier (e.g. 'base-sepolia')
+ * @param globalConfig.apiKeyId - API key ID for the payment facilitator service
+ * @param globalConfig.apiKeySecret - API key secret for the payment facilitator service
  *
  * @returns A function that creates an Express middleware handler for a specific payment amount
  *
@@ -47,8 +49,15 @@ import {
  * ```
  */
 export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
-  const { facilitatorUrl, address, network } = globalConfig;
-  const { settle, verify } = useFacilitator(facilitatorUrl);
+  const { facilitatorUrl, address, network, apiKeyId, apiKeySecret } = globalConfig;
+  const authOptions =
+    apiKeyId && apiKeySecret
+      ? {
+          apiKeyId,
+          apiKeySecret,
+        }
+      : undefined;
+  const { verify, settle } = useFacilitator(facilitatorUrl, authOptions);
 
   return function paymentMiddleware(amount: Money, config: PaymentMiddlewareConfig = {}) {
     const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =

@@ -5,15 +5,31 @@ import {
   VerifyResponse,
 } from "../types/verify";
 import axios from "axios";
-import { toJsonSafe } from "../shared";
+import { createAuthHeader, toJsonSafe } from "../shared";
+import { Resource } from "../types";
+
+/**
+ * AuthOptions is an optional object that can be used to authenticate requests to the facilitator service
+ *
+ * @param apiKeyId - The CDP API key ID
+ * @param apiKeySecret - The CDP API key secret
+ */
+export interface AuthOptions {
+  apiKeyId: string;
+  apiKeySecret: string;
+}
 
 /**
  * Creates a facilitator client for interacting with the X402 payment facilitator service
  *
  * @param url - The base URL of the facilitator service (defaults to "https://x402.org/facilitator")
+ * @param authOptions - Optional authentication options for the facilitator service
  * @returns An object containing verify and settle functions for interacting with the facilitator
  */
-export function useFacilitator(url: string = "https://x402.org/facilitator") {
+export function useFacilitator(
+  url: Resource = "https://x402.org/facilitator",
+  authOptions?: AuthOptions,
+) {
   /**
    * Verifies a payment payload with the facilitator service
    *
@@ -25,10 +41,25 @@ export function useFacilitator(url: string = "https://x402.org/facilitator") {
     payload: PaymentPayload,
     paymentRequirements: PaymentRequirements,
   ): Promise<VerifyResponse> {
-    const res = await axios.post(`${url}/verify`, {
-      payload: toJsonSafe(payload),
-      details: toJsonSafe(paymentRequirements),
-    });
+    const res = await axios.post(
+      `${url}/verify`,
+      {
+        payload: toJsonSafe(payload),
+        details: toJsonSafe(paymentRequirements),
+      },
+      {
+        headers: authOptions
+          ? {
+            Authorization: await createAuthHeader(
+              authOptions.apiKeyId,
+              authOptions.apiKeySecret,
+              url,
+              "/verify",
+            ),
+          }
+          : undefined,
+      },
+    );
 
     if (res.status !== 200) {
       throw new Error(`Failed to verify payment: ${res.statusText}`);
@@ -48,10 +79,25 @@ export function useFacilitator(url: string = "https://x402.org/facilitator") {
     payload: PaymentPayload,
     paymentRequirements: PaymentRequirements,
   ): Promise<SettleResponse> {
-    const res = await axios.post(`${url}/settle`, {
-      payload: toJsonSafe(payload),
-      details: toJsonSafe(paymentRequirements),
-    });
+    const res = await axios.post(
+      `${url}/settle`,
+      {
+        payload: toJsonSafe(payload),
+        details: toJsonSafe(paymentRequirements),
+      },
+      {
+        headers: authOptions
+          ? {
+            Authorization: await createAuthHeader(
+              authOptions.apiKeyId,
+              authOptions.apiKeySecret,
+              url,
+              "/settle",
+            ),
+          }
+          : undefined,
+      },
+    );
 
     if (res.status !== 200) {
       throw new Error(`Failed to settle payment: ${res.statusText}`);

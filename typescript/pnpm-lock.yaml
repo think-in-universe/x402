@@ -28,7 +28,7 @@ importers:
         version: 16.4.7
       viem:
         specifier: ^2.23.1
-        version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
+        version: 2.26.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.2)
       x402-axios:
         specifier: workspace:*
         version: link:../../../packages/x402-axios
@@ -74,7 +74,7 @@ importers:
         version: 16.4.7
       viem:
         specifier: ^2.23.1
-        version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
+        version: 2.26.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.2)
       x402-fetch:
         specifier: workspace:*
         version: link:../../../packages/x402-fetch
@@ -250,18 +250,18 @@ importers:
 
   packages/x402:
     dependencies:
-      '@hono/node-server':
-        specifier: ^1.13.8
-        version: 1.14.0(hono@4.7.6)
       axios:
         specifier: ^1.7.9
         version: 1.8.4
       hono:
         specifier: ^4.7.1
         version: 4.7.6
+      jose:
+        specifier: ^6.0.10
+        version: 6.0.10
       viem:
         specifier: ^2.23.1
-        version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
+        version: 2.26.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.2)
       zod:
         specifier: ^3.24.2
         version: 3.24.2
@@ -316,7 +316,7 @@ importers:
         version: 1.8.4
       viem:
         specifier: ^2.23.1
-        version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
+        version: 2.26.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.2)
       x402:
         specifier: workspace:*
         version: link:../x402
@@ -374,7 +374,7 @@ importers:
         version: 4.21.2
       viem:
         specifier: ^2.23.1
-        version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
+        version: 2.26.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.2)
       x402:
         specifier: workspace:*
         version: link:../x402
@@ -432,7 +432,7 @@ importers:
     dependencies:
       viem:
         specifier: ^2.23.1
-        version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
+        version: 2.26.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.2)
       x402:
         specifier: workspace:*
         version: link:../x402
@@ -490,7 +490,7 @@ importers:
         version: 4.7.6
       viem:
         specifier: ^2.23.1
-        version: 2.26.2(typescript@5.8.3)(zod@3.24.2)
+        version: 2.26.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.2)
       x402:
         specifier: workspace:*
         version: link:../x402
@@ -1318,6 +1318,10 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
+  bufferutil@4.0.9:
+    resolution: {integrity: sha512-WDtdLmJvAuNNPzByAYpRo2rF1Mmradw6gvWsQKf63476DDXmomT9zUiGypLcG4ibIM67vhAj8jJRdbmEws2Aqw==}
+    engines: {node: '>=6.14.2'}
+
   bundle-require@4.2.1:
     resolution: {integrity: sha512-7Q/6vkyYAwOmQNRw75x+4yRtZCZJXUDmHHlFdkiV0wgv/reNjtJwpu1jPJ0w2kbEpIM0uoKI3S4/f39dU7AjSA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -2020,6 +2024,9 @@ packages:
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
 
+  jose@6.0.10:
+    resolution: {integrity: sha512-skIAxZqcMkOrSwjJvplIPYrlXGpxTPnro2/QWTDCxAdWQrSTV5/KqspMWmi5WAx5+ULswASJiZ0a+1B/Lxt9cw==}
+
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
@@ -2159,6 +2166,10 @@ packages:
   negotiator@0.6.3:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==}
     engines: {node: '>= 0.6'}
+
+  node-gyp-build@4.8.4:
+    resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
+    hasBin: true
 
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
@@ -2773,6 +2784,10 @@ packages:
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
+
+  utf-8-validate@5.0.10:
+    resolution: {integrity: sha512-Z6czzLq4u8fPOyx7TU6X3dvUZVvoJmxSQ+IcrlmagKhilxlhZgxPK6C5Jqbkw1IDUmFTM+cz9QDnnLTwDz/2gQ==}
+    engines: {node: '>=6.14.2'}
 
   utils-merge@1.0.1:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
@@ -3599,6 +3614,11 @@ snapshots:
   braces@3.0.3:
     dependencies:
       fill-range: 7.1.1
+
+  bufferutil@4.0.9:
+    dependencies:
+      node-gyp-build: 4.8.4
+    optional: true
 
   bundle-require@4.2.1(esbuild@0.19.12):
     dependencies:
@@ -4450,15 +4470,17 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  isows@1.0.6(ws@8.18.1):
+  isows@1.0.6(ws@8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)):
     dependencies:
-      ws: 8.18.1
+      ws: 8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
 
   jackspeak@3.4.3:
     dependencies:
       '@isaacs/cliui': 8.0.2
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
+
+  jose@6.0.10: {}
 
   joycon@3.1.1: {}
 
@@ -4563,6 +4585,9 @@ snapshots:
   natural-compare@1.4.0: {}
 
   negotiator@0.6.3: {}
+
+  node-gyp-build@4.8.4:
+    optional: true
 
   normalize-path@3.0.0: {}
 
@@ -5230,20 +5255,25 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
+  utf-8-validate@5.0.10:
+    dependencies:
+      node-gyp-build: 4.8.4
+    optional: true
+
   utils-merge@1.0.1: {}
 
   vary@1.1.2: {}
 
-  viem@2.26.2(typescript@5.8.3)(zod@3.24.2):
+  viem@2.26.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.2):
     dependencies:
       '@noble/curves': 1.8.1
       '@noble/hashes': 1.7.1
       '@scure/bip32': 1.6.2
       '@scure/bip39': 1.5.4
       abitype: 1.0.8(typescript@5.8.3)(zod@3.24.2)
-      isows: 1.0.6(ws@8.18.1)
+      isows: 1.0.6(ws@8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       ox: 0.6.9(typescript@5.8.3)(zod@3.24.2)
-      ws: 8.18.1
+      ws: 8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     optionalDependencies:
       typescript: 5.8.3
     transitivePeerDependencies:
@@ -5404,7 +5434,10 @@ snapshots:
       string-width: 5.1.2
       strip-ansi: 7.1.0
 
-  ws@8.18.1: {}
+  ws@8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10):
+    optionalDependencies:
+      bufferutil: 4.0.9
+      utf-8-validate: 5.0.10
 
   yaml@2.7.1: {}
 
