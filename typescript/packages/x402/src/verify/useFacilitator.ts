@@ -11,14 +11,12 @@ import { Resource } from "../types";
 /**
  * AuthOptions is an optional object that can be used to authenticate requests to the facilitator service
  *
- * @param apiKeyId - The CDP API key ID
- * @param apiKeySecret - The CDP API key secret
+ * @param cdpApiKeyId - The CDP API key ID
+ * @param cdpApiKeySecret - The CDP API key secret
  */
 export interface AuthOptions {
-  apiKeyId: string;
-  apiKeySecret: string;
-  verifyPath: `/${string}`;
-  settlePath: `/${string}`;
+  cdpApiKeyId: string;
+  cdpApiKeySecret: string;
 }
 
 /**
@@ -44,7 +42,7 @@ export function useFacilitator(
     paymentRequirements: PaymentRequirements,
   ): Promise<VerifyResponse> {
     const res = await axios.post(
-      `${url}${authOptions?.verifyPath ?? "/verify"}`,
+      `${url}/v2/x402/verify`,
       {
         payload: toJsonSafe(payload),
         details: toJsonSafe(paymentRequirements),
@@ -53,10 +51,10 @@ export function useFacilitator(
         headers: authOptions
           ? {
             Authorization: await createAuthHeader(
-              authOptions.apiKeyId,
-              authOptions.apiKeySecret,
+              authOptions.cdpApiKeyId,
+              authOptions.cdpApiKeySecret,
               url,
-              "/verify",
+              "/v2/x402/verify",
             ),
           }
           : undefined,
@@ -82,7 +80,7 @@ export function useFacilitator(
     paymentRequirements: PaymentRequirements,
   ): Promise<SettleResponse> {
     const res = await axios.post(
-      `${url}${authOptions?.settlePath ?? "/settle"}`,
+      `${url}/v2/x402/settle`,
       {
         payload: toJsonSafe(payload),
         details: toJsonSafe(paymentRequirements),
@@ -91,10 +89,10 @@ export function useFacilitator(
         headers: authOptions
           ? {
             Authorization: await createAuthHeader(
-              authOptions.apiKeyId,
-              authOptions.apiKeySecret,
+              authOptions.cdpApiKeyId,
+              authOptions.cdpApiKeySecret,
               url,
-              "/settle",
+              "/v2/x402/settle",
             ),
           }
           : undefined,

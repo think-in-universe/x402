@@ -29,10 +29,8 @@ import { useFacilitator } from "x402/verify";
  * @param globalConfig.address - Address to receive payments
  * @param globalConfig.network - Network identifier (e.g. 'base-sepolia')
  * @param globalConfig.auth - Authentication options for the payment facilitator service
- * @param globalConfig.auth.apiKeyId - API key ID for the payment facilitator service
- * @param globalConfig.auth.apiKeySecret - API key secret for the payment facilitator service
- * @param globalConfig.auth.verifyPath - Path to the verify endpoint on the payment facilitator service
- * @param globalConfig.auth.settlePath - Path to the settle endpoint on the payment facilitator service
+ * @param globalConfig.auth.cdpApiKeyId - CDP API key ID for the payment facilitator service
+ * @param globalConfig.auth.cdpApiKeySecret - CDP API key secret for the payment facilitator service
  *
  * @returns A function that creates a Hono middleware handler for a specific payment amount
  *

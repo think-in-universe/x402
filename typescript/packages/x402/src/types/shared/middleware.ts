@@ -7,10 +7,8 @@ export type GlobalConfig = {
   address: Hex;
   network: Network;
   auth?: {
-    apiKeyId: string;
-    apiKeySecret: string;
-    verifyPath: `/${string}`;
-    settlePath: `/${string}`;
+    cdpApiKeyId: string;
+    cdpApiKeySecret: string;
   };
 };
 
