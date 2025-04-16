@@ -29,9 +29,7 @@ import {
  * @param globalConfig.facilitatorUrl - URL of the payment facilitator service
  * @param globalConfig.address - Address to receive payments
  * @param globalConfig.network - Network identifier (e.g. 'base-sepolia')
- * @param globalConfig.auth - Authentication options for the payment facilitator service
- * @param globalConfig.auth.cdpApiKeyId - CDP API key ID for the payment facilitator service
- * @param globalConfig.auth.cdpApiKeySecret - CDP API key secret for the payment facilitator service
+ * @param globalConfig.createAuthHeaders - Function to create creates for the payment facilitator service. If using Coinbase's facilitator, use the createCdpAuthHeader function.
  *
  * @returns A function that creates an Express middleware handler for a specific payment amount
  *
@@ -50,8 +48,8 @@ import {
  * ```
  */
 export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
-  const { facilitatorUrl, address, network, auth } = globalConfig;
-  const { verify, settle } = useFacilitator(facilitatorUrl, auth);
+  const { facilitatorUrl, address, network, createAuthHeaders } = globalConfig;
+  const { verify, settle } = useFacilitator(facilitatorUrl, createAuthHeaders);
 
   return function paymentMiddleware(amount: Money, config: PaymentMiddlewareConfig = {}) {
     const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
