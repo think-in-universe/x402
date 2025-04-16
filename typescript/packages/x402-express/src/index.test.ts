@@ -21,6 +21,16 @@ vi.mock("x402/shared/evm", () => ({
   getUsdcAddressForChain: vi.fn().mockReturnValue("0x036CbD53842c5426634e7929541eC2318f3dCF7e"),
 }));
 
+// Mock exact.evm.decodePayment
+vi.mock("x402/schemes", () => ({
+  exact: {
+    evm: {
+      encodePayment: vi.fn(),
+      decodePayment: vi.fn(),
+    },
+  },
+}));
+
 describe("configurePaymentMiddleware()", () => {
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
@@ -59,7 +69,7 @@ describe("configurePaymentMiddleware()", () => {
       },
     },
   };
-  const encodedValidPayment = exact.evm.encodePayment(validPayment);
+  const encodedValidPayment = "encoded-payment";
 
   beforeEach(() => {
     // Reset mocks
@@ -95,6 +105,10 @@ describe("configurePaymentMiddleware()", () => {
 
     // Setup paywall HTML mock
     (getPaywallHtml as ReturnType<typeof vi.fn>).mockReturnValue("<html>Paywall</html>");
+
+    // Setup exact.evm mocks
+    (exact.evm.encodePayment as ReturnType<typeof vi.fn>).mockReturnValue(encodedValidPayment);
+    (exact.evm.decodePayment as ReturnType<typeof vi.fn>).mockReturnValue(validPayment);
 
     // Create middleware
     middleware = configurePaymentMiddleware(globalConfig)(1.0, middlewareConfig);
@@ -141,6 +155,7 @@ describe("configurePaymentMiddleware()", () => {
 
     await middleware(mockReq as Request, mockRes as Response, mockNext);
 
+    expect(exact.evm.decodePayment).toHaveBeenCalledWith(encodedValidPayment);
     expect(mockVerify).toHaveBeenCalledWith(validPayment, expect.any(Object));
     expect(mockNext).toHaveBeenCalled();
   });
@@ -150,6 +165,10 @@ describe("configurePaymentMiddleware()", () => {
     (mockReq.header as ReturnType<typeof vi.fn>).mockImplementation((name: string) => {
       if (name === "X-PAYMENT") return invalidPayment;
       return undefined;
+    });
+
+    (exact.evm.decodePayment as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      throw new Error("Invalid payment");
     });
 
     (mockVerify as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -162,16 +181,15 @@ describe("configurePaymentMiddleware()", () => {
     expect(mockRes.status).toHaveBeenCalledWith(402);
     expect(mockRes.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        error: "insufficient_funds",
+        error: expect.any(Error),
         paymentRequirements: expect.any(Object),
       }),
     );
   });
 
   it("should handle settlement after response", async () => {
-    const validPayment = "valid-payment-header";
     (mockReq.header as ReturnType<typeof vi.fn>).mockImplementation((name: string) => {
-      if (name === "X-PAYMENT") return validPayment;
+      if (name === "X-PAYMENT") return encodedValidPayment;
       return undefined;
     });
 
@@ -192,14 +210,14 @@ describe("configurePaymentMiddleware()", () => {
 
     await middleware(mockReq as Request, mockRes as Response, mockNext);
 
+    expect(exact.evm.decodePayment).toHaveBeenCalledWith(encodedValidPayment);
     expect(mockSettle).toHaveBeenCalledWith(validPayment, expect.any(Object));
     expect(mockRes.setHeader).toHaveBeenCalledWith("X-PAYMENT-RESPONSE", expect.any(String));
   });
 
   it("should handle settlement failure before response is sent", async () => {
-    const validPayment = "valid-payment-header";
     (mockReq.header as ReturnType<typeof vi.fn>).mockImplementation((name: string) => {
-      if (name === "X-PAYMENT") return validPayment;
+      if (name === "X-PAYMENT") return encodedValidPayment;
       return undefined;
     });
 
@@ -218,9 +236,8 @@ describe("configurePaymentMiddleware()", () => {
   });
 
   it("should handle settlement failure after response is sent", async () => {
-    const validPayment = "valid-payment-header";
     (mockReq.header as ReturnType<typeof vi.fn>).mockImplementation((name: string) => {
-      if (name === "X-PAYMENT") return validPayment;
+      if (name === "X-PAYMENT") return encodedValidPayment;
       return undefined;
     });
 
@@ -238,6 +255,7 @@ describe("configurePaymentMiddleware()", () => {
 
     await middleware(mockReq as Request, mockRes as Response, mockNext);
 
+    expect(exact.evm.decodePayment).toHaveBeenCalledWith(encodedValidPayment);
     expect(mockSettle).toHaveBeenCalledWith(validPayment, expect.any(Object));
     // Should not try to send another response since headers are already sent
     expect(mockRes.status).not.toHaveBeenCalledWith(402);

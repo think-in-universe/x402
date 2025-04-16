@@ -67,19 +67,21 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
 
     return async (c, next) => {
       let resourceUrl = resource || (c.req.url as Resource);
-      const paymentRequirements: PaymentRequirements[] = [{
-        scheme: "exact",
-        network,
-        maxAmountRequired: maxAmountRequired.toString(),
-        resource: resourceUrl,
-        description: description ?? "",
-        mimeType: mimeType ?? "",
-        payTo: address,
-        maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
-        asset: getUsdcAddressForChain(getNetworkId(network)),
-        outputSchema: outputSchema || undefined,
-        extra: undefined,
-      }];
+      const paymentRequirements: PaymentRequirements[] = [
+        {
+          scheme: "exact",
+          network,
+          maxAmountRequired: maxAmountRequired.toString(),
+          resource: resourceUrl,
+          description: description ?? "",
+          mimeType: mimeType ?? "",
+          payTo: address,
+          maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
+          asset: getUsdcAddressForChain(getNetworkId(network)),
+          outputSchema: outputSchema || undefined,
+          extra: undefined,
+        },
+      ];
 
       const payment = c.req.header("X-PAYMENT");
       const userAgent = c.req.header("User-Agent") || "";
@@ -126,7 +128,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         );
       }
 
-      const selectedPaymentRequirements = paymentRequirements.find((value) => value.scheme === decodedPayment.scheme && value.network === decodedPayment.network);
+      const selectedPaymentRequirements = paymentRequirements.find(
+        value => value.scheme === decodedPayment.scheme && value.network === decodedPayment.network,
+      );
       if (!selectedPaymentRequirements) {
         return c.json(
           {

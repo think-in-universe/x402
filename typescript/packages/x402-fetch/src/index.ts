@@ -45,7 +45,9 @@ export function fetchWithPayment(
     }
 
     const { paymentRequirements } = (await response.json()) as { paymentRequirements: unknown[] };
-    const parsedPaymentRequirements = paymentRequirements.map(x => PaymentRequirementsSchema.parse(x));
+    const parsedPaymentRequirements = paymentRequirements.map(x =>
+      PaymentRequirementsSchema.parse(x),
+    );
 
     // TODO: Improve selection between multiple payment requirements
     const selectedPaymentRequirements = parsedPaymentRequirements[0];
