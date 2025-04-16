@@ -1,7 +1,11 @@
 import { AxiosInstance, AxiosError } from "axios";
 import { PaymentRequirements, PaymentRequirementsSchema } from "x402/types";
 import { evm } from "x402/types";
-import { createPaymentHeader } from "x402/client";
+import {
+  createPaymentHeader,
+  PaymentRequirementsSelector,
+  selectPaymentRequirements,
+} from "x402/client";
 
 /**
  * Enables the payment of APIs using the x402 payment protocol.
@@ -14,7 +18,7 @@ import { createPaymentHeader } from "x402/client";
  *
  * @param axiosClient - The Axios instance to add the interceptor to
  * @param walletClient - A wallet client that can sign transactions and create payment headers
- *
+ * @param paymentRequirementsSelector - A function that selects the payment requirements from the response
  * @returns The modified Axios instance with the payment interceptor
  *
  * @example
@@ -31,6 +35,7 @@ import { createPaymentHeader } from "x402/client";
 export function withPaymentInterceptor(
   axiosClient: AxiosInstance,
   walletClient: typeof evm.SignerWallet,
+  paymentRequirementsSelector: PaymentRequirementsSelector = selectPaymentRequirements,
 ) {
   axiosClient.interceptors.response.use(
     response => response,
@@ -41,11 +46,12 @@ export function withPaymentInterceptor(
 
       try {
         const { paymentRequirements } = error.response.data as {
-          paymentRequirements: PaymentRequirements;
+          paymentRequirements: PaymentRequirements[];
         };
-        const parsed = PaymentRequirementsSchema.parse(paymentRequirements);
+        const parsed = paymentRequirements.map(x => PaymentRequirementsSchema.parse(x));
 
-        const paymentHeader = await createPaymentHeader(walletClient, parsed);
+        const selectedPaymentRequirements = paymentRequirementsSelector(parsed);
+        const paymentHeader = await createPaymentHeader(walletClient, selectedPaymentRequirements);
 
         const originalConfig = error.config;
         if (!originalConfig || !originalConfig.headers) {

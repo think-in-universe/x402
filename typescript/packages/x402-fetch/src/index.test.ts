@@ -4,6 +4,7 @@ import { evm, PaymentRequirements } from "x402/types";
 
 vi.mock("x402/client", () => ({
   createPaymentHeader: vi.fn(),
+  selectPaymentRequirements: vi.fn(),
 }));
 
 type RequestInitWithRetry = RequestInit & { __is402Retry?: boolean };
@@ -35,7 +36,7 @@ describe("fetchWithPayment()", () => {
     return response;
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetAllMocks();
 
     mockFetch = vi.fn();
@@ -43,6 +44,12 @@ describe("fetchWithPayment()", () => {
     mockWalletClient = {
       signMessage: vi.fn(),
     } as unknown as typeof evm.SignerWallet;
+
+    // Mock payment requirements selector
+    const { selectPaymentRequirements } = await import("x402/client");
+    (selectPaymentRequirements as ReturnType<typeof vi.fn>).mockImplementation(
+      requirements => requirements[0],
+    );
 
     wrappedFetch = fetchWithPayment(mockFetch, mockWalletClient);
   });
@@ -61,8 +68,11 @@ describe("fetchWithPayment()", () => {
     const paymentHeader = "payment-header-value";
     const successResponse = createResponse(200, { data: "success" });
 
-    const { createPaymentHeader } = await import("x402/client");
+    const { createPaymentHeader, selectPaymentRequirements } = await import("x402/client");
     (createPaymentHeader as ReturnType<typeof vi.fn>).mockResolvedValue(paymentHeader);
+    (selectPaymentRequirements as ReturnType<typeof vi.fn>).mockImplementation(
+      requirements => requirements[0],
+    );
     mockFetch
       .mockResolvedValueOnce(createResponse(402, { paymentRequirements: validPaymentRequirements }))
       .mockResolvedValueOnce(successResponse);
@@ -73,6 +83,7 @@ describe("fetchWithPayment()", () => {
     } as RequestInitWithRetry);
 
     expect(result).toBe(successResponse);
+    expect(selectPaymentRequirements).toHaveBeenCalledWith(validPaymentRequirements);
     expect(createPaymentHeader).toHaveBeenCalledWith(mockWalletClient, validPaymentRequirements[0]);
     expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(mockFetch).toHaveBeenLastCalledWith("https://api.example.com", {
