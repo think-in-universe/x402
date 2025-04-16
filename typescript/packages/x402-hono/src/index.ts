@@ -56,6 +56,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
     const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
       config;
 
+    const assetAddress = config.asset?.address ?? getUsdcAddressForChain(getNetworkId(network));
+    const assetDecimals = config.asset?.decimals ?? 6;
+
     const parsedAmount = moneySchema.safeParse(amount);
     if (!parsedAmount.success) {
       throw new Error(
@@ -63,7 +66,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       );
     }
     const parsedUsdAmount = parsedAmount.data;
-    const maxAmountRequired = parsedUsdAmount * 10 ** 6; // TODO: Determine asset, get decimals, and convert to atomic amount
+    const maxAmountRequired = parsedUsdAmount * 10 ** assetDecimals;
 
     return async (c, next) => {
       let resourceUrl = resource || (c.req.url as Resource);
@@ -77,9 +80,14 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
           mimeType: mimeType ?? "",
           payTo: address,
           maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
-          asset: getUsdcAddressForChain(getNetworkId(network)),
+          asset: assetAddress,
           outputSchema: outputSchema || undefined,
-          extra: undefined,
+          extra: config.asset
+            ? {
+                name: config.asset.eip712.name,
+                version: config.asset.eip712.version,
+              }
+            : undefined,
         },
       ];
 

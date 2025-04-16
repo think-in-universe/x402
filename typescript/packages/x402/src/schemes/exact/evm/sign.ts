@@ -19,24 +19,25 @@ import { getRandomValues } from "crypto";
  * @param paymentRequirements - The payment requirements containing asset and network information
  * @param paymentRequirements.asset - The address of the USDC contract
  * @param paymentRequirements.network - The network where the USDC contract exists
+ * @param paymentRequirements.extra - The extra information containing the name and version of the ERC20 contract
  * @returns The signature for the authorization
  */
 export async function signAuthorization<transport extends Transport, chain extends Chain>(
   walletClient: SignerWallet<chain, transport>,
   { from, to, value, validAfter, validBefore, nonce }: ExactEvmPayloadAuthorization,
-  { asset, network }: PaymentRequirements,
+  { asset, network, extra }: PaymentRequirements,
 ): Promise<{ signature: Hex }> {
   const chainId = getNetworkId(network);
-  const usdcName = config[chainId].usdcName;
-  const version = await getVersion(walletClient);
+  const name = extra?.name ?? config[chainId].usdcName;
+  const version = extra?.version ?? (await getVersion(walletClient));
 
   const data = {
     account: walletClient.account!,
     types: authorizationTypes,
     domain: {
-      name: usdcName,
-      version: version,
-      chainId: chainId,
+      name,
+      version,
+      chainId,
       verifyingContract: asset as Address,
     },
     primaryType: "TransferWithAuthorization" as const,

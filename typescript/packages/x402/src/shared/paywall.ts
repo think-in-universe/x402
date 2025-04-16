@@ -288,18 +288,18 @@ export function getPaywallHtml({
 
   window.x402.utils.signAuthorization = async (walletClient, authorizationParameters, paymentRequirements, publicClient) => {
     const chainId = getNetworkId(paymentRequirements.network);
-    const usdcName = window.x402.config.chainConfig[chainId].usdcName;
-    const usdcAddress = window.x402.config.chainConfig[chainId].usdcAddress;
-    const version = await window.x402.utils.getVersion(publicClient, usdcAddress);
+    const name = paymentRequirements.extra?.name ?? window.x402.config.chainConfig[chainId].usdcName;
+    const erc20Address = paymentRequirements.asset;
+    const version = paymentRequirements.extra?.version ?? await window.x402.utils.getVersion(publicClient, erc20Address);
     const { from, to, value, validAfter, validBefore, nonce } = authorizationParameters;
     const data = {
       account: walletClient.account,
       types: authorizationTypes,
       domain: {
-        name: usdcName,
-        version: version,
-        chainId: chainId,
-        verifyingContract: usdcAddress,
+        name,
+        version,
+        chainId,
+        verifyingContract: erc20Address,
       },
       primaryType: "TransferWithAuthorization",
       message: {
