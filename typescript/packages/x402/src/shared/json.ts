@@ -17,7 +17,7 @@ export function toJsonSafe<T extends object>(data: T): object {
    * @returns The converted value with bigints as strings
    */
   function convert(value: unknown): unknown {
-    if (value !== null && typeof value === "object") {
+    if (value !== null && typeof value === "object" && !Array.isArray(value)) {
       return Object.fromEntries(Object.entries(value).map(([key, val]) => [key, convert(val)]));
     }
 
