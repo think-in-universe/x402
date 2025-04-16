@@ -53,12 +53,12 @@ export function createCdpAuthHeaders(apiKeyId: string, apiKeySecret: string): Cr
 /**
  * Creates a facilitator client for interacting with the X402 payment facilitator service
  *
- * @param url - The base URL of the facilitator service (defaults to "https://x402.org/facilitator")
+ * @param url - The base URL of the facilitator service (defaults to "https://x402.org/facilitator/v2/x402")
  * @param createAuthHeaders - Optional function to create an auth header for the facilitator service. If using Coinbase's facilitator, use the createCdpAuthHeaders function.
  * @returns An object containing verify and settle functions for interacting with the facilitator
  */
 export function useFacilitator(
-  url: Resource = "https://x402.org/facilitator",
+  url: Resource = "https://x402.org/facilitator/v2/x402",
   createAuthHeaders?: CreateHeaders,
 ) {
   /**
@@ -73,7 +73,7 @@ export function useFacilitator(
     paymentRequirements: PaymentRequirements,
   ): Promise<VerifyResponse> {
     const res = await axios.post(
-      `${url}/v2/x402/verify`,
+      `${url}/verify`,
       {
         payload: toJsonSafe(payload),
         details: toJsonSafe(paymentRequirements),
@@ -102,7 +102,7 @@ export function useFacilitator(
     paymentRequirements: PaymentRequirements,
   ): Promise<SettleResponse> {
     const res = await axios.post(
-      `${url}/v2/x402/settle`,
+      `${url}/settle`,
       {
         payload: toJsonSafe(payload),
         details: toJsonSafe(paymentRequirements),
