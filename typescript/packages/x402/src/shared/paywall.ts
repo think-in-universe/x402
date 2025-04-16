@@ -2,7 +2,7 @@ import { PaymentRequirements } from "../types/verify";
 
 interface PaywallOptions {
   amount: number;
-  paymentRequirements: PaymentRequirements;
+  paymentRequirements: PaymentRequirements[];
   currentUrl: string;
   testnet: boolean;
 }
@@ -157,7 +157,7 @@ export function getPaywallHtml({
   try {
     // Initialize x402 namespace
     window.x402 = {
-      paymentRequirements: ${JSON.stringify(paymentRequirements)},
+      paymentRequirements: ${JSON.stringify(paymentRequirements[0])},
       isTestnet: ${testnet},
       currentUrl: "${currentUrl}",
       state: {
@@ -525,7 +525,7 @@ window.addEventListener('load', initializeApp);
   <div class="container">
     <div class="header">
       <h1 class="title">Payment Required</h1>
-      <p class="subtitle">${paymentRequirements.description}. To access this content, please pay $${amount} ${testnet ? "Base Sepolia" : "Base"} USDC.</p>
+      <p class="subtitle">${paymentRequirements[0].description}. To access this content, please pay $${amount} ${testnet ? "Base Sepolia" : "Base"} USDC.</p>
       <p class="instructions">Need Base Sepolia USDC? <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">Get some here.</a></p>
     </div>
 
