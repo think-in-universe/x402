@@ -12,17 +12,19 @@ describe("fetchWithPayment()", () => {
   let mockFetch: ReturnType<typeof vi.fn>;
   let mockWalletClient: typeof evm.SignerWallet;
   let wrappedFetch: ReturnType<typeof fetchWithPayment>;
-  const validPaymentRequirements: PaymentRequirements = {
-    scheme: "exact",
-    network: "base-sepolia",
-    maxAmountRequired: "100000", // 0.1 USDC in base units
-    resource: "https://api.example.com/resource",
-    description: "Test payment",
-    mimeType: "application/json",
-    payTo: "0x1234567890123456789012345678901234567890",
-    maxTimeoutSeconds: 300,
-    asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC on base-sepolia
-  };
+  const validPaymentRequirements: PaymentRequirements[] = [
+    {
+      scheme: "exact",
+      network: "base-sepolia",
+      maxAmountRequired: "100000", // 0.1 USDC in base units
+      resource: "https://api.example.com/resource",
+      description: "Test payment",
+      mimeType: "application/json",
+      payTo: "0x1234567890123456789012345678901234567890",
+      maxTimeoutSeconds: 300,
+      asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC on base-sepolia
+    },
+  ];
 
   const createResponse = (status: number, data?: unknown): Response => {
     const response = new Response(JSON.stringify(data), {
@@ -71,7 +73,7 @@ describe("fetchWithPayment()", () => {
     } as RequestInitWithRetry);
 
     expect(result).toBe(successResponse);
-    expect(createPaymentHeader).toHaveBeenCalledWith(mockWalletClient, validPaymentRequirements);
+    expect(createPaymentHeader).toHaveBeenCalledWith(mockWalletClient, validPaymentRequirements[0]);
     expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(mockFetch).toHaveBeenLastCalledWith("https://api.example.com", {
       method: "GET",
@@ -106,10 +108,12 @@ describe("fetchWithPayment()", () => {
 
   it("should reject if payment amount exceeds maximum", async () => {
     const errorResponse = createResponse(402, {
-      paymentRequirements: {
-        ...validPaymentRequirements,
-        maxAmountRequired: "200000", // 0.2 USDC, which exceeds our default max of 0.1 USDC
-      },
+      paymentRequirements: [
+        {
+          ...validPaymentRequirements[0],
+          maxAmountRequired: "200000", // 0.2 USDC, which exceeds our default max of 0.1 USDC
+        },
+      ],
     });
     mockFetch.mockResolvedValue(errorResponse);
 

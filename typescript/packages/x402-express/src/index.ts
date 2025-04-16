@@ -68,19 +68,21 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       // Use req.originalUrl as the resource if none is provided
       // TODO: req.originalUrl is not always correct, and can just be the route, i.e. `/route`. Need to consider a better fallback.
       const resourceUrl: Resource = resource || (req.originalUrl as Resource);
-      const paymentRequirements: PaymentRequirements[] = [{
-        scheme: "exact",
-        network,
-        maxAmountRequired: maxAmountRequired.toString(),
-        resource: resourceUrl,
-        description: description ?? "",
-        mimeType: mimeType ?? "",
-        payTo: address,
-        maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
-        asset: getUsdcAddressForChain(getNetworkId(network)),
-        outputSchema: outputSchema ?? undefined,
-        extra: undefined,
-      }];
+      const paymentRequirements: PaymentRequirements[] = [
+        {
+          scheme: "exact",
+          network,
+          maxAmountRequired: maxAmountRequired.toString(),
+          resource: resourceUrl,
+          description: description ?? "",
+          mimeType: mimeType ?? "",
+          payTo: address,
+          maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
+          asset: getUsdcAddressForChain(getNetworkId(network)),
+          outputSchema: outputSchema ?? undefined,
+          extra: undefined,
+        },
+      ];
 
       const payment = req.header("X-PAYMENT");
       const userAgent = req.header("User-Agent") || "";
@@ -117,7 +119,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         });
       }
 
-      const selectedPaymentRequirements = paymentRequirements.find((value) => value.scheme === decodedPayment.scheme && value.network === decodedPayment.network);
+      const selectedPaymentRequirements = paymentRequirements.find(
+        value => value.scheme === decodedPayment.scheme && value.network === decodedPayment.network,
+      );
       if (!selectedPaymentRequirements) {
         return res.status(402).json({
           error: "Unable to find matching payment requirements",
