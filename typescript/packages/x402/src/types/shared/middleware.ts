@@ -15,4 +15,12 @@ export type PaymentMiddlewareConfig = {
   outputSchema?: object;
   customPaywallHtml?: string;
   resource?: Resource;
+  asset?: {
+    address: string;
+    decimals: number;
+    eip712: {
+      name: string;
+      version: string;
+    };
+  };
 };
