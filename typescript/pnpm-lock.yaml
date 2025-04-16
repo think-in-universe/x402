@@ -210,9 +210,6 @@ importers:
       hono:
         specifier: ^4.7.1
         version: 4.7.6
-      x402:
-        specifier: workspace:*
-        version: link:../../../packages/x402
       x402-hono:
         specifier: workspace:*
         version: link:../../../packages/x402-hono
