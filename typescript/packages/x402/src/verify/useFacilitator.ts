@@ -50,13 +50,13 @@ export function useFacilitator(
       {
         headers: authOptions
           ? {
-            Authorization: await createAuthHeader(
-              authOptions.cdpApiKeyId,
-              authOptions.cdpApiKeySecret,
-              url,
-              "/v2/x402/verify",
-            ),
-          }
+              Authorization: await createAuthHeader(
+                authOptions.cdpApiKeyId,
+                authOptions.cdpApiKeySecret,
+                url,
+                "/v2/x402/verify",
+              ),
+            }
           : undefined,
       },
     );
@@ -88,13 +88,13 @@ export function useFacilitator(
       {
         headers: authOptions
           ? {
-            Authorization: await createAuthHeader(
-              authOptions.cdpApiKeyId,
-              authOptions.cdpApiKeySecret,
-              url,
-              "/v2/x402/settle",
-            ),
-          }
+              Authorization: await createAuthHeader(
+                authOptions.cdpApiKeyId,
+                authOptions.cdpApiKeySecret,
+                url,
+                "/v2/x402/settle",
+              ),
+            }
           : undefined,
       },
     );
