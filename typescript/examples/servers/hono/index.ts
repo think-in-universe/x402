@@ -1,8 +1,7 @@
 import { config } from "dotenv";
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { configurePaymentMiddleware } from "x402-hono";
-import { Network, Resource } from "x402/types";
+import { configurePaymentMiddleware, Network, Resource } from "x402-hono";
 
 config();
 
