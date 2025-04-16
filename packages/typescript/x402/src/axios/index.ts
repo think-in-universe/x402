@@ -1,5 +1,5 @@
 import { AxiosInstance, AxiosError } from "axios";
-import { PaymentRequirementsSchema } from "../types";
+import { PaymentRequirements, PaymentRequirementsSchema } from "../types";
 import { evm } from "../shared";
 import { createPaymentHeader } from "../client";
 
@@ -15,10 +15,13 @@ export function withPaymentInterceptor(
       }
 
       try {
-        const { paymentRequirements } = error.response.data as any;
-        const parsed = PaymentRequirementsSchema.parse(paymentRequirements);
+        const { paymentRequirements } = error.response.data as { paymentRequirements: PaymentRequirements[] };
+        const parsedPaymentRequirements = paymentRequirements.map(x => PaymentRequirementsSchema.parse(x));
 
-        const paymentHeader = await createPaymentHeader(walletClient, parsed);
+        // TODO: Improve selection between multiple payment requirements
+        const selectedPaymentRequirements = parsedPaymentRequirements[0];
+
+        const paymentHeader = await createPaymentHeader(walletClient, selectedPaymentRequirements);
 
         const originalConfig = error.config;
         if (!originalConfig || !originalConfig.headers) {

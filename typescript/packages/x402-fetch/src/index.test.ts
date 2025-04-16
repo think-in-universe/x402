@@ -4,6 +4,7 @@ import { evm, PaymentRequirements } from "x402/types";
 
 vi.mock("x402/client", () => ({
   createPaymentHeader: vi.fn(),
+  selectPaymentRequirements: vi.fn(),
 }));
 
 type RequestInitWithRetry = RequestInit & { __is402Retry?: boolean };
@@ -12,17 +13,19 @@ describe("fetchWithPayment()", () => {
   let mockFetch: ReturnType<typeof vi.fn>;
   let mockWalletClient: typeof evm.SignerWallet;
   let wrappedFetch: ReturnType<typeof fetchWithPayment>;
-  const validPaymentRequirements: PaymentRequirements = {
-    scheme: "exact",
-    network: "base-sepolia",
-    maxAmountRequired: "100000", // 0.1 USDC in base units
-    resource: "https://api.example.com/resource",
-    description: "Test payment",
-    mimeType: "application/json",
-    payTo: "0x1234567890123456789012345678901234567890",
-    maxTimeoutSeconds: 300,
-    asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC on base-sepolia
-  };
+  const validPaymentRequirements: PaymentRequirements[] = [
+    {
+      scheme: "exact",
+      network: "base-sepolia",
+      maxAmountRequired: "100000", // 0.1 USDC in base units
+      resource: "https://api.example.com/resource",
+      description: "Test payment",
+      mimeType: "application/json",
+      payTo: "0x1234567890123456789012345678901234567890",
+      maxTimeoutSeconds: 300,
+      asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC on base-sepolia
+    },
+  ];
 
   const createResponse = (status: number, data?: unknown): Response => {
     const response = new Response(JSON.stringify(data), {
@@ -33,7 +36,7 @@ describe("fetchWithPayment()", () => {
     return response;
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetAllMocks();
 
     mockFetch = vi.fn();
@@ -41,6 +44,12 @@ describe("fetchWithPayment()", () => {
     mockWalletClient = {
       signMessage: vi.fn(),
     } as unknown as typeof evm.SignerWallet;
+
+    // Mock payment requirements selector
+    const { selectPaymentRequirements } = await import("x402/client");
+    (selectPaymentRequirements as ReturnType<typeof vi.fn>).mockImplementation(
+      requirements => requirements[0],
+    );
 
     wrappedFetch = fetchWithPayment(mockFetch, mockWalletClient);
   });
@@ -59,8 +68,11 @@ describe("fetchWithPayment()", () => {
     const paymentHeader = "payment-header-value";
     const successResponse = createResponse(200, { data: "success" });
 
-    const { createPaymentHeader } = await import("x402/client");
+    const { createPaymentHeader, selectPaymentRequirements } = await import("x402/client");
     (createPaymentHeader as ReturnType<typeof vi.fn>).mockResolvedValue(paymentHeader);
+    (selectPaymentRequirements as ReturnType<typeof vi.fn>).mockImplementation(
+      requirements => requirements[0],
+    );
     mockFetch
       .mockResolvedValueOnce(createResponse(402, { paymentRequirements: validPaymentRequirements }))
       .mockResolvedValueOnce(successResponse);
@@ -71,7 +83,8 @@ describe("fetchWithPayment()", () => {
     } as RequestInitWithRetry);
 
     expect(result).toBe(successResponse);
-    expect(createPaymentHeader).toHaveBeenCalledWith(mockWalletClient, validPaymentRequirements);
+    expect(selectPaymentRequirements).toHaveBeenCalledWith(validPaymentRequirements);
+    expect(createPaymentHeader).toHaveBeenCalledWith(mockWalletClient, validPaymentRequirements[0]);
     expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(mockFetch).toHaveBeenLastCalledWith("https://api.example.com", {
       method: "GET",
@@ -106,10 +119,12 @@ describe("fetchWithPayment()", () => {
 
   it("should reject if payment amount exceeds maximum", async () => {
     const errorResponse = createResponse(402, {
-      paymentRequirements: {
-        ...validPaymentRequirements,
-        maxAmountRequired: "200000", // 0.2 USDC, which exceeds our default max of 0.1 USDC
-      },
+      paymentRequirements: [
+        {
+          ...validPaymentRequirements[0],
+          maxAmountRequired: "200000", // 0.2 USDC, which exceeds our default max of 0.1 USDC
+        },
+      ],
     });
     mockFetch.mockResolvedValue(errorResponse);
 

@@ -1,8 +1,9 @@
+import { selectPaymentRequirements } from "../client";
 import { PaymentRequirements } from "../types/verify";
 
 interface PaywallOptions {
   amount: number;
-  paymentRequirements: PaymentRequirements;
+  paymentRequirements: PaymentRequirements[];
   currentUrl: string;
   testnet: boolean;
 }
@@ -23,6 +24,7 @@ export function getPaywallHtml({
   paymentRequirements,
   currentUrl,
 }: PaywallOptions): string {
+  const selectedPaymentRequirements = selectPaymentRequirements(paymentRequirements);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -157,7 +159,7 @@ export function getPaywallHtml({
   try {
     // Initialize x402 namespace
     window.x402 = {
-      paymentRequirements: ${JSON.stringify(paymentRequirements)},
+      paymentRequirements: ${JSON.stringify(selectedPaymentRequirements)},
       isTestnet: ${testnet},
       currentUrl: "${currentUrl}",
       state: {
@@ -287,18 +289,18 @@ export function getPaywallHtml({
 
   window.x402.utils.signAuthorization = async (walletClient, authorizationParameters, paymentRequirements, publicClient) => {
     const chainId = getNetworkId(paymentRequirements.network);
-    const usdcName = window.x402.config.chainConfig[chainId].usdcName;
-    const usdcAddress = window.x402.config.chainConfig[chainId].usdcAddress;
-    const version = await window.x402.utils.getVersion(publicClient, usdcAddress);
+    const name = paymentRequirements.extra?.name ?? window.x402.config.chainConfig[chainId].usdcName;
+    const erc20Address = paymentRequirements.asset;
+    const version = paymentRequirements.extra?.version ?? await window.x402.utils.getVersion(publicClient, erc20Address);
     const { from, to, value, validAfter, validBefore, nonce } = authorizationParameters;
     const data = {
       account: walletClient.account,
       types: authorizationTypes,
       domain: {
-        name: usdcName,
-        version: version,
-        chainId: chainId,
-        verifyingContract: usdcAddress,
+        name,
+        version,
+        chainId,
+        verifyingContract: erc20Address,
       },
       primaryType: "TransferWithAuthorization",
       message: {
@@ -525,7 +527,7 @@ window.addEventListener('load', initializeApp);
   <div class="container">
     <div class="header">
       <h1 class="title">Payment Required</h1>
-      <p class="subtitle">${paymentRequirements.description}. To access this content, please pay $${amount} ${testnet ? "Base Sepolia" : "Base"} USDC.</p>
+      <p class="subtitle">${selectedPaymentRequirements.description}. To access this content, please pay $${amount} ${testnet ? "Base Sepolia" : "Base"} USDC.</p>
       <p class="instructions">Need Base Sepolia USDC? <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">Get some here.</a></p>
     </div>
 

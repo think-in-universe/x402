@@ -1,4 +1,5 @@
 import type { MiddlewareHandler } from "hono";
+import { exact } from "x402/schemes";
 import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
 import { getUsdcAddressForChain } from "x402/shared/evm";
 import {
@@ -6,6 +7,7 @@ import {
   Money,
   moneySchema,
   PaymentMiddlewareConfig,
+  PaymentPayload,
   PaymentRequirements,
   Resource,
   settleResponseHeader,
@@ -54,6 +56,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
     const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
       config;
 
+    const assetAddress = config.asset?.address ?? getUsdcAddressForChain(getNetworkId(network));
+    const assetDecimals = config.asset?.decimals ?? 6;
+
     const parsedAmount = moneySchema.safeParse(amount);
     if (!parsedAmount.success) {
       throw new Error(
@@ -61,23 +66,30 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       );
     }
     const parsedUsdAmount = parsedAmount.data;
-    const maxAmountRequired = parsedUsdAmount * 10 ** 6; // TODO: Determine asset, get decimals, and convert to atomic amount
+    const maxAmountRequired = parsedUsdAmount * 10 ** assetDecimals;
 
     return async (c, next) => {
       let resourceUrl = resource || (c.req.url as Resource);
-      const paymentRequirements: PaymentRequirements = {
-        scheme: "exact",
-        network,
-        maxAmountRequired: maxAmountRequired.toString(),
-        resource: resourceUrl,
-        description: description ?? "",
-        mimeType: mimeType ?? "",
-        payTo: address,
-        maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
-        asset: getUsdcAddressForChain(getNetworkId(network)),
-        outputSchema: outputSchema || undefined,
-        extra: undefined,
-      };
+      const paymentRequirements: PaymentRequirements[] = [
+        {
+          scheme: "exact",
+          network,
+          maxAmountRequired: maxAmountRequired.toString(),
+          resource: resourceUrl,
+          description: description ?? "",
+          mimeType: mimeType ?? "",
+          payTo: address,
+          maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
+          asset: assetAddress,
+          outputSchema: outputSchema || undefined,
+          extra: config.asset
+            ? {
+                name: config.asset.eip712.name,
+                version: config.asset.eip712.version,
+              }
+            : undefined,
+        },
+      ];
 
       const payment = c.req.header("X-PAYMENT");
       const userAgent = c.req.header("User-Agent") || "";
@@ -111,7 +123,33 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         );
       }
 
-      const response = await verify(payment, paymentRequirements);
+      let decodedPayment: PaymentPayload;
+      try {
+        decodedPayment = exact.evm.decodePayment(payment);
+      } catch (error) {
+        return c.json(
+          {
+            error: error || "Invalid or malformed payment header",
+            paymentRequirements: toJsonSafe(paymentRequirements),
+          },
+          402,
+        );
+      }
+
+      const selectedPaymentRequirements = paymentRequirements.find(
+        value => value.scheme === decodedPayment.scheme && value.network === decodedPayment.network,
+      );
+      if (!selectedPaymentRequirements) {
+        return c.json(
+          {
+            error: "Unable to find matching payment requirements",
+            paymentRequirements: toJsonSafe(paymentRequirements),
+          },
+          402,
+        );
+      }
+
+      const response = await verify(decodedPayment, selectedPaymentRequirements);
       if (!response.isValid) {
         return c.json(
           {
@@ -125,14 +163,14 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       await next();
 
       try {
-        const settleResponse = await settle(payment, paymentRequirements);
+        const settleResponse = await settle(decodedPayment, selectedPaymentRequirements);
         const responseHeader = settleResponseHeader(settleResponse);
 
         c.header("X-PAYMENT-RESPONSE", responseHeader);
       } catch (error) {
         c.res = c.json(
           {
-            error,
+            error: error || "Failed to settle payment",
             paymentRequirements: toJsonSafe(paymentRequirements),
           },
           402,

@@ -1,6 +1,6 @@
 import { Account, Address, Chain, Hex, Transport, verifyTypedData } from "viem";
 import { getNetworkId } from "../../../shared";
-import { getUsdcAddressForChain, getUSDCBalance, getVersion } from "../../../shared/evm";
+import { getVersion, getERC20Balance } from "../../../shared/evm";
 import {
   usdcABI as abi,
   authorizationTypes,
@@ -61,15 +61,16 @@ export async function verify<
       invalidReason: `Incompatible payload scheme. payload: ${payload.scheme}, paymentRequirements: ${paymentRequirements.scheme}, supported: ${SCHEME}`,
     };
   }
-  let usdcName: string;
+
+  let name: string;
   let chainId: number;
-  let usdcAddress: Address;
+  let erc20Address: Address;
   let version: string;
   try {
     chainId = getNetworkId(payload.network);
-    usdcName = config[chainId.toString()].usdcName;
-    usdcAddress = getUsdcAddressForChain(chainId);
-    version = await getVersion(client);
+    name = paymentRequirements.extra?.name ?? config[chainId.toString()].usdcName;
+    erc20Address = paymentRequirements.asset as Address;
+    version = paymentRequirements.extra?.version ?? (await getVersion(client));
   } catch {
     return {
       isValid: false,
@@ -81,10 +82,10 @@ export async function verify<
     types: authorizationTypes,
     primaryType: "TransferWithAuthorization" as const,
     domain: {
-      name: usdcName,
+      name,
       version,
       chainId,
-      verifyingContract: paymentRequirements.asset as Address,
+      verifyingContract: erc20Address,
     },
     message: {
       from: payload.payload.authorization.from,
@@ -106,13 +107,7 @@ export async function verify<
       invalidReason: "invalid_scheme", //"Invalid permit signature",
     };
   }
-  // Verify usdc address is correct for the chain
-  if (paymentRequirements.asset !== usdcAddress) {
-    return {
-      isValid: false,
-      invalidReason: "invalid_scheme", //"Invalid usdc address",
-    };
-  }
+
   // Verify deadline is not yet expired
   // Pad 3 block to account for round tripping
   if (
@@ -131,7 +126,11 @@ export async function verify<
     };
   }
   // Verify client has enough funds to cover paymentRequirements.maxAmountRequired
-  const balance = await getUSDCBalance(client, payload.payload.authorization.from as Address);
+  const balance = await getERC20Balance(
+    client,
+    erc20Address,
+    payload.payload.authorization.from as Address,
+  );
   if (balance < BigInt(paymentRequirements.maxAmountRequired)) {
     return {
       isValid: false,
