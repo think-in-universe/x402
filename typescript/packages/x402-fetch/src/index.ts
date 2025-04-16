@@ -1,6 +1,10 @@
 import { PaymentRequirementsSchema } from "x402/types";
 import { evm } from "x402/types";
-import { createPaymentHeader } from "x402/client";
+import {
+  createPaymentHeader,
+  PaymentRequirementsSelector,
+  selectPaymentRequirements,
+} from "x402/client";
 
 /**
  * Enables the payment of APIs using the x402 payment protocol.
@@ -16,6 +20,7 @@ import { createPaymentHeader } from "x402/client";
  * @param fetch - The fetch function to wrap (typically globalThis.fetch)
  * @param walletClient - The wallet client used to sign payment messages
  * @param maxValue - The maximum allowed payment amount in base units (defaults to 0.1 USDC)
+ * @param paymentRequirementsSelector - A function that selects the payment requirements from the response
  * @returns A wrapped fetch function that handles 402 responses automatically
  *
  * @example
@@ -36,6 +41,7 @@ export function fetchWithPayment(
   fetch: typeof globalThis.fetch,
   walletClient: typeof evm.SignerWallet,
   maxValue: bigint = BigInt(0.1 * 10 ** 6), // Default to 0.10 USDC
+  paymentRequirementsSelector: PaymentRequirementsSelector = selectPaymentRequirements,
 ) {
   return async (input: RequestInfo, init?: RequestInit) => {
     const response = await fetch(input, init);
@@ -49,8 +55,7 @@ export function fetchWithPayment(
       PaymentRequirementsSchema.parse(x),
     );
 
-    // TODO: Improve selection between multiple payment requirements
-    const selectedPaymentRequirements = parsedPaymentRequirements[0];
+    const selectedPaymentRequirements = paymentRequirementsSelector(parsedPaymentRequirements);
 
     if (BigInt(selectedPaymentRequirements.maxAmountRequired) > maxValue) {
       throw new Error("Payment amount exceeds maximum allowed");

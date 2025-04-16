@@ -12,6 +12,7 @@ import { withPaymentInterceptor } from "./index";
 // Mock the createPaymentHeader function
 vi.mock("x402/client", () => ({
   createPaymentHeader: vi.fn(),
+  selectPaymentRequirements: vi.fn(),
 }));
 
 describe("withPaymentInterceptor()", () => {
@@ -19,17 +20,19 @@ describe("withPaymentInterceptor()", () => {
   let mockWalletClient: typeof evm.SignerWallet;
   let interceptor: (error: AxiosError) => Promise<AxiosResponse>;
 
-  const validPaymentRequirements: PaymentRequirements = {
-    scheme: "exact",
-    network: "base-sepolia",
-    maxAmountRequired: "1000000", // 1 USDC in base units
-    resource: "https://api.example.com/resource",
-    description: "Test payment",
-    mimeType: "application/json",
-    payTo: "0x1234567890123456789012345678901234567890",
-    maxTimeoutSeconds: 300,
-    asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC on base-sepolia
-  };
+  const validPaymentRequirements: PaymentRequirements[] = [
+    {
+      scheme: "exact",
+      network: "base-sepolia",
+      maxAmountRequired: "1000000", // 1 USDC in base units
+      resource: "https://api.example.com/resource",
+      description: "Test payment",
+      mimeType: "application/json",
+      payTo: "0x1234567890123456789012345678901234567890",
+      maxTimeoutSeconds: 300,
+      asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e", // USDC on base-sepolia
+    },
+  ];
 
   const createErrorConfig = (isRetry = false): InternalAxiosRequestConfig =>
     ({
@@ -42,7 +45,7 @@ describe("withPaymentInterceptor()", () => {
   const createAxiosError = (
     status: number,
     config?: InternalAxiosRequestConfig,
-    data?: { paymentRequirements: PaymentRequirements },
+    data?: { paymentRequirements: PaymentRequirements[] },
   ): AxiosError => {
     return new AxiosError(
       "Error",
@@ -59,7 +62,7 @@ describe("withPaymentInterceptor()", () => {
     );
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset mocks before each test
     vi.resetAllMocks();
 
@@ -77,6 +80,12 @@ describe("withPaymentInterceptor()", () => {
     mockWalletClient = {
       signMessage: vi.fn(),
     } as unknown as typeof evm.SignerWallet;
+
+    // Mock payment requirements selector
+    const { selectPaymentRequirements } = await import("x402/client");
+    (selectPaymentRequirements as ReturnType<typeof vi.fn>).mockImplementation(
+      requirements => requirements[0],
+    );
 
     // Set up the interceptor
     withPaymentInterceptor(mockAxiosClient, mockWalletClient);
@@ -102,8 +111,11 @@ describe("withPaymentInterceptor()", () => {
     const paymentHeader = "payment-header-value";
     const successResponse = { data: "success" } as AxiosResponse;
 
-    const { createPaymentHeader } = await import("x402/client");
+    const { createPaymentHeader, selectPaymentRequirements } = await import("x402/client");
     (createPaymentHeader as ReturnType<typeof vi.fn>).mockResolvedValue(paymentHeader);
+    (selectPaymentRequirements as ReturnType<typeof vi.fn>).mockImplementation(
+      requirements => requirements[0],
+    );
     (mockAxiosClient.request as ReturnType<typeof vi.fn>).mockResolvedValue(successResponse);
 
     const error = createAxiosError(402, createErrorConfig(), {
@@ -113,7 +125,8 @@ describe("withPaymentInterceptor()", () => {
     const result = await interceptor(error);
 
     expect(result).toBe(successResponse);
-    expect(createPaymentHeader).toHaveBeenCalledWith(mockWalletClient, validPaymentRequirements);
+    expect(selectPaymentRequirements).toHaveBeenCalledWith(validPaymentRequirements);
+    expect(createPaymentHeader).toHaveBeenCalledWith(mockWalletClient, validPaymentRequirements[0]);
     expect(mockAxiosClient.request).toHaveBeenCalledWith({
       ...error.config,
       headers: new AxiosHeaders({

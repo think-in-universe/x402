@@ -1,3 +1,4 @@
+import { selectPaymentRequirements } from "../client";
 import { PaymentRequirements } from "../types/verify";
 
 interface PaywallOptions {
@@ -157,7 +158,7 @@ export function getPaywallHtml({
   try {
     // Initialize x402 namespace
     window.x402 = {
-      paymentRequirements: ${JSON.stringify(paymentRequirements[0])},
+      paymentRequirements: ${JSON.stringify(selectPaymentRequirements(paymentRequirements))},
       isTestnet: ${testnet},
       currentUrl: "${currentUrl}",
       state: {
