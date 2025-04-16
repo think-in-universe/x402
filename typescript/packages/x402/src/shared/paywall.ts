@@ -24,6 +24,7 @@ export function getPaywallHtml({
   paymentRequirements,
   currentUrl,
 }: PaywallOptions): string {
+  const selectedPaymentRequirements = selectPaymentRequirements(paymentRequirements);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -158,7 +159,7 @@ export function getPaywallHtml({
   try {
     // Initialize x402 namespace
     window.x402 = {
-      paymentRequirements: ${JSON.stringify(selectPaymentRequirements(paymentRequirements))},
+      paymentRequirements: ${JSON.stringify(selectedPaymentRequirements)},
       isTestnet: ${testnet},
       currentUrl: "${currentUrl}",
       state: {
@@ -526,7 +527,7 @@ window.addEventListener('load', initializeApp);
   <div class="container">
     <div class="header">
       <h1 class="title">Payment Required</h1>
-      <p class="subtitle">${paymentRequirements[0].description}. To access this content, please pay $${amount} ${testnet ? "Base Sepolia" : "Base"} USDC.</p>
+      <p class="subtitle">${selectedPaymentRequirements.description}. To access this content, please pay $${amount} ${testnet ? "Base Sepolia" : "Base"} USDC.</p>
       <p class="instructions">Need Base Sepolia USDC? <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">Get some here.</a></p>
     </div>
 
