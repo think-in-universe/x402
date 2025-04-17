@@ -256,6 +256,9 @@ importers:
       axios:
         specifier: ^1.7.9
         version: 1.8.4
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
       hono:
         specifier: ^4.7.1
         version: 4.7.6
