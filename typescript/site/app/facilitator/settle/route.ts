@@ -1,9 +1,15 @@
 import { Hex } from "viem";
 import { settle } from "x402/facilitator";
-import { PaymentRequirements, PaymentRequirementsSchema, evm } from "x402/types";
+import {
+  PaymentPayload,
+  PaymentPayloadSchema,
+  PaymentRequirements,
+  PaymentRequirementsSchema,
+  evm,
+} from "x402/types";
 
 type SettleRequest = {
-  payload: string;
+  payload: PaymentPayload;
   details: PaymentRequirements;
 };
 
@@ -18,9 +24,10 @@ export async function POST(req: Request) {
 
   const body: SettleRequest = await req.json();
 
+  const paymentPayload = PaymentPayloadSchema.parse(body.payload);
   const paymentRequirements = PaymentRequirementsSchema.parse(body.details);
 
-  const response = await settle(wallet, body.payload, paymentRequirements);
+  const response = await settle(wallet, paymentPayload, paymentRequirements);
 
   return Response.json(response);
 }
@@ -35,7 +42,7 @@ export async function GET() {
     endpoint: "/settle",
     description: "POST to settle x402 payments",
     body: {
-      payload: "string",
+      payload: "PaymentPayload",
       details: "PaymentRequirements",
     },
   });
