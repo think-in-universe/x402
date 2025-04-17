@@ -14,7 +14,7 @@ export default [
     languageOptions: {
       parser: tsParser,
       sourceType: "module",
-      ecmaVersion: 2022,
+      ecmaVersion: 2020,
       globals: {
         process: "readonly",
         __dirname: "readonly",
