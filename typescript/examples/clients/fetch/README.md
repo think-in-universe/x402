@@ -54,7 +54,7 @@ The example demonstrates how to:
 import { config } from "dotenv";
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { fetchWithPayment } from "x402-fetch";
+import { wrapFetchWithPayment } from "x402-fetch";
 import { baseSepolia } from "viem/chains";
 
 config();
@@ -70,7 +70,7 @@ const client = createWalletClient({
 });
 
 // Wrap fetch with payment handling
-const fetchWithPay = fetchWithPayment(fetch, client);
+const fetchWithPay = wrapFetchWithPayment(fetch, client);
 
 // Make request to paid endpoint
 fetchWithPay(`${RESOURCE_SERVER_URL}${ENDPOINT_PATH}`, {

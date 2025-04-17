@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 import { createWalletClient, http, publicActions } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { fetchWithPayment } from "x402-fetch";
+import { wrapFetchWithPayment } from "x402-fetch";
 import { baseSepolia } from "viem/chains";
 
 config();
@@ -20,9 +20,9 @@ const client = createWalletClient({
   chain: baseSepolia,
 }).extend(publicActions);
 
-const fetchWithPay = fetchWithPayment(fetch, client);
+const fetchWithPayment = wrapFetchWithPayment(fetch, client);
 
-fetchWithPay(`${RESOURCE_SERVER_URL}${ENDPOINT_PATH}`, {
+fetchWithPayment(`${RESOURCE_SERVER_URL}${ENDPOINT_PATH}`, {
   method: "GET",
 })
   .then(async response => {

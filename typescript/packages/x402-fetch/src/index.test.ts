@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fetchWithPayment } from "./index";
+import { wrapFetchWithPayment } from "./index";
 import { evm, PaymentRequirements } from "x402/types";
 
 vi.mock("x402/client", () => ({
@@ -12,7 +12,7 @@ type RequestInitWithRetry = RequestInit & { __is402Retry?: boolean };
 describe("fetchWithPayment()", () => {
   let mockFetch: ReturnType<typeof vi.fn>;
   let mockWalletClient: typeof evm.SignerWallet;
-  let wrappedFetch: ReturnType<typeof fetchWithPayment>;
+  let wrappedFetch: ReturnType<typeof wrapFetchWithPayment>;
   const validPaymentRequirements: PaymentRequirements[] = [
     {
       scheme: "exact",
@@ -51,7 +51,7 @@ describe("fetchWithPayment()", () => {
       requirements => requirements[0],
     );
 
-    wrappedFetch = fetchWithPayment(mockFetch, mockWalletClient);
+    wrappedFetch = wrapFetchWithPayment(mockFetch, mockWalletClient);
   });
 
   it("should return the original response for non-402 status codes", async () => {
