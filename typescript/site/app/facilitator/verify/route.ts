@@ -1,8 +1,14 @@
-import { PaymentRequirements, PaymentRequirementsSchema, evm } from "x402/types";
+import {
+  PaymentPayload,
+  PaymentPayloadSchema,
+  PaymentRequirements,
+  PaymentRequirementsSchema,
+  evm,
+} from "x402/types";
 import { verify } from "x402/facilitator";
 
 type VerifyRequest = {
-  payload: string;
+  payload: PaymentPayload;
   details: PaymentRequirements;
 };
 
@@ -17,10 +23,11 @@ const client = evm.createClientSepolia();
 export async function POST(req: Request) {
   const body: VerifyRequest = await req.json();
 
+  const paymentPayload = PaymentPayloadSchema.parse(body.payload);
   const paymentRequirements = PaymentRequirementsSchema.parse(body.details);
 
   // @ts-expect-error - Type instantiation is excessively deep
-  const valid = await verify(client, body.payload, paymentRequirements);
+  const valid = await verify(client, paymentPayload, paymentRequirements);
 
   return Response.json(valid);
 }
@@ -35,7 +42,7 @@ export async function GET() {
     endpoint: "/verify",
     description: "POST to verify x402 payments",
     body: {
-      payload: "string",
+      payload: "PaymentPayload",
       details: "PaymentRequirements",
     },
   });

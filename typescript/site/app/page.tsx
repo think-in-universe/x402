@@ -85,7 +85,7 @@ export default function Home() {
         <section className="max-w-6xl mx-auto px-4 py-20 lg:py-28">
           <div className="text-center">
             <div className="w-64 mb-6 mx-auto">
-              <WordmarkCondensed alt="x402 Payment Protocol" className="mx-auto" />
+              <WordmarkCondensed className="mx-auto" />
             </div>
             <p className="text-xl text-gray-400 mb-8 font-mono">
               An open protocol for internet-native payments
