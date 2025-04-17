@@ -80,8 +80,9 @@ export function useFacilitator(
     const res = await axios.post(
       `${url}/verify`,
       {
-        payload: toJsonSafe(payload),
-        details: toJsonSafe(paymentRequirements),
+        x402Version: payload.x402Version,
+        paymentPayload: toJsonSafe(payload),
+        paymentRequirements: toJsonSafe(paymentRequirements),
       },
       {
         headers: createAuthHeaders ? (await createAuthHeaders()).verify : undefined,
@@ -109,8 +110,9 @@ export function useFacilitator(
     const res = await axios.post(
       `${url}/settle`,
       {
-        payload: toJsonSafe(payload),
-        details: toJsonSafe(paymentRequirements),
+        x402Version: payload.x402Version,
+        paymentPayload: toJsonSafe(payload),
+        paymentRequirements: toJsonSafe(paymentRequirements),
       },
       {
         headers: createAuthHeaders ? (await createAuthHeaders()).settle : undefined,

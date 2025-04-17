@@ -45,14 +45,6 @@ export function withPaymentInterceptor(
       }
 
       try {
-        const { paymentRequirements } = error.response.data as {
-          paymentRequirements: PaymentRequirements[];
-        };
-        const parsed = paymentRequirements.map(x => PaymentRequirementsSchema.parse(x));
-
-        const selectedPaymentRequirements = paymentRequirementsSelector(parsed);
-        const paymentHeader = await createPaymentHeader(walletClient, selectedPaymentRequirements);
-
         const originalConfig = error.config;
         if (!originalConfig || !originalConfig.headers) {
           return Promise.reject(new Error("Missing axios request configuration"));
@@ -61,6 +53,14 @@ export function withPaymentInterceptor(
         if ((originalConfig as { __is402Retry?: boolean }).__is402Retry) {
           return Promise.reject(error);
         }
+
+        const { paymentRequirements } = error.response.data as {
+          paymentRequirements: PaymentRequirements[];
+        };
+        const parsed = paymentRequirements.map(x => PaymentRequirementsSchema.parse(x));
+
+        const selectedPaymentRequirements = paymentRequirementsSelector(parsed);
+        const paymentHeader = await createPaymentHeader(walletClient, selectedPaymentRequirements);
 
         (originalConfig as { __is402Retry?: boolean }).__is402Retry = true;
 
