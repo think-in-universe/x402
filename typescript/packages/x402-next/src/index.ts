@@ -100,22 +100,26 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
 
     const resourceUrl =
       resource || (`${request.nextUrl.protocol}//${request.nextUrl.host}${pathname}` as Resource);
-    const paymentRequirements: PaymentRequirements[] = [{
-      scheme: "exact",
-      network,
-      maxAmountRequired: maxAmountRequired.toString(),
-      resource: resourceUrl,
-      description: description ?? "",
-      mimeType: mimeType ?? "",
-      payTo: address,
-      maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
-      asset: assetAddress,
-      outputSchema: outputSchema || undefined,
-      extra: config.asset ? {
-        name: config.asset.eip712.name,
-        version: config.asset.eip712.version,
-      } : undefined,
-    }];
+    const paymentRequirements: PaymentRequirements[] = [
+      {
+        scheme: "exact",
+        network,
+        maxAmountRequired: maxAmountRequired.toString(),
+        resource: resourceUrl,
+        description: description ?? "",
+        mimeType: mimeType ?? "",
+        payTo: address,
+        maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
+        asset: assetAddress,
+        outputSchema: outputSchema || undefined,
+        extra: config.asset
+          ? {
+              name: config.asset.eip712.name,
+              version: config.asset.eip712.version,
+            }
+          : undefined,
+      },
+    ];
 
     const payment = request.headers.get("X-PAYMENT");
     const userAgent = request.headers.get("User-Agent") || "";
@@ -154,20 +158,26 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     try {
       decodedPayment = exact.evm.decodePayment(payment);
     } catch (error) {
-      return NextResponse.json({
-        error: error || "Invalid or malformed payment header",
-        paymentRequirements: toJsonSafe(paymentRequirements),
-      }, { status: 402 });
+      return NextResponse.json(
+        {
+          error: error || "Invalid or malformed payment header",
+          paymentRequirements: toJsonSafe(paymentRequirements),
+        },
+        { status: 402 },
+      );
     }
 
     const selectedPaymentRequirements = paymentRequirements.find(
       value => value.scheme === decodedPayment.scheme && value.network === decodedPayment.network,
     );
     if (!selectedPaymentRequirements) {
-      return NextResponse.json({
-        error: "Unable to find matching payment requirements",
-        paymentRequirements: toJsonSafe(paymentRequirements),
-      }, { status: 402 });
+      return NextResponse.json(
+        {
+          error: "Unable to find matching payment requirements",
+          paymentRequirements: toJsonSafe(paymentRequirements),
+        },
+        { status: 402 },
+      );
     }
 
     try {
