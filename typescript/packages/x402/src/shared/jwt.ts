@@ -1,5 +1,4 @@
 import { generateJwt } from "@coinbase/cdp-sdk/auth";
-import { Resource } from "../types";
 
 /**
  * Creates an authorization header for a request to the Coinbase API.
@@ -13,7 +12,7 @@ import { Resource } from "../types";
 export async function createAuthHeader(
   apiKeyId: string,
   apiKeySecret: string,
-  requestHost: Resource,
+  requestHost: string,
   requestPath: string,
 ) {
   const jwt = await generateJwt({

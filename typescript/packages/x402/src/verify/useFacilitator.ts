@@ -7,6 +7,9 @@ import {
 import axios from "axios";
 import { createAuthHeader, toJsonSafe } from "../shared";
 import { Resource } from "../types";
+import { config } from "dotenv";
+
+config();
 
 export type CreateHeaders = () => Promise<{
   verify: Record<string, string>;
@@ -20,23 +23,32 @@ export type CreateHeaders = () => Promise<{
  * @param apiKeySecret - The CDP API key secret
  * @returns A function that returns the auth headers
  */
-export function createAuthHeaders(apiKeyId: string, apiKeySecret: string): CreateHeaders {
+export function createCdpAuthHeaders(apiKeyId?: string, apiKeySecret?: string): CreateHeaders {
+  apiKeyId = apiKeyId ?? process.env.CDP_API_KEY_ID;
+  apiKeySecret = apiKeySecret ?? process.env.CDP_API_KEY_SECRET;
+
+  if (!apiKeyId || !apiKeySecret) {
+    throw new Error(
+      "Missing environment variables: CDP_API_KEY_ID and CDP_API_KEY_SECRET must be set when using default facilitator",
+    );
+  }
+
   return async () => {
     return {
       verify: {
         Authorization: await createAuthHeader(
           apiKeyId,
           apiKeySecret,
-          "https://api.cdp.coinbase.com/platform",
-          "/v2/x402/verify",
+          "api.cdp.coinbase.com",
+          "/platform/v2/x402/verify",
         ),
       },
       settle: {
         Authorization: await createAuthHeader(
           apiKeyId,
           apiKeySecret,
-          "https://api.cdp.coinbase.com/platform",
-          "/v2/x402/settle",
+          "api.cdp.coinbase.com",
+          "/platform/v2/x402/settle",
         ),
       },
     };
@@ -52,7 +64,7 @@ export function createAuthHeaders(apiKeyId: string, apiKeySecret: string): Creat
  */
 export function useFacilitator(
   url: Resource = "https://x402.org/facilitator",
-  createAuthHeaders?: CreateHeaders,
+  createAuthHeaders?: CreateHeaders, // TODO: default to createCdpAuthHeaders() once the `url` default is updated to `https://api.cdp.coinbase.com/platform/v2/x402`
 ) {
   /**
    * Verifies a payment payload with the facilitator service
