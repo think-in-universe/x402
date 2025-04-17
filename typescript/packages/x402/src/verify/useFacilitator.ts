@@ -27,7 +27,7 @@ export function createAuthHeaders(apiKeyId: string, apiKeySecret: string): Creat
         Authorization: await createAuthHeader(
           apiKeyId,
           apiKeySecret,
-          "https://x402.org/facilitator",
+          "https://api.cdp.coinbase.com/platform",
           "/v2/x402/verify",
         ),
       },
@@ -35,7 +35,7 @@ export function createAuthHeaders(apiKeyId: string, apiKeySecret: string): Creat
         Authorization: await createAuthHeader(
           apiKeyId,
           apiKeySecret,
-          "https://x402.org/facilitator",
+          "https://api.cdp.coinbase.com/platform",
           "/v2/x402/settle",
         ),
       },
@@ -46,12 +46,12 @@ export function createAuthHeaders(apiKeyId: string, apiKeySecret: string): Creat
 /**
  * Creates a facilitator client for interacting with the X402 payment facilitator service
  *
- * @param url - The base URL of the facilitator service (defaults to "https://x402.org/facilitator/v2/x402")
+ * @param url - The base URL of the facilitator service (defaults to "https://x402.org/facilitator")
  * @param createAuthHeaders - Optional function to create an auth header for the facilitator service. If using Coinbase's facilitator, use the createAuthHeaders function.
  * @returns An object containing verify and settle functions for interacting with the facilitator
  */
 export function useFacilitator(
-  url: Resource = "https://x402.org/facilitator/v2/x402",
+  url: Resource = "https://x402.org/facilitator",
   createAuthHeaders?: CreateHeaders,
 ) {
   /**
