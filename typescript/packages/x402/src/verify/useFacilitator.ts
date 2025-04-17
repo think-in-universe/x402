@@ -8,13 +8,6 @@ import axios from "axios";
 import { createAuthHeader, toJsonSafe } from "../shared";
 import { Resource } from "../types";
 
-/**
- * Creates a CDP auth header for the facilitator service
- *
- * @param apiKeyId - The CDP API key ID
- * @param apiKeySecret - The CDP API key secret
- * @returns A function that returns the auth header
- */
 export type CreateHeaders = () => Promise<{
   verify: Record<string, string>;
   settle: Record<string, string>;
@@ -25,9 +18,9 @@ export type CreateHeaders = () => Promise<{
  *
  * @param apiKeyId - The CDP API key ID
  * @param apiKeySecret - The CDP API key secret
- * @returns A function that returns the auth header
+ * @returns A function that returns the auth headers
  */
-export function createCdpAuthHeaders(apiKeyId: string, apiKeySecret: string): CreateHeaders {
+export function createAuthHeaders(apiKeyId: string, apiKeySecret: string): CreateHeaders {
   return async () => {
     return {
       verify: {
@@ -54,7 +47,7 @@ export function createCdpAuthHeaders(apiKeyId: string, apiKeySecret: string): Cr
  * Creates a facilitator client for interacting with the X402 payment facilitator service
  *
  * @param url - The base URL of the facilitator service (defaults to "https://x402.org/facilitator/v2/x402")
- * @param createAuthHeaders - Optional function to create an auth header for the facilitator service. If using Coinbase's facilitator, use the createCdpAuthHeaders function.
+ * @param createAuthHeaders - Optional function to create an auth header for the facilitator service. If using Coinbase's facilitator, use the createAuthHeaders function.
  * @returns An object containing verify and settle functions for interacting with the facilitator
  */
 export function useFacilitator(
