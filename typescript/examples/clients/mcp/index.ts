@@ -25,7 +25,6 @@ const wallet = createWalletClient({
   account: privateKeyToAccount(PRIVATE_KEY as Hex),
 }).extend(publicActions);
 
-
 const client = withPaymentInterceptor(axios.create({ baseURL: RESOURCE_SERVER_URL }), wallet);
 
 // Create an MCP server
