@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
 import { getUsdcAddressForChain } from "x402/shared/evm";
 import { useFacilitator } from "x402/verify";
-import { Resource } from "x402/types";
+import { PaymentPayload, Resource } from "x402/types";
 import {
   GlobalConfig,
   Money,
@@ -12,6 +12,7 @@ import {
   PaymentRequirements,
   settleResponseHeader,
 } from "x402/types";
+import { exact } from "x402/schemes";
 
 /**
  * Configuration for the Next.js payment middleware
@@ -86,6 +87,8 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     const { amount, config = {} } = routeMatch.config;
     const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
       config;
+    const assetAddress = config.asset?.address ?? getUsdcAddressForChain(getNetworkId(network));
+    const assetDecimals = config.asset?.decimals ?? 6;
 
     const parsedAmount = moneySchema.safeParse(amount);
     if (!parsedAmount.success) {
@@ -93,11 +96,11 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     }
 
     const parsedUsdAmount = parsedAmount.data;
-    const maxAmountRequired = parsedUsdAmount * 10 ** 6;
+    const maxAmountRequired = parsedUsdAmount * 10 ** assetDecimals;
 
     const resourceUrl =
       resource || (`${request.nextUrl.protocol}//${request.nextUrl.host}${pathname}` as Resource);
-    const paymentRequirements: PaymentRequirements = {
+    const paymentRequirements: PaymentRequirements[] = [{
       scheme: "exact",
       network,
       maxAmountRequired: maxAmountRequired.toString(),
@@ -106,10 +109,13 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
       mimeType: mimeType ?? "",
       payTo: address,
       maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
-      asset: getUsdcAddressForChain(getNetworkId(network)),
+      asset: assetAddress,
       outputSchema: outputSchema || undefined,
-      extra: undefined,
-    };
+      extra: config.asset ? {
+        name: config.asset.eip712.name,
+        version: config.asset.eip712.version,
+      } : undefined,
+    }];
 
     const payment = request.headers.get("X-PAYMENT");
     const userAgent = request.headers.get("User-Agent") || "";
@@ -144,8 +150,28 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
       );
     }
 
+    let decodedPayment: PaymentPayload;
     try {
-      const response = await verify(payment, paymentRequirements);
+      decodedPayment = exact.evm.decodePayment(payment);
+    } catch (error) {
+      return NextResponse.json({
+        error: error || "Invalid or malformed payment header",
+        paymentRequirements: toJsonSafe(paymentRequirements),
+      }, { status: 402 });
+    }
+
+    const selectedPaymentRequirements = paymentRequirements.find(
+      value => value.scheme === decodedPayment.scheme && value.network === decodedPayment.network,
+    );
+    if (!selectedPaymentRequirements) {
+      return NextResponse.json({
+        error: "Unable to find matching payment requirements",
+        paymentRequirements: toJsonSafe(paymentRequirements),
+      }, { status: 402 });
+    }
+
+    try {
+      const response = await verify(decodedPayment, selectedPaymentRequirements);
       if (!response.isValid) {
         return NextResponse.json(
           {
@@ -169,7 +195,7 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     const response = NextResponse.next();
 
     try {
-      const settleResponse = await settle(payment, paymentRequirements);
+      const settleResponse = await settle(decodedPayment, selectedPaymentRequirements);
       const responseHeader = settleResponseHeader(settleResponse);
       response.headers.set("X-PAYMENT-RESPONSE", responseHeader);
     } catch (error) {
