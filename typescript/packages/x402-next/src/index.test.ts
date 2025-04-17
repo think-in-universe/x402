@@ -160,11 +160,14 @@ describe("createPaymentMiddleware()", () => {
     const response = await middleware(mockRequest);
 
     expect(mockDecodePayment).toHaveBeenCalledWith(validPayment);
-    expect(mockVerify).toHaveBeenCalledWith(decodedPayment, expect.objectContaining({
-      scheme: "exact",
-      network: "base-sepolia",
-      asset: "0xCustomAssetAddress",
-    }));
+    expect(mockVerify).toHaveBeenCalledWith(
+      decodedPayment,
+      expect.objectContaining({
+        scheme: "exact",
+        network: "base-sepolia",
+        asset: "0xCustomAssetAddress",
+      }),
+    );
     expect(response.status).toBe(200);
     expect(response.headers.get("X-PAYMENT-RESPONSE")).toBeDefined();
   });
@@ -221,11 +224,14 @@ describe("createPaymentMiddleware()", () => {
 
     const response = await middleware(mockRequest);
 
-    expect(mockSettle).toHaveBeenCalledWith(decodedPayment, expect.objectContaining({
-      scheme: "exact",
-      network: "base-sepolia",
-      asset: "0xCustomAssetAddress",
-    }));
+    expect(mockSettle).toHaveBeenCalledWith(
+      decodedPayment,
+      expect.objectContaining({
+        scheme: "exact",
+        network: "base-sepolia",
+        asset: "0xCustomAssetAddress",
+      }),
+    );
     expect(response.headers.get("X-PAYMENT-RESPONSE")).toBeDefined();
   });
 
@@ -295,12 +301,14 @@ describe("createPaymentMiddleware()", () => {
     const response = await middleware(mockRequest);
 
     expect(response.status).toBe(402);
-    const json = await response.json() as { paymentRequirements: Array<{ maxAmountRequired: string }> };
+    const json = (await response.json()) as {
+      paymentRequirements: Array<{ maxAmountRequired: string }>;
+    };
     console.log(json.paymentRequirements[0]);
     expect(json.paymentRequirements[0]).toEqual(
       expect.objectContaining({
         maxAmountRequired: "1000000",
-      })
+      }),
     );
   });
 });
