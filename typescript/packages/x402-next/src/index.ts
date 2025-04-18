@@ -61,10 +61,10 @@ export interface NextPaymentConfig extends GlobalConfig {
  * ```
  */
 export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
-  const { facilitatorUrl, address, network, routes } = globalConfig;
-  const { verify, settle } = useFacilitator(facilitatorUrl);
+  const { facilitatorUrl, address, network, routes, createAuthHeaders } = globalConfig;
+  const { verify, settle } = useFacilitator(facilitatorUrl, createAuthHeaders);
 
-  // Pre-compile route patterns to regex for better performance
+  // Pre-compile route patterns to regex
   const routePatterns = Object.entries(routes).map(([pattern, config]) => ({
     pattern: new RegExp(
       `^${pattern
@@ -87,8 +87,15 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     const { amount, config = {} } = routeMatch.config;
     const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
       config;
-    const assetAddress = config.asset?.address ?? getUsdcAddressForChain(getNetworkId(network));
-    const assetDecimals = config.asset?.decimals ?? 6;
+
+    const asset = config.asset ?? {
+      address: getUsdcAddressForChain(getNetworkId(network)),
+      decimals: 6,
+      eip712: {
+        name: "USDC",
+        version: "2",
+      },
+    };
 
     const parsedAmount = moneySchema.safeParse(amount);
     if (!parsedAmount.success) {
@@ -96,7 +103,7 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     }
 
     const parsedUsdAmount = parsedAmount.data;
-    const maxAmountRequired = parsedUsdAmount * 10 ** assetDecimals;
+    const maxAmountRequired = parsedUsdAmount * 10 ** asset.decimals;
 
     const resourceUrl =
       resource || (`${request.nextUrl.protocol}//${request.nextUrl.host}${pathname}` as Resource);
@@ -110,14 +117,12 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
         mimeType: mimeType ?? "",
         payTo: address,
         maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
-        asset: assetAddress,
+        asset: asset.address,
         outputSchema: outputSchema || undefined,
-        extra: config.asset
-          ? {
-              name: config.asset.eip712.name,
-              version: config.asset.eip712.version,
-            }
-          : undefined,
+        extra: {
+          name: asset.eip712.name,
+          version: asset.eip712.version,
+        },
       },
     ];
 
