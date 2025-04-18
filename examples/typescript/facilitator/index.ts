@@ -2,7 +2,7 @@
 import { config } from "dotenv";
 import express from "express";
 import { verify, settle } from "x402/facilitator";
-import { PaymentRequirementsSchema, PaymentRequirements, evm } from "x402/types";
+import { PaymentRequirementsSchema, PaymentRequirements, evm, PaymentPayload, PaymentPayloadSchema } from "x402/types";
 
 config();
 
@@ -22,12 +22,12 @@ const port = parseInt(PORT);
 app.use(express.json());
 
 type VerifyRequest = {
-  payload: string;
+  payload: PaymentPayload;
   details: PaymentRequirements;
 };
 
 type SettleRequest = {
-  payload: string;
+  payload: PaymentPayload;
   details: PaymentRequirements;
 };
 
@@ -48,7 +48,8 @@ app.post("/verify", async (req, res) => {
   try {
     const body: VerifyRequest = req.body;
     const paymentRequirements = PaymentRequirementsSchema.parse(body.details);
-    const valid = await verify(client, body.payload, paymentRequirements);
+    const paymentPayload = PaymentPayloadSchema.parse(body.payload);
+    const valid = await verify(client, paymentPayload, paymentRequirements);
     res.json(valid);
   } catch {
     res.status(400).json({ error: "Invalid request" });
@@ -71,7 +72,8 @@ app.post("/settle", async (req, res) => {
     const signer = createSignerSepolia(PRIVATE_KEY as `0x${string}`);
     const body: SettleRequest = req.body;
     const paymentRequirements = PaymentRequirementsSchema.parse(body.details);
-    const response = await settle(signer, body.payload, paymentRequirements);
+    const paymentPayload = PaymentPayloadSchema.parse(body.payload);
+    const response = await settle(signer, paymentPayload, paymentRequirements);
     res.json(response);
   } catch {
     res.status(400).json({ error: "Invalid request" });
