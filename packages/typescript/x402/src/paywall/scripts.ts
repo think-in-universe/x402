@@ -1,6 +1,6 @@
 import { createWalletClient, createPublicClient, http, custom, publicActions } from "viem";
-import { createConfig, connect, disconnect } from "@wagmi/core";
-import { coinbaseWallet, injected } from "@wagmi/connectors";
+import { createConfig, connect, disconnect, getAccount, switchChain } from "@wagmi/core";
+import { injected } from "@wagmi/connectors";
 import { base, baseSepolia } from "viem/chains";
 
 import { SignerWallet } from "../shared/evm/wallet.js";
@@ -9,13 +9,14 @@ import { createPayment } from "../schemes/exact/evm/client.js";
 import { createNonce, signAuthorization } from "../schemes/exact/evm/sign.js";
 import { encodePayment } from "../schemes/exact/evm/utils/paymentUtils.js";
 import { getUSDCBalance, getVersion } from "../shared/evm/usdc.js";
+import { PaymentDetails } from "../types/index.js";
 
 declare global {
   interface Window {
     x402: {
       amount?: number;
       testnet?: boolean;
-      paymentDetails: any;
+      paymentDetails: PaymentDetails;
       currentUrl: string;
       config: {
         chainConfig: Record<
@@ -44,21 +45,20 @@ function ensureFunctionsAreAvailable() {
 }
 
 // Function to update UI with payment details
-function updatePaymentUI() {
-  const x402 = window.x402;
+function updatePaymentUI(x402: Window["x402"]) {
   if (!x402) return;
 
-  console.log("X402:", x402);
   const amount = x402.amount || 0;
   const paymentDetails = x402.paymentDetails || {};
   const testnet = x402.testnet ?? true;
+  const chainName = testnet ? "Base Sepolia" : "Base";
 
   // Update payment description
   const descriptionEl = document.getElementById("payment-description");
   if (descriptionEl) {
     descriptionEl.textContent = paymentDetails.description
-      ? `${paymentDetails.description}. To access this content, please pay $${amount} Base Sepolia USDC.`
-      : `To access this content, please pay $${amount} Base Sepolia USDC.`;
+      ? `${paymentDetails.description}. To access this content, please pay $${amount} ${chainName} USDC.`
+      : `To access this content, please pay $${amount} ${chainName} USDC.`;
   }
 
   // Update amount
@@ -70,7 +70,7 @@ function updatePaymentUI() {
   // Update network
   const networkEl = document.getElementById("payment-network");
   if (networkEl) {
-    networkEl.textContent = testnet ? "Base Sepolia" : "Base";
+    networkEl.textContent = chainName;
   }
 }
 
@@ -79,7 +79,7 @@ async function initializeApp() {
 
   const wagmiConfig = createConfig({
     chains: [base, baseSepolia],
-    connectors: [coinbaseWallet({ appName: "x402" }), injected()],
+    connectors: [injected()],
     transports: {
       [base.id]: http(),
       [baseSepolia.id]: http(),
@@ -87,6 +87,13 @@ async function initializeApp() {
   });
 
   ensureFunctionsAreAvailable();
+
+  const chain = x402.testnet ? baseSepolia : base;
+  let walletClient: SignerWallet;
+  const publicClient = createPublicClient({
+    chain,
+    transport: custom(window.ethereum),
+  }).extend(publicActions);
 
   // DOM Elements
   const connectWalletBtn = document.getElementById("connect-wallet");
@@ -99,27 +106,16 @@ async function initializeApp() {
     return;
   }
 
-  // Update the UI with payment details
-  updatePaymentUI();
-
-  let walletClient: SignerWallet | null = null;
-  const chain = x402.testnet ? baseSepolia : base;
-
-  const publicClient = createPublicClient({
-    chain,
-    transport: custom(window.ethereum),
-  }).extend(publicActions);
-
   // Connect wallet handler
   connectWalletBtn.addEventListener("click", async () => {
     // If wallet is already connected, disconnect it
-    if (walletClient) {
+    const { isConnected } = getAccount(wagmiConfig);
+    if (isConnected) {
       try {
         await disconnect(wagmiConfig);
-        walletClient = null;
         connectWalletBtn.textContent = "Connect Wallet";
         paymentSection.classList.add("hidden");
-        statusDiv.textContent = "Wallet disconnected";
+        statusDiv.textContent = "";
         return;
       } catch (error) {
         statusDiv.textContent = "Failed to disconnect wallet";
@@ -134,22 +130,20 @@ async function initializeApp() {
         connector: injected(),
         chainId: chain.id,
       });
+
       if (!result.accounts?.[0]) {
         throw new Error("Please select an account in your wallet");
       }
 
-      // Verify connected to the correct network
-      if (result.chainId !== chain.id) {
-        throw new Error(`Please switch to ${chain.name} network in your wallet`);
-      }
-
+      const address = result.accounts[0];
       walletClient = createWalletClient({
-        account: result.accounts[0],
         chain,
         transport: custom(window.ethereum),
+        account: {
+          address: address as `0x${string}`,
+          type: "json-rpc",
+        },
       }).extend(publicActions) as SignerWallet;
-
-      const address = result.accounts[0];
 
       connectWalletBtn.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
       paymentSection.classList.remove("hidden");
@@ -165,9 +159,18 @@ async function initializeApp() {
 
   // Payment handler
   payButton.addEventListener("click", async () => {
-    if (!walletClient) {
+    const { isConnected, chainId: connectedChainId } = getAccount(wagmiConfig);
+    if (!isConnected) {
       statusDiv.textContent = "Please connect your wallet first";
       return;
+    }
+    if (connectedChainId !== chain.id) {
+      try {
+        await switchChain(wagmiConfig, { chainId: chain.id });
+      } catch (error) {
+        statusDiv.textContent = `Please switch to ${chain.name} network in your wallet`;
+        return;
+      }
     }
 
     try {
@@ -175,7 +178,7 @@ async function initializeApp() {
       const balance = await getUSDCBalance(publicClient, walletClient.account.address);
       if (balance === 0n) {
         statusDiv.textContent = `Your USDC balance is 0. Please make sure you have USDC tokens on ${
-          x402.testnet ? "Base Sepolia" : "Base"
+          chain.name
         }.`;
         return;
       }
@@ -218,7 +221,7 @@ async function initializeApp() {
 
 window.addEventListener("load", () => {
   // Update the UI with payment details
-  updatePaymentUI();
+  updatePaymentUI(window.x402);
 
   initializeApp();
 });
