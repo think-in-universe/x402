@@ -7,9 +7,6 @@ import {
 import axios from "axios";
 import { toJsonSafe } from "../shared";
 import { Resource } from "../types";
-import { config } from "dotenv";
-
-config();
 
 export type CreateHeaders = () => Promise<{
   verify: Record<string, string>;

@@ -61,7 +61,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       address: getUsdcAddressForChain(getNetworkId(network)),
       decimals: 6,
       eip712: {
-        name: "USDC",
+        name: network == "base-sepolia" ? "USDC" : "USD Coin",
         version: "2",
       },
     };

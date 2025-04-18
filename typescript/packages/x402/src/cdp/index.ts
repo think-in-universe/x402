@@ -1,5 +1,8 @@
 import { createAuthHeader } from "../shared";
 import { CreateHeaders } from "../verify/useFacilitator";
+import { config } from "dotenv";
+
+config();
 
 /**
  * Creates a CDP auth header for the facilitator service
