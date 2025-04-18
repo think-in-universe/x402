@@ -68,6 +68,12 @@ function updatePaymentUI(x402: Window["x402"]) {
       : `To access this content, please pay $${amount} ${chainName} USDC.`;
   }
 
+  // Hide Base Sepolia instructions if not on testnet
+  const instructionsEl = document.getElementById("instructions");
+  if (!testnet && instructionsEl) {
+    instructionsEl.classList.add("hidden");
+  }
+
   // Update amount
   const amountEl = document.getElementById("payment-amount");
   if (amountEl) {

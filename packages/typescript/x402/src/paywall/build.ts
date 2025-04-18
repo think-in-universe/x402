@@ -20,12 +20,12 @@ function getPaywallTemplate(): string {
           <div class="header">
             <h1 class="title">Payment Required</h1>
             <p class="subtitle" id="payment-description">Loading payment details...</p>
-            <p class="instructions">Need Base Sepolia USDC? <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">Get some here.</a></p>
+            <p class="instructions" id="instructions">Need Base Sepolia USDC? <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">Get some here.</a></p>
           </div>
 
           <div class="content">
             <div id="connect-section">
-              <button id="connect-wallet" class="button button-blue">
+              <button id="connect-wallet" class="button button-primary">
                   Connect wallet
               </button>
             </div>
@@ -42,7 +42,7 @@ function getPaywallTemplate(): string {
                 </div>
               </div>
 
-              <button id="pay-button" class="button button-green">
+              <button id="pay-button" class="button button-secondary">
                   Pay Now
               </button>
             </div>

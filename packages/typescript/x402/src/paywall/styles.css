@@ -35,9 +35,23 @@ h6 {
 }
 
 /* Custom Styles */
+:root {
+  --background-color: #f9fafb;
+  --container-background-color: white;
+  --text-color: #111827;
+  --subtitle-text-color: #4b5563;
+  --instructions-text-color: #4b5563;
+  --details-background-color: #f9fafb;
+  --details-text-color: #111827;
+  --button-primary-color: #2563eb;
+  --button-primary-hover-color: #1d4ed8;
+  --button-secondary-color: #059669;
+  --button-secondary-hover-color: #047857;
+}
+
 body {
   min-height: 100vh;
-  background-color: #f9fafb;
+  background-color: var(--background-color);
   font-family:
     system-ui,
     -apple-system,
@@ -48,7 +62,7 @@ body {
   max-width: 32rem;
   margin: 4rem auto;
   padding: 1.5rem;
-  background-color: white;
+  background-color: var(--container-background-color);
   border-radius: 0.75rem;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -56,25 +70,28 @@ body {
 }
 
 .header {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   margin-bottom: 2rem;
+  align-items: center;
+  text-align: center;
 }
 
 .title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-color);
   margin-bottom: 0.5rem;
 }
 
 .subtitle {
-  color: #4b5563;
-  margin-bottom: 1rem;
+  color: var(--subtitle-text-color);
 }
 
 .instructions {
   font-size: 0.9rem;
-  color: #4b5563;
+  color: var(--instructions-text-color);
   font-style: italic;
 }
 
@@ -98,27 +115,28 @@ body {
   outline: none;
 }
 
-.button-blue {
-  background-color: #2563eb;
+.button-primary {
+  background-color: var(--button-primary-color);
   color: white;
 }
 
-.button-blue:hover {
-  background-color: #1d4ed8;
+.button-primary:hover {
+  background-color: var(--button-primary-hover-color);
 }
 
-.button-green {
-  background-color: #059669;
+.button-secondary {
+  background-color: var(--button-secondary-color);
   color: white;
 }
 
-.button-green:hover {
-  background-color: #047857;
+.button-secondary:hover {
+  background-color: var(--button-secondary-hover-color);
 }
 
 .payment-details {
   padding: 1rem;
-  background-color: #f9fafb;
+  margin-bottom: 1rem;
+  background-color: var(--details-background-color);
   border-radius: 0.5rem;
 }
 
@@ -134,7 +152,7 @@ body {
 }
 
 .payment-label {
-  color: #4b5563;
+  color: var(--details-text-color);
 }
 
 .payment-value {
