@@ -11,8 +11,6 @@ class FacilitatorClient:
     ) -> VerifyResponse:
         """Verify a payment header is valid and a request should be processed"""
 
-        print(payment_details, payment)
-
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{self.url}/verify",
@@ -22,10 +20,8 @@ class FacilitatorClient:
                 },
                 follow_redirects=True,
             )
-            print(response)
 
             data = response.json()
-            print(data)
             return VerifyResponse(**data)
 
     async def settle(

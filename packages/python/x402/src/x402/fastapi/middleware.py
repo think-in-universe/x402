@@ -110,15 +110,11 @@ def require_payment(
         if payment == "":  # Return JSON response for API requests
             # TODO: add support for html paywall
 
-            r = PaymentRequiredResponse(
-                paymentDetails=payment_details,
-                error="X-PAYMENT header is required",
-            ).model_dump()
-
-            print(r)
-
             return JSONResponse(
-                content=r,
+                content=PaymentRequiredResponse(
+                    paymentDetails=payment_details,
+                    error="X-PAYMENT header is required",
+                ).model_dump(),
                 status_code=402,
             )
 
