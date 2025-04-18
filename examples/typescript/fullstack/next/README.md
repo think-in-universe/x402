@@ -4,8 +4,8 @@ This is a Next.js application that demonstrates how to use the `x402-next` middl
 
 ## Prerequisites
 
-- Node.js (v18 or higher)
-- A valid x402 facilitator URL (you can run the example facilitator at `examples/facilitator`)
+- Node.js (20 or higher)
+- A valid x402 facilitator URL (you can run the example facilitator at `examples/typescript/facilitator`)
 - A valid Ethereum address for receiving payments
 
 ## Setup
@@ -13,6 +13,7 @@ This is a Next.js application that demonstrates how to use the `x402-next` middl
 1. First, start the local facilitator server:
 ```bash
 cd ../facilitator
+# Ensure .env is setup
 pnpm install
 pnpm dev
 ```
@@ -21,7 +22,7 @@ The facilitator will run on http://localhost:3002
 2. In a new terminal, install and start the Next.js example:
 ```bash
 pnpm install
-ppnpm dev
+pnpm dev
 ```
 The Next.js app will run on http://localhost:3000
 
