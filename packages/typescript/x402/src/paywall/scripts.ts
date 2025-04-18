@@ -5,9 +5,18 @@ import {
   custom,
   publicActions,
   Transport,
+  Account,
 } from "viem";
-import { createConfig, connect, disconnect, getAccount, switchChain } from "@wagmi/core";
-import { injected } from "@wagmi/connectors";
+import {
+  createConfig,
+  connect,
+  disconnect,
+  getAccount,
+  switchChain,
+  watchAccount,
+  GetAccountReturnType,
+} from "@wagmi/core";
+import { injected, coinbaseWallet, metaMask } from "@wagmi/connectors";
 import { base, baseSepolia } from "viem/chains";
 
 import { SignerWallet, ConnectedClient } from "../shared/evm/wallet.js";
@@ -102,17 +111,27 @@ async function initializeApp() {
   ensureFunctionsAreAvailable();
 
   const chain = x402.testnet ? baseSepolia : base;
-  let walletClient: SignerWallet;
+  let walletClient: SignerWallet | null;
   const publicClient: ConnectedClient<Transport, typeof chain, undefined> = createPublicClient({
     chain,
     transport: custom(window.ethereum),
   }).extend(publicActions);
 
+  let address: `0x${string}` | undefined;
+  let connectedChainId: number | undefined;
+
+  const unwatch = watchAccount(wagmiConfig, {
+    onChange(data: GetAccountReturnType<typeof wagmiConfig>) {
+      address = data.address;
+      connectedChainId = data.chainId;
+    },
+  });
+
   // DOM Elements
-  const connectWalletBtn = document.getElementById("connect-wallet");
-  const paymentSection = document.getElementById("payment-section");
-  const payButton = document.getElementById("pay-button");
-  const statusDiv = document.getElementById("status");
+  const connectWalletBtn = document.getElementById("connect-wallet") as HTMLButtonElement | null;
+  const paymentSection = document.getElementById("payment-section") as HTMLDivElement | null;
+  const payButton = document.getElementById("pay-button") as HTMLButtonElement | null;
+  const statusDiv = document.getElementById("status") as HTMLDivElement | null;
 
   if (!connectWalletBtn || !paymentSection || !payButton || !statusDiv) {
     console.error("Required DOM elements not found");
@@ -120,22 +139,7 @@ async function initializeApp() {
   }
 
   // Connect wallet handler
-  connectWalletBtn.addEventListener("click", async () => {
-    // If wallet is already connected, disconnect it
-    const { isConnected } = getAccount(wagmiConfig);
-    if (isConnected) {
-      try {
-        await disconnect(wagmiConfig);
-        connectWalletBtn.textContent = "Connect Wallet";
-        paymentSection.classList.add("hidden");
-        statusDiv.textContent = "";
-        return;
-      } catch (error) {
-        statusDiv.textContent = "Failed to disconnect wallet";
-        return;
-      }
-    }
-
+  const handleWalletConnect = async () => {
     try {
       statusDiv.textContent = "Connecting wallet...";
 
@@ -144,11 +148,10 @@ async function initializeApp() {
         chainId: chain.id,
       });
 
-      if (!result.accounts?.[0]) {
+      if (!result.accounts?.[0] || !address) {
         throw new Error("No account selected in your wallet");
       }
 
-      const address = result.accounts[0];
       walletClient = createWalletClient({
         chain,
         transport: custom(window.ethereum),
@@ -158,23 +161,32 @@ async function initializeApp() {
         },
       }).extend(publicActions) as SignerWallet;
 
-      connectWalletBtn.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
+      // Update account
+      const accountEl = document.getElementById("payment-account");
+      if (accountEl) {
+        accountEl.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
+      }
+
+      connectWalletBtn.textContent = "Connected";
+      connectWalletBtn.classList.add("connected");
+      connectWalletBtn.disabled = true;
       paymentSection.classList.remove("hidden");
       statusDiv.textContent = "Wallet connected! You can now proceed with payment.";
+
+      // Remove the event listener after successful connection
+      connectWalletBtn.removeEventListener("click", handleWalletConnect);
     } catch (error) {
       statusDiv.textContent = error instanceof Error ? error.message : "Failed to connect wallet";
       // Reset UI state
-      connectWalletBtn.textContent = "Connect Wallet";
+      connectWalletBtn.textContent = "Connect wallet";
+      connectWalletBtn.classList.remove("connected");
+      connectWalletBtn.disabled = false;
       paymentSection.classList.add("hidden");
     }
-  });
+  };
 
   // Payment handler
-  payButton.addEventListener("click", async () => {
-    const { isConnected, chainId: connectedChainId } = getAccount(wagmiConfig);
-    if (!isConnected) {
-      throw new Error("No wallet connected");
-    }
+  const handlePayment = async () => {
     if (connectedChainId !== chain.id) {
       try {
         await switchChain(wagmiConfig, { chainId: chain.id });
@@ -189,6 +201,9 @@ async function initializeApp() {
 
     try {
       statusDiv.textContent = "Checking USDC balance...";
+      if (!walletClient) {
+        throw new Error("No wallet connected");
+      }
       const balance = await getUSDCBalance(publicClient, walletClient.account.address);
       if (balance === 0n) {
         throw new Error(
@@ -230,7 +245,10 @@ async function initializeApp() {
     } catch (error) {
       statusDiv.textContent = error instanceof Error ? error.message : "Payment failed";
     }
-  });
+  };
+
+  connectWalletBtn.addEventListener("click", handleWalletConnect);
+  payButton.addEventListener("click", handlePayment);
 }
 
 window.addEventListener("load", () => {

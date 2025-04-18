@@ -124,6 +124,12 @@ body {
   background-color: var(--button-primary-hover-color);
 }
 
+.button-primary.connected,
+.button-primary.connected:hover {
+  opacity: 0.3;
+  cursor: default;
+}
+
 .button-secondary {
   background-color: var(--button-secondary-color);
   color: white;

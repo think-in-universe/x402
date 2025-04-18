@@ -33,6 +33,10 @@ function getPaywallTemplate(): string {
             <div id="payment-section" class="hidden">
               <div class="payment-details">
                 <div class="payment-row">
+                  <span class="payment-label">Wallet:</span>
+                  <span class="payment-value" id="payment-account">Loading...</span>
+                </div>
+                <div class="payment-row">
                   <span class="payment-label">Amount:</span>
                   <span class="payment-value" id="payment-amount">Loading...</span>
                 </div>
