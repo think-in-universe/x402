@@ -63,11 +63,6 @@
       "import": "./dist/esm/client/index.js",
       "require": "./dist/cjs/client/index.js"
     },
-    "./cdp": {
-      "types": "./dist/esm/cdp/index.d.ts",
-      "import": "./dist/esm/cdp/index.js",
-      "require": "./dist/cjs/cdp/index.js"
-    },
     "./verify": {
       "types": "./dist/esm/verify/index.d.ts",
       "import": "./dist/esm/verify/index.js",

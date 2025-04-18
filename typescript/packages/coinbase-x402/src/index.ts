@@ -1,5 +1,5 @@
-import { createAuthHeader } from "../shared";
-import { CreateHeaders } from "../verify/useFacilitator";
+import { createAuthHeader } from "x402/shared";
+import { CreateHeaders } from "x402/verify";
 
 /**
  * Creates a CDP auth header for the facilitator service
