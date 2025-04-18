@@ -4,23 +4,26 @@ This is an example client that demonstrates how to use the `x402-fetch` package 
 
 ## Prerequisites
 
-- Node.js (v18 or higher)
-- A running x402 facilitator (you can use the example facilitator at `examples/facilitator`)
-- A running x402 server (you can use the example express server at `examples/servers/express`)
+- Node.js (v20 or higher)
+- A running x402 facilitator (you can use the example express server at `examples/typescript/facilitator`)
+- A running x402 server (you can use the example express server at `examples/typescript/servers/express`)
 - A valid Ethereum private key for making payments
 
 ## Setup
 
 1. First, start the facilitator:
+
 ```bash
-cd examples/facilitator
+cd ../facilitator
+# Ensure .env is setup
 pnpm install
 pnpm dev
 ```
 
 2. First, start the example express server:
 ```bash
-cd examples/servers/express
+cd ../../servers/express
+# Ensure .env is setup
 pnpm install
 pnpm dev
 ```
@@ -35,7 +38,6 @@ ENDPOINT_PATH=/weather
 
 4. In a new terminal, install and run the example client:
 ```bash
-cd examples/clients/fetch
 pnpm install
 pnpm dev
 ```
@@ -84,51 +86,3 @@ fetchWithPay(`${RESOURCE_SERVER_URL}${ENDPOINT_PATH}`, {
     console.error(error.response?.data?.error);
   });
 ```
-
-## Response Handling
-
-### Payment Required (402)
-When a payment is required, the wrapped fetch function will:
-1. Receive the 402 response
-2. Parse the payment requirements
-3. Create and sign a payment header
-4. Automatically retry the request with the payment header
-
-### Successful Response
-After payment is processed, you'll receive the actual response from the endpoint:
-```json
-{
-  "report": {
-    "weather": "sunny",
-    "temperature": 70
-  }
-}
-```
-
-## Error Handling
-
-The example includes basic error handling for:
-- Missing environment variables
-- Payment failures
-- Network errors
-- Invalid responses
-
-## Extending the Example
-
-To use this pattern in your own application:
-
-1. Install the required dependencies:
-```bash
-npm install x402-fetch viem
-```
-
-2. Set up your environment variables
-3. Create a wallet client
-4. Wrap your fetch function
-5. Make requests to paid endpoints
-
-## Security Notes
-
-- Never commit your private key to version control
-- Use environment variables for sensitive information
-- Consider using a more secure key management solution in production
