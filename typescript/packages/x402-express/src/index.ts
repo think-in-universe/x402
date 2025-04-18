@@ -148,6 +148,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
           return res.status(402).json({
             error: response.invalidReason,
             paymentRequirements: toJsonSafe(paymentRequirements),
+            payerAddress: response.payerAddress,
           });
         }
       } catch (error) {

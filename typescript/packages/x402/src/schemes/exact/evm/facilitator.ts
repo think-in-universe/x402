@@ -59,6 +59,7 @@ export async function verify<
     return {
       isValid: false,
       invalidReason: `Incompatible payload scheme. payload: ${payload.scheme}, paymentRequirements: ${paymentRequirements.scheme}, supported: ${SCHEME}`,
+      payerAddress: payload.payload.authorization.from,
     };
   }
 
@@ -75,6 +76,7 @@ export async function verify<
     return {
       isValid: false,
       invalidReason: `invalid_network`,
+      payerAddress: payload.payload.authorization.from,
     };
   }
   // Verify permit signature is recoverable for the owner address
@@ -105,6 +107,7 @@ export async function verify<
     return {
       isValid: false,
       invalidReason: "invalid_scheme", //"Invalid permit signature",
+      payerAddress: payload.payload.authorization.from,
     };
   }
 
@@ -116,6 +119,7 @@ export async function verify<
     return {
       isValid: false,
       invalidReason: "invalid_scheme", //"Deadline on permit isn't far enough in the future",
+      payerAddress: payload.payload.authorization.from,
     };
   }
   // Verify deadline is not yet valid
@@ -123,6 +127,7 @@ export async function verify<
     return {
       isValid: false,
       invalidReason: "invalid_scheme", //"Deadline on permit is in the future",
+      payerAddress: payload.payload.authorization.from,
     };
   }
   // Verify client has enough funds to cover paymentRequirements.maxAmountRequired
@@ -135,6 +140,7 @@ export async function verify<
     return {
       isValid: false,
       invalidReason: "insufficient_funds", //"Client does not have enough funds",
+      payerAddress: payload.payload.authorization.from,
     };
   }
   // Verify value in payload is enough to cover paymentRequirements.maxAmountRequired
@@ -142,11 +148,13 @@ export async function verify<
     return {
       isValid: false,
       invalidReason: "invalid_scheme", //"Value in payload is not enough to cover paymentRequirements.maxAmountRequired",
+      payerAddress: payload.payload.authorization.from,
     };
   }
   return {
     isValid: true,
     invalidReason: undefined,
+    payerAddress: payload.payload.authorization.from,
   };
 }
 

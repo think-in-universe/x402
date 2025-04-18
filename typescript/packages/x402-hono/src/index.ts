@@ -160,6 +160,7 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
           {
             error: response.invalidReason,
             paymentRequirements: toJsonSafe(paymentRequirements),
+            payerAddress: response.payerAddress,
           },
           402,
         );

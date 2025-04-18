@@ -192,6 +192,7 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
           {
             error: response.invalidReason,
             paymentRequirements: toJsonSafe(paymentRequirements),
+            payerAddress: response.payerAddress,
           },
           { status: 402 },
         );

@@ -63,6 +63,7 @@ export type UnsignedPaymentPayload = Omit<PaymentPayload, "payload"> & {
 export const VerifyResponseSchema = z.object({
   isValid: z.boolean(),
   invalidReason: z.enum(ErrorReasons).optional(),
+  payerAddress: z.string().regex(MixedAddressRegex).optional(),
 });
 export type VerifyResponse = z.infer<typeof VerifyResponseSchema>;
 

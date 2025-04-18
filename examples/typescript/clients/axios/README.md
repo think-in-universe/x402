@@ -5,8 +5,8 @@ This is an example client that demonstrates how to use the `x402-axios` package 
 ## Prerequisites
 
 - Node.js (v20 or higher)
-- A running x402 facilitator (you can use the example express server at `examples/typescript/facilitator`)
-- A running x402 server (you can use the example express server at `examples/typescript/servers/express`)
+- A valid x402 facilitator (you can use the example express server at `examples/typescript/facilitator`)
+- A valid x402 server (you can use the example express server at `examples/typescript/servers/express`)
 - A valid Ethereum private key for making payments
 
 ## Setup
