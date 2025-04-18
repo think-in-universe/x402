@@ -26,7 +26,7 @@ import {
  * @example
  * ```typescript
  * const wallet = new SignerWallet(...);
- * const fetchWithPay = fetchWithPayment(fetch, wallet);
+ * const fetchWithPay = wrapFetchWithPayment(fetch, wallet);
  *
  * // Make a request that may require payment
  * const response = await fetchWithPay('https://api.example.com/paid-endpoint');
@@ -37,7 +37,7 @@ import {
  * @throws {Error} If a payment has already been attempted for this request
  * @throws {Error} If there's an error creating the payment header
  */
-export function fetchWithPayment(
+export function wrapFetchWithPayment(
   fetch: typeof globalThis.fetch,
   walletClient: typeof evm.SignerWallet,
   maxValue: bigint = BigInt(0.1 * 10 ** 6), // Default to 0.10 USDC
