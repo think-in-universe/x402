@@ -1,4 +1,4 @@
-import { PAYWALL_TEMPLATE } from "../paywall/dist/template";
+import { PAYWALL_TEMPLATE } from "../paywall/dist/template.js";
 
 interface PaywallOptions {
   amount: number;

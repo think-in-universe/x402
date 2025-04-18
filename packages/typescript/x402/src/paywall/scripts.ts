@@ -2,13 +2,13 @@ import { createWalletClient, createPublicClient, http, custom, publicActions } f
 import { createConfig, connect, disconnect } from "@wagmi/core";
 import { coinbaseWallet, injected } from "@wagmi/connectors";
 import { base, baseSepolia } from "viem/chains";
-import { SignerWallet } from "../shared/evm/wallet";
-import { createPaymentHeader } from "../schemes/exact/evm/client";
 
-import { createPayment } from "../schemes/exact/evm/client";
-import { createNonce, signAuthorization } from "../schemes/exact/evm/sign";
-import { encodePayment } from "../schemes/exact/evm/utils/paymentUtils";
-import { getUSDCBalance, getVersion } from "../shared/evm/usdc";
+import { SignerWallet } from "../shared/evm/wallet.js";
+import { createPaymentHeader } from "../schemes/exact/evm/client.js";
+import { createPayment } from "../schemes/exact/evm/client.js";
+import { createNonce, signAuthorization } from "../schemes/exact/evm/sign.js";
+import { encodePayment } from "../schemes/exact/evm/utils/paymentUtils.js";
+import { getUSDCBalance, getVersion } from "../shared/evm/usdc.js";
 
 declare global {
   interface Window {
