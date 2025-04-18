@@ -5,23 +5,26 @@ This is an example client that demonstrates how to use the x402 payment protocol
 ## Prerequisites
 
 - Node.js (v20 or higher)
-- A running x402 facilitator (you can use the example facilitator at `examples/facilitator`)
-- A running x402 server (you can use the example express server at `examples/servers/express`)
+- A running x402 facilitator (you can use the example express server at `examples/typescript/facilitator`)
+- A running x402 server (you can use the example express server at `examples/typescript/servers/express`)
 - A valid Ethereum private key for making payments
 - Claude Desktop with MCP support
 
 ## Setup
 
 1. First, start the facilitator:
+
 ```bash
-cd examples/facilitator
+cd ../facilitator
+# Ensure .env is setup
 pnpm install
 pnpm dev
 ```
 
-2. Start the example express server:
+2. First, start the example express server:
 ```bash
-cd examples/servers/express
+cd ../../servers/express
+# Ensure .env is setup
 pnpm install
 pnpm dev
 ```
