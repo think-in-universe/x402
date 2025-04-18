@@ -6,14 +6,24 @@ import {
 } from "../types/verify";
 import axios from "axios";
 import { toJsonSafe } from "../shared";
+import { Resource } from "../types";
+
+export type CreateHeaders = () => Promise<{
+  verify: Record<string, string>;
+  settle: Record<string, string>;
+}>;
 
 /**
  * Creates a facilitator client for interacting with the X402 payment facilitator service
  *
  * @param url - The base URL of the facilitator service (defaults to "https://x402.org/facilitator")
+ * @param createAuthHeaders - Optional function to create an auth header for the facilitator service. If using Coinbase's facilitator, use the createAuthHeaders function.
  * @returns An object containing verify and settle functions for interacting with the facilitator
  */
-export function useFacilitator(url: string = "https://x402.org/facilitator") {
+export function useFacilitator(
+  url: Resource = "https://x402.org/facilitator",
+  createAuthHeaders?: CreateHeaders,
+) {
   /**
    * Verifies a payment payload with the facilitator service
    *
@@ -25,10 +35,17 @@ export function useFacilitator(url: string = "https://x402.org/facilitator") {
     payload: PaymentPayload,
     paymentRequirements: PaymentRequirements,
   ): Promise<VerifyResponse> {
-    const res = await axios.post(`${url}/verify`, {
-      payload: toJsonSafe(payload),
-      details: toJsonSafe(paymentRequirements),
-    });
+    const res = await axios.post(
+      `${url}/verify`,
+      {
+        x402Version: payload.x402Version,
+        paymentPayload: toJsonSafe(payload),
+        paymentRequirements: toJsonSafe(paymentRequirements),
+      },
+      {
+        headers: createAuthHeaders ? (await createAuthHeaders()).verify : undefined,
+      },
+    );
 
     if (res.status !== 200) {
       throw new Error(`Failed to verify payment: ${res.statusText}`);
@@ -48,10 +65,17 @@ export function useFacilitator(url: string = "https://x402.org/facilitator") {
     payload: PaymentPayload,
     paymentRequirements: PaymentRequirements,
   ): Promise<SettleResponse> {
-    const res = await axios.post(`${url}/settle`, {
-      payload: toJsonSafe(payload),
-      details: toJsonSafe(paymentRequirements),
-    });
+    const res = await axios.post(
+      `${url}/settle`,
+      {
+        x402Version: payload.x402Version,
+        paymentPayload: toJsonSafe(payload),
+        paymentRequirements: toJsonSafe(paymentRequirements),
+      },
+      {
+        headers: createAuthHeaders ? (await createAuthHeaders()).settle : undefined,
+      },
+    );
 
     if (res.status !== 200) {
       throw new Error(`Failed to settle payment: ${res.statusText}`);

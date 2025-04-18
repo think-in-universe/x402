@@ -1,11 +1,13 @@
 import { Hex } from "viem";
 import { Network } from "./network";
 import { Resource } from "./resource";
+import { CreateHeaders } from "../../verify";
 
 export type GlobalConfig = {
-  facilitatorUrl?: string;
+  facilitatorUrl?: Resource;
   address: Hex;
   network: Network;
+  createAuthHeaders?: CreateHeaders;
 };
 
 export type PaymentMiddlewareConfig = {
