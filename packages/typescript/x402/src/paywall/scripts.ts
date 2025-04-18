@@ -1,9 +1,16 @@
-import { createWalletClient, createPublicClient, http, custom, publicActions } from "viem";
+import {
+  createWalletClient,
+  createPublicClient,
+  http,
+  custom,
+  publicActions,
+  Transport,
+} from "viem";
 import { createConfig, connect, disconnect, getAccount, switchChain } from "@wagmi/core";
 import { injected } from "@wagmi/connectors";
 import { base, baseSepolia } from "viem/chains";
 
-import { SignerWallet } from "../shared/evm/wallet.js";
+import { SignerWallet, ConnectedClient } from "../shared/evm/wallet.js";
 import { createPaymentHeader } from "../schemes/exact/evm/client.js";
 import { createPayment } from "../schemes/exact/evm/client.js";
 import { createNonce, signAuthorization } from "../schemes/exact/evm/sign.js";
@@ -90,7 +97,7 @@ async function initializeApp() {
 
   const chain = x402.testnet ? baseSepolia : base;
   let walletClient: SignerWallet;
-  const publicClient = createPublicClient({
+  const publicClient: ConnectedClient<Transport, typeof chain, undefined> = createPublicClient({
     chain,
     transport: custom(window.ethereum),
   }).extend(publicActions);
@@ -132,7 +139,7 @@ async function initializeApp() {
       });
 
       if (!result.accounts?.[0]) {
-        throw new Error("Please select an account in your wallet");
+        throw new Error("No account selected in your wallet");
       }
 
       const address = result.accounts[0];
@@ -149,7 +156,6 @@ async function initializeApp() {
       paymentSection.classList.remove("hidden");
       statusDiv.textContent = "Wallet connected! You can now proceed with payment.";
     } catch (error) {
-      console.error("Connection error:", error);
       statusDiv.textContent = error instanceof Error ? error.message : "Failed to connect wallet";
       // Reset UI state
       connectWalletBtn.textContent = "Connect Wallet";
@@ -161,14 +167,16 @@ async function initializeApp() {
   payButton.addEventListener("click", async () => {
     const { isConnected, chainId: connectedChainId } = getAccount(wagmiConfig);
     if (!isConnected) {
-      statusDiv.textContent = "Please connect your wallet first";
-      return;
+      throw new Error("No wallet connected");
     }
     if (connectedChainId !== chain.id) {
       try {
         await switchChain(wagmiConfig, { chainId: chain.id });
       } catch (error) {
-        statusDiv.textContent = `Please switch to ${chain.name} network in your wallet`;
+        statusDiv.textContent =
+          error instanceof Error
+            ? error.message
+            : `Please switch to ${chain.name} network in your wallet`;
         return;
       }
     }
@@ -177,14 +185,14 @@ async function initializeApp() {
       statusDiv.textContent = "Checking USDC balance...";
       const balance = await getUSDCBalance(publicClient, walletClient.account.address);
       if (balance === 0n) {
-        statusDiv.textContent = `Your USDC balance is 0. Please make sure you have USDC tokens on ${
-          chain.name
-        }.`;
-        return;
+        throw new Error(
+          `Your USDC balance is 0. Please make sure you have USDC tokens on ${chain.name}`,
+        );
       }
     } catch (error) {
       statusDiv.textContent =
         error instanceof Error ? error.message : "Failed to check USDC balance";
+      return;
     }
 
     statusDiv.textContent = "Creating payment signature...";
