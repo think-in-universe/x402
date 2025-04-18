@@ -29,7 +29,7 @@ import {
  * @param globalConfig.facilitatorUrl - URL of the payment facilitator service
  * @param globalConfig.address - Address to receive payments
  * @param globalConfig.network - Network identifier (e.g. 'base-sepolia')
- * @param globalConfig.createAuthHeaders - Function to create creates for the payment facilitator service. If using Coinbase's facilitator, use the createCdpAuthHeader function.
+ * @param globalConfig.createAuthHeaders - Function to create creates for the payment facilitator service.
  *
  * @returns A function that creates an Express middleware handler for a specific payment amount
  *

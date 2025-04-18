@@ -7,6 +7,7 @@ const baseConfig = {
     "shared/evm/index": "src/shared/evm/index.ts",
     "schemes/index": "src/schemes/index.ts",
     "client/index": "src/client/index.ts",
+    "cdp/index": "src/cdp/index.ts",
     "verify/index": "src/verify/index.ts",
     "facilitator/index": "src/facilitator/index.ts",
     "types/index": "src/types/index.ts",

@@ -5,7 +5,7 @@ import {
   VerifyResponse,
 } from "../types/verify";
 import axios from "axios";
-import { createAuthHeader, toJsonSafe } from "../shared";
+import { toJsonSafe } from "../shared";
 import { Resource } from "../types";
 import { config } from "dotenv";
 
@@ -17,45 +17,6 @@ export type CreateHeaders = () => Promise<{
 }>;
 
 /**
- * Creates a CDP auth header for the facilitator service
- *
- * @param apiKeyId - The CDP API key ID
- * @param apiKeySecret - The CDP API key secret
- * @returns A function that returns the auth headers
- */
-export function createCdpAuthHeaders(apiKeyId?: string, apiKeySecret?: string): CreateHeaders {
-  apiKeyId = apiKeyId ?? process.env.CDP_API_KEY_ID;
-  apiKeySecret = apiKeySecret ?? process.env.CDP_API_KEY_SECRET;
-
-  if (!apiKeyId || !apiKeySecret) {
-    throw new Error(
-      "Missing environment variables: CDP_API_KEY_ID and CDP_API_KEY_SECRET must be set when using default facilitator",
-    );
-  }
-
-  return async () => {
-    return {
-      verify: {
-        Authorization: await createAuthHeader(
-          apiKeyId,
-          apiKeySecret,
-          "api.cdp.coinbase.com",
-          "/platform/v2/x402/verify",
-        ),
-      },
-      settle: {
-        Authorization: await createAuthHeader(
-          apiKeyId,
-          apiKeySecret,
-          "api.cdp.coinbase.com",
-          "/platform/v2/x402/settle",
-        ),
-      },
-    };
-  };
-}
-
-/**
  * Creates a facilitator client for interacting with the X402 payment facilitator service
  *
  * @param url - The base URL of the facilitator service (defaults to "https://x402.org/facilitator")
@@ -64,7 +25,7 @@ export function createCdpAuthHeaders(apiKeyId?: string, apiKeySecret?: string): 
  */
 export function useFacilitator(
   url: Resource = "https://x402.org/facilitator",
-  createAuthHeaders?: CreateHeaders, // TODO: default to createCdpAuthHeaders() once the `url` default is updated to `https://api.cdp.coinbase.com/platform/v2/x402`
+  createAuthHeaders?: CreateHeaders,
 ) {
   /**
    * Verifies a payment payload with the facilitator service
