@@ -6,7 +6,7 @@ import path from "path";
 // This file only runs at build time and generates a template HTML file
 // Template variables are handled at runtime, not build time
 
-// Function to generate HTML template. Content here is static but can be changed at runtime.
+// Generate HTML template. Content here is static but can be changed at runtime.
 function getPaywallTemplate(): string {
   return `
     <!DOCTYPE html>

@@ -58,7 +58,7 @@ function ensureFunctionsAreAvailable() {
   };
 }
 
-// Function to update UI with payment details
+// Update UI with payment details -- called when the page loads
 function updatePaymentUI(x402: Window["x402"]) {
   if (!x402) return;
 
