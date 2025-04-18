@@ -10,13 +10,11 @@ import {
 import {
   createConfig,
   connect,
-  disconnect,
-  getAccount,
   switchChain,
   watchAccount,
   GetAccountReturnType,
 } from "@wagmi/core";
-import { injected, coinbaseWallet, metaMask } from "@wagmi/connectors";
+import { injected } from "@wagmi/connectors";
 import { base, baseSepolia } from "viem/chains";
 
 import { SignerWallet, ConnectedClient } from "../shared/evm/wallet.js";
@@ -138,7 +136,6 @@ async function initializeApp() {
     return;
   }
 
-  // Connect wallet handler
   const handleWalletConnect = async () => {
     try {
       statusDiv.textContent = "Connecting wallet...";
@@ -185,7 +182,6 @@ async function initializeApp() {
     }
   };
 
-  // Payment handler
   const handlePayment = async () => {
     if (connectedChainId !== chain.id) {
       try {
@@ -249,6 +245,9 @@ async function initializeApp() {
 
   connectWalletBtn.addEventListener("click", handleWalletConnect);
   payButton.addEventListener("click", handlePayment);
+  window.addEventListener("beforeunload", () => {
+    if (unwatch) unwatch();
+  });
 }
 
 window.addEventListener("load", () => {
