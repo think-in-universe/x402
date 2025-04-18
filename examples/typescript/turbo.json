@@ -9,15 +9,6 @@
         "dist/**"
       ]
     },
-    "test": {
-      "dependsOn": [
-        "build"
-      ],
-      "inputs": [
-        "src/**/*.ts",
-        "test/**/*.ts"
-      ]
-    },
     "lint": {
       "dependsOn": [
         "^lint"

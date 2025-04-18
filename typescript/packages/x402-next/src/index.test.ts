@@ -304,7 +304,6 @@ describe("createPaymentMiddleware()", () => {
     const json = (await response.json()) as {
       paymentRequirements: Array<{ maxAmountRequired: string }>;
     };
-    console.log(json.paymentRequirements[0]);
     expect(json.paymentRequirements[0]).toEqual(
       expect.objectContaining({
         maxAmountRequired: "1000000",

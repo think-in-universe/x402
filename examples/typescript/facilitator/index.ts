@@ -2,7 +2,13 @@
 import { config } from "dotenv";
 import express from "express";
 import { verify, settle } from "x402/facilitator";
-import { PaymentRequirementsSchema, PaymentRequirements, evm, PaymentPayload, PaymentPayloadSchema } from "x402/types";
+import {
+  PaymentRequirementsSchema,
+  PaymentRequirements,
+  evm,
+  PaymentPayload,
+  PaymentPayloadSchema,
+} from "x402/types";
 
 config();
 
