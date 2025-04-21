@@ -128,7 +128,7 @@ the payment details accepted for a resource.
   // Version of the x402 payment protocol
   x402Version: number;
 
-  // scheme is the scheme value of the accepted `paymentDetails` the client is using to pay
+  // scheme is the scheme value of the accepted `paymentRequirements` the client is using to pay
   scheme: string;
 
   // network is the network id of the accepted `paymentRequirements` the client is using to pay
@@ -150,7 +150,7 @@ Request body JSON:
 {
   x402Version: number;
   paymentHeader: string;
-  paymentDetails: paymentDetails;
+  paymentRequirements: paymentRequirements;
 }
 
 Response:
@@ -165,7 +165,7 @@ Request body JSON:
 {
   x402Version: number;
   paymentHeader: string;
-  paymentDetails: paymentDetails;
+  paymentRequirements: paymentRequirements;
 }
 
 Response:

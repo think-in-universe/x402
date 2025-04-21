@@ -2,7 +2,7 @@
 
 ## Summary
 
-The `exact` scheme on EVM chains uses `EIP-3009` to authorize a transfer of a specific amount of an `ERC20 token` from the payer to the resource server. The approach results in the facilitator having no ability to direct funds anywhere but the address specified by the resource server in paymentDetails.
+The `exact` scheme on EVM chains uses `EIP-3009` to authorize a transfer of a specific amount of an `ERC20 token` from the payer to the resource server. The approach results in the facilitator having no ability to direct funds anywhere but the address specified by the resource server in paymentRequirements.
 
 ## `X-Payment` header payload
 
