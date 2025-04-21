@@ -63,6 +63,7 @@ export interface NextPaymentConfig extends GlobalConfig {
 export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
   const { facilitatorUrl, address, network, routes, createAuthHeaders } = globalConfig;
   const { verify, settle } = useFacilitator(facilitatorUrl, createAuthHeaders);
+  const x402Version = 1;
 
   // Pre-compile route patterns to regex
   const routePatterns = Object.entries(routes).map(([pattern, config]) => ({
@@ -152,8 +153,9 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
 
       return NextResponse.json(
         {
+          x402Version,
           error: "X-PAYMENT header is required",
-          paymentRequirements: toJsonSafe(paymentRequirements),
+          accepts: toJsonSafe(paymentRequirements),
         },
         { status: 402 },
       );
@@ -165,8 +167,9 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     } catch (error) {
       return NextResponse.json(
         {
+          x402Version,
           error: error || "Invalid or malformed payment header",
-          paymentRequirements: toJsonSafe(paymentRequirements),
+          accepts: toJsonSafe(paymentRequirements),
         },
         { status: 402 },
       );
@@ -178,8 +181,9 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     if (!selectedPaymentRequirements) {
       return NextResponse.json(
         {
+          x402Version,
           error: "Unable to find matching payment requirements",
-          paymentRequirements: toJsonSafe(paymentRequirements),
+          accepts: toJsonSafe(paymentRequirements),
         },
         { status: 402 },
       );
@@ -190,8 +194,9 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
       if (!response.isValid) {
         return NextResponse.json(
           {
+            x402Version,
             error: response.invalidReason,
-            paymentRequirements: toJsonSafe(paymentRequirements),
+            accepts: toJsonSafe(paymentRequirements),
             payerAddress: response.payerAddress,
           },
           { status: 402 },
@@ -200,8 +205,9 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     } catch (error) {
       return NextResponse.json(
         {
+          x402Version,
           error,
-          paymentRequirements: toJsonSafe(paymentRequirements),
+          accepts: toJsonSafe(paymentRequirements),
         },
         { status: 402 },
       );
@@ -217,8 +223,9 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     } catch (error) {
       return NextResponse.json(
         {
+          x402Version,
           error,
-          paymentRequirements: toJsonSafe(paymentRequirements),
+          accepts: toJsonSafe(paymentRequirements),
         },
         { status: 402 },
       );

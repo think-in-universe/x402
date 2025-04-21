@@ -8,11 +8,13 @@ import { encodePayment } from "./utils/paymentUtils";
  * Prepares an unsigned payment header with the given sender address and payment requirements.
  *
  * @param from - The sender's address from which the payment will be made
+ * @param x402Version - The version of the X402 protocol to use
  * @param paymentRequirements - The payment requirements containing scheme and network information
  * @returns An unsigned payment payload containing authorization details
  */
 export function preparePaymentHeader(
   from: Address,
+  x402Version: number,
   paymentRequirements: PaymentRequirements,
 ): UnsignedPaymentPayload {
   const nonce = createNonce();
@@ -25,7 +27,7 @@ export function preparePaymentHeader(
   ).toString();
 
   return {
-    x402Version: 1,
+    x402Version,
     scheme: paymentRequirements.scheme,
     network: paymentRequirements.network,
     payload: {
@@ -74,15 +76,17 @@ export async function signPaymentHeader<transport extends Transport, chain exten
  * Creates a complete payment payload by preparing and signing a payment header.
  *
  * @param client - The signer wallet instance used to create and sign the payment
+ * @param x402Version - The version of the X402 protocol to use
  * @param paymentRequirements - The payment requirements containing scheme and network information
  * @returns A promise that resolves to the complete signed payment payload
  */
 export async function createPayment<transport extends Transport, chain extends Chain>(
   client: SignerWallet<chain, transport>,
+  x402Version: number,
   paymentRequirements: PaymentRequirements,
 ): Promise<PaymentPayload> {
   const from = client!.account!.address;
-  const unsignedPaymentHeader = preparePaymentHeader(from, paymentRequirements);
+  const unsignedPaymentHeader = preparePaymentHeader(from, x402Version, paymentRequirements);
   return signPaymentHeader(client, paymentRequirements, unsignedPaymentHeader);
 }
 
@@ -90,13 +94,15 @@ export async function createPayment<transport extends Transport, chain extends C
  * Creates and encodes a payment header for the given client and payment requirements.
  *
  * @param client - The signer wallet instance used to create the payment header
+ * @param x402Version - The version of the X402 protocol to use
  * @param paymentRequirements - The payment requirements containing scheme and network information
  * @returns A promise that resolves to the encoded payment header string
  */
 export async function createPaymentHeader(
   client: SignerWallet,
+  x402Version: number,
   paymentRequirements: PaymentRequirements,
 ): Promise<string> {
-  const payment = await createPayment(client, paymentRequirements);
+  const payment = await createPayment(client, x402Version, paymentRequirements);
   return encodePayment(payment);
 }

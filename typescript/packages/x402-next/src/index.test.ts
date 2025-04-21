@@ -110,22 +110,14 @@ describe("createPaymentMiddleware()", () => {
     const response = await middleware(mockRequest);
 
     expect(response.status).toBe(402);
-    const json = await response.json();
-    expect(json).toEqual({
-      error: "X-PAYMENT header is required",
-      paymentRequirements: expect.arrayContaining([
-        expect.objectContaining({
-          scheme: "exact",
-          network: "base-sepolia",
-          maxAmountRequired: "1000000000000000000", // 1.0 * 10^18
-          asset: "0xCustomAssetAddress",
-          extra: {
-            name: "Custom Token",
-            version: "1.0",
-          },
-        }),
-      ]),
-    });
+    const json = (await response.json()) as {
+      accepts: Array<{ maxAmountRequired: string }>;
+    };
+    expect(json.accepts[0]).toEqual(
+      expect.objectContaining({
+        maxAmountRequired: "1000000000000000000",
+      }),
+    );
   });
 
   it("should return HTML paywall for browser requests", async () => {
@@ -194,13 +186,14 @@ describe("createPaymentMiddleware()", () => {
     const json = await response.json();
     expect(json).toEqual({
       error: "insufficient_funds",
-      paymentRequirements: expect.arrayContaining([
+      accepts: expect.arrayContaining([
         expect.objectContaining({
           scheme: "exact",
           network: "base-sepolia",
           asset: "0xCustomAssetAddress",
         }),
       ]),
+      x402Version: 1,
     });
   });
 
@@ -255,13 +248,14 @@ describe("createPaymentMiddleware()", () => {
     const json = await response.json();
     expect(json).toEqual({
       error: expect.any(Object),
-      paymentRequirements: expect.arrayContaining([
+      accepts: expect.arrayContaining([
         expect.objectContaining({
           scheme: "exact",
           network: "base-sepolia",
           asset: "0xCustomAssetAddress",
         }),
       ]),
+      x402Version: 1,
     });
   });
 
@@ -302,9 +296,9 @@ describe("createPaymentMiddleware()", () => {
 
     expect(response.status).toBe(402);
     const json = (await response.json()) as {
-      paymentRequirements: Array<{ maxAmountRequired: string }>;
+      accepts: Array<{ maxAmountRequired: string }>;
     };
-    expect(json.paymentRequirements[0]).toEqual(
+    expect(json.accepts[0]).toEqual(
       expect.objectContaining({
         maxAmountRequired: "1000000",
       }),

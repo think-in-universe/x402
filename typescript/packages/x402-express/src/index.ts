@@ -50,6 +50,7 @@ import {
 export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
   const { facilitatorUrl, address, network, createAuthHeaders } = globalConfig;
   const { verify, settle } = useFacilitator(facilitatorUrl, createAuthHeaders);
+  const x402Version = 1;
 
   return function paymentMiddleware(amount: Money, config: PaymentMiddlewareConfig = {}) {
     const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
@@ -117,8 +118,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
           return res.status(402).send(html);
         }
         return res.status(402).json({
+          x402Version,
           error: "X-PAYMENT header is required",
-          paymentRequirements: toJsonSafe(paymentRequirements),
+          accepts: toJsonSafe(paymentRequirements),
         });
       }
 
@@ -127,8 +129,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         decodedPayment = exact.evm.decodePayment(payment);
       } catch (error) {
         return res.status(402).json({
+          x402Version,
           error: error || "Invalid or malformed payment header",
-          paymentRequirements: toJsonSafe(paymentRequirements),
+          accepts: toJsonSafe(paymentRequirements),
         });
       }
 
@@ -137,8 +140,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       );
       if (!selectedPaymentRequirements) {
         return res.status(402).json({
+          x402Version,
           error: "Unable to find matching payment requirements",
-          paymentRequirements: toJsonSafe(paymentRequirements),
+          accepts: toJsonSafe(paymentRequirements),
         });
       }
 
@@ -146,15 +150,17 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         const response = await verify(decodedPayment, selectedPaymentRequirements);
         if (!response.isValid) {
           return res.status(402).json({
+            x402Version,
             error: response.invalidReason,
-            paymentRequirements: toJsonSafe(paymentRequirements),
+            accepts: toJsonSafe(paymentRequirements),
             payerAddress: response.payerAddress,
           });
         }
       } catch (error) {
         return res.status(402).json({
+          x402Version,
           error,
-          paymentRequirements: toJsonSafe(paymentRequirements),
+          accepts: toJsonSafe(paymentRequirements),
         });
       }
 
@@ -184,8 +190,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         // If settlement fails and the response hasn't been sent yet, return an error
         if (!res.headersSent) {
           return res.status(402).json({
+            x402Version,
             error,
-            paymentRequirements: toJsonSafe(paymentRequirements),
+            accepts: toJsonSafe(paymentRequirements),
           });
         }
       } finally {

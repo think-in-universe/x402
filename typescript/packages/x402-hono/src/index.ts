@@ -49,6 +49,7 @@ import { useFacilitator } from "x402/verify";
 export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
   const { facilitatorUrl, address, network, createAuthHeaders } = globalConfig;
   const { verify, settle } = useFacilitator(facilitatorUrl, createAuthHeaders);
+  const x402Version = 1;
 
   return function paymentMiddleware(
     amount: Money,
@@ -122,7 +123,8 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
         return c.json(
           {
             error: "X-PAYMENT header is required",
-            paymentRequirements: toJsonSafe(paymentRequirements),
+            accepts: toJsonSafe(paymentRequirements),
+            x402Version: 1,
           },
           402,
         );
@@ -134,8 +136,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       } catch (error) {
         return c.json(
           {
+            x402Version,
             error: error || "Invalid or malformed payment header",
-            paymentRequirements: toJsonSafe(paymentRequirements),
+            accepts: toJsonSafe(paymentRequirements),
           },
           402,
         );
@@ -147,8 +150,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       if (!selectedPaymentRequirements) {
         return c.json(
           {
+            x402Version,
             error: "Unable to find matching payment requirements",
-            paymentRequirements: toJsonSafe(paymentRequirements),
+            accepts: toJsonSafe(paymentRequirements),
           },
           402,
         );
@@ -158,8 +162,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       if (!response.isValid) {
         return c.json(
           {
+            x402Version,
             error: response.invalidReason,
-            paymentRequirements: toJsonSafe(paymentRequirements),
+            accepts: toJsonSafe(paymentRequirements),
             payerAddress: response.payerAddress,
           },
           402,
@@ -176,8 +181,9 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       } catch (error) {
         c.res = c.json(
           {
+            x402Version,
             error: error || "Failed to settle payment",
-            paymentRequirements: toJsonSafe(paymentRequirements),
+            accepts: toJsonSafe(paymentRequirements),
           },
           402,
         );

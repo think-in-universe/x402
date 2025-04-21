@@ -74,7 +74,9 @@ describe("fetchWithPayment()", () => {
       requirements => requirements[0],
     );
     mockFetch
-      .mockResolvedValueOnce(createResponse(402, { paymentRequirements: validPaymentRequirements }))
+      .mockResolvedValueOnce(
+        createResponse(402, { accepts: validPaymentRequirements, x402Version: 1 }),
+      )
       .mockResolvedValueOnce(successResponse);
 
     const result = await wrappedFetch("https://api.example.com", {
@@ -84,7 +86,11 @@ describe("fetchWithPayment()", () => {
 
     expect(result).toBe(successResponse);
     expect(selectPaymentRequirements).toHaveBeenCalledWith(validPaymentRequirements);
-    expect(createPaymentHeader).toHaveBeenCalledWith(mockWalletClient, validPaymentRequirements[0]);
+    expect(createPaymentHeader).toHaveBeenCalledWith(
+      mockWalletClient,
+      1,
+      validPaymentRequirements[0],
+    );
     expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(mockFetch).toHaveBeenLastCalledWith("https://api.example.com", {
       method: "GET",
@@ -98,7 +104,10 @@ describe("fetchWithPayment()", () => {
   });
 
   it("should not retry if already retried", async () => {
-    const errorResponse = createResponse(402, { paymentRequirements: validPaymentRequirements });
+    const errorResponse = createResponse(402, {
+      accepts: validPaymentRequirements,
+      x402Version: 1,
+    });
     mockFetch.mockResolvedValue(errorResponse);
 
     await expect(
@@ -109,7 +118,10 @@ describe("fetchWithPayment()", () => {
   });
 
   it("should reject if missing request config", async () => {
-    const errorResponse = createResponse(402, { paymentRequirements: validPaymentRequirements });
+    const errorResponse = createResponse(402, {
+      accepts: validPaymentRequirements,
+      x402Version: 1,
+    });
     mockFetch.mockResolvedValue(errorResponse);
 
     await expect(wrappedFetch("https://api.example.com")).rejects.toThrow(
@@ -119,12 +131,13 @@ describe("fetchWithPayment()", () => {
 
   it("should reject if payment amount exceeds maximum", async () => {
     const errorResponse = createResponse(402, {
-      paymentRequirements: [
+      accepts: [
         {
           ...validPaymentRequirements[0],
           maxAmountRequired: "200000", // 0.2 USDC, which exceeds our default max of 0.1 USDC
         },
       ],
+      x402Version: 1,
     });
     mockFetch.mockResolvedValue(errorResponse);
 
@@ -140,7 +153,7 @@ describe("fetchWithPayment()", () => {
     const { createPaymentHeader } = await import("x402/client");
     (createPaymentHeader as ReturnType<typeof vi.fn>).mockRejectedValue(paymentError);
     mockFetch.mockResolvedValue(
-      createResponse(402, { paymentRequirements: validPaymentRequirements }),
+      createResponse(402, { accepts: validPaymentRequirements, x402Version: 1 }),
     );
 
     await expect(

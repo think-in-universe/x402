@@ -54,13 +54,18 @@ export function withPaymentInterceptor(
           return Promise.reject(error);
         }
 
-        const { paymentRequirements } = error.response.data as {
-          paymentRequirements: PaymentRequirements[];
+        const { x402Version, accepts } = error.response.data as {
+          x402Version: number;
+          accepts: PaymentRequirements[];
         };
-        const parsed = paymentRequirements.map(x => PaymentRequirementsSchema.parse(x));
+        const parsed = accepts.map(x => PaymentRequirementsSchema.parse(x));
 
         const selectedPaymentRequirements = paymentRequirementsSelector(parsed);
-        const paymentHeader = await createPaymentHeader(walletClient, selectedPaymentRequirements);
+        const paymentHeader = await createPaymentHeader(
+          walletClient,
+          x402Version,
+          selectedPaymentRequirements,
+        );
 
         (originalConfig as { __is402Retry?: boolean }).__is402Retry = true;
 
