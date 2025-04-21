@@ -184,6 +184,18 @@ Response:
   networkId: string | null;
 }
 
+// Get supported payment schemes and networks
+GET /supported
+Response:
+{
+  kinds: [
+    {
+      "scheme": string,
+      "network": string,
+    }
+  ]
+}
+
 ```
 
 ### Schemes

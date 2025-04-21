@@ -73,6 +73,18 @@ app.get("/settle", (req, res) => {
   });
 });
 
+app.get("/supported", (req, res) => {
+  res.json({
+    kinds: [
+      {
+        x402Version: 1,
+        scheme: "exact",
+        network: "base-sepolia",
+      },
+    ],
+  });
+});
+
 app.post("/settle", async (req, res) => {
   try {
     const signer = createSignerSepolia(PRIVATE_KEY as `0x${string}`);
