@@ -1,5 +1,5 @@
 packages:
-  - "site"
+  - "../site"
   - "packages/x402*"
   - "examples/facilitator"
   - "examples/**/*"
