@@ -31,7 +31,7 @@ func TestVerify(t *testing.T) {
 	client := facilitatorclient.NewFacilitatorClient(server.URL)
 
 	// Test data
-	payload := &types.PaymentPayload{
+	paymentPayload := &types.PaymentPayload{
 		X402Version: 1,
 		Scheme:      "exact",
 		Network:     "base-sepolia",
@@ -47,7 +47,7 @@ func TestVerify(t *testing.T) {
 			},
 		},
 	}
-	details := &types.PaymentRequirements{
+	paymentRequirements := &types.PaymentRequirements{
 		Scheme:            "exact",
 		Network:           "base-sepolia",
 		MaxAmountRequired: "1000000",
@@ -60,7 +60,7 @@ func TestVerify(t *testing.T) {
 	}
 
 	// Test verify
-	resp, err := client.Verify(payload, details)
+	resp, err := client.Verify(paymentPayload, paymentRequirements)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -92,7 +92,7 @@ func TestSettle(t *testing.T) {
 	client := facilitatorclient.NewFacilitatorClient(server.URL)
 
 	// Test data
-	payload := &types.PaymentPayload{
+	paymentPayload := &types.PaymentPayload{
 		X402Version: 1,
 		Scheme:      "exact",
 		Network:     "base-sepolia",
@@ -108,7 +108,7 @@ func TestSettle(t *testing.T) {
 			},
 		},
 	}
-	details := &types.PaymentRequirements{
+	paymentRequirements := &types.PaymentRequirements{
 		Scheme:            "exact",
 		Network:           "base-sepolia",
 		MaxAmountRequired: "1000000",
@@ -121,7 +121,7 @@ func TestSettle(t *testing.T) {
 	}
 
 	// Test settle
-	resp, err := client.Settle(payload, details)
+	resp, err := client.Settle(paymentPayload, paymentRequirements)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}

@@ -164,8 +164,8 @@ func PaymentMiddleware(amount *big.Float, address string, opts ...Options) gin.H
 			}
 
 			c.AbortWithStatusJSON(http.StatusPaymentRequired, gin.H{
-				"error":               "X-PAYMENT header is required",
-				"paymentRequirements": []*types.PaymentRequirements{paymentRequirements},
+				"error":   "X-PAYMENT header is required",
+				"accepts": []*types.PaymentRequirements{paymentRequirements},
 			})
 			return
 		}
@@ -183,8 +183,8 @@ func PaymentMiddleware(amount *big.Float, address string, opts ...Options) gin.H
 		if !response.IsValid {
 			fmt.Println("Invalid payment: ", response.InvalidReason)
 			c.AbortWithStatusJSON(http.StatusPaymentRequired, gin.H{
-				"error":               response.InvalidReason,
-				"paymentRequirements": []*types.PaymentRequirements{paymentRequirements},
+				"error":   response.InvalidReason,
+				"accepts": []*types.PaymentRequirements{paymentRequirements},
 			})
 			return
 		}
@@ -197,8 +197,8 @@ func PaymentMiddleware(amount *big.Float, address string, opts ...Options) gin.H
 		if err != nil {
 			fmt.Println("Settlement failed:", err)
 			c.AbortWithStatusJSON(http.StatusPaymentRequired, gin.H{
-				"error":               err.Error(),
-				"paymentRequirements": []*types.PaymentRequirements{paymentRequirements},
+				"error":   err.Error(),
+				"accepts": []*types.PaymentRequirements{paymentRequirements},
 			})
 			return
 		}

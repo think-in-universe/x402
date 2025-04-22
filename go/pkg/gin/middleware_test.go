@@ -114,7 +114,7 @@ func TestPaymentMiddleware_NoPaymentHeader(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Contains(t, response, "error")
-	assert.Contains(t, response, "paymentRequirements")
+	assert.Contains(t, response, "accepts")
 }
 
 func TestPaymentMiddleware_WebBrowserRequest(t *testing.T) {
@@ -149,7 +149,7 @@ func TestPaymentMiddleware_ValidPayment(t *testing.T) {
 	responseBytes, err := base64.StdEncoding.DecodeString(responseStr)
 	assert.NoError(t, err)
 
-	var settleResponse x402.SettleResponse
+	var settleResponse types.SettleResponse
 	err = json.Unmarshal(responseBytes, &settleResponse)
 	assert.NoError(t, err)
 	assert.True(t, settleResponse.Success)
@@ -176,7 +176,7 @@ func TestPaymentMiddleware_VerificationFails(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Contains(t, response, "error")
-	assert.Contains(t, response, "paymentRequirements")
+	assert.Contains(t, response, "accepts")
 	assert.Equal(t, config.InvalidReason, response["error"])
 }
 
@@ -223,7 +223,7 @@ func TestPaymentMiddleware_SettlementFails(t *testing.T) {
 	responseBytes, err := base64.StdEncoding.DecodeString(responseStr)
 	assert.NoError(t, err)
 
-	var settleResponse x402.SettleResponse
+	var settleResponse types.SettleResponse
 	err = json.Unmarshal(responseBytes, &settleResponse)
 	assert.NoError(t, err)
 	assert.False(t, settleResponse.Success)
@@ -330,7 +330,7 @@ func TestPaymentMiddleware_NetworkSelection(t *testing.T) {
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			assert.NoError(t, err)
 
-			requirementsSlice, ok := response["paymentRequirements"].([]any)
+			requirementsSlice, ok := response["accepts"].([]any)
 			assert.True(t, ok)
 
 			requirements, ok := requirementsSlice[0].(map[string]any)

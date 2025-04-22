@@ -32,9 +32,9 @@ func NewFacilitatorClient(url string) *FacilitatorClient {
 // Verify sends a payment verification request to the facilitator
 func (c *FacilitatorClient) Verify(payload *types.PaymentPayload, requirements *types.PaymentRequirements) (*types.VerifyResponse, error) {
 	reqBody := map[string]any{
-		"x402Version": 1,
-		"payload":     payload,
-		"details":     requirements,
+		"x402Version":         1,
+		"paymentPayload":      payload,
+		"paymentRequirements": requirements,
 	}
 
 	jsonBody, err := json.Marshal(reqBody)
@@ -69,9 +69,9 @@ func (c *FacilitatorClient) Verify(payload *types.PaymentPayload, requirements *
 // Settle sends a payment settlement request to the facilitator
 func (c *FacilitatorClient) Settle(payload *types.PaymentPayload, requirements *types.PaymentRequirements) (*types.SettleResponse, error) {
 	reqBody := map[string]any{
-		"x402Version": 1,
-		"payload":     payload,
-		"details":     requirements,
+		"x402Version":         1,
+		"paymentPayload":      payload,
+		"paymentRequirements": requirements,
 	}
 
 	jsonBody, err := json.Marshal(reqBody)
