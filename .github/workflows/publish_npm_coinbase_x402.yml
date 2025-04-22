@@ -12,17 +12,23 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      
       - uses: actions/setup-node@v4
         with:
           node-version: "18"
           registry-url: "https://registry.npmjs.org"
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
+          cache: "pnpm"
+          cache-dependency-path: ./typescript
+      
       - name: Install and build
         working-directory: ./typescript/packages/coinbase-x402
         run: |
-          pnpm install
+          pnpm install --frozen-lockfile
           pnpm run build
       
       - name: Publish coinbase-x402 package
@@ -37,10 +43,10 @@ jobs:
           # Check if running on main branch
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "Publishing to NPM (main branch)"
-            pnpm publish --provenance --access public --no-git-checks
+            pnpm publish --provenance --access public
           else
             echo "Dry run only (non-main branch: ${{ github.ref }})"
-            pnpm publish --dry-run --no-git-checks
+            pnpm publish --dry-run
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 

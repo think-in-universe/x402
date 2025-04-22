@@ -16,9 +16,9 @@ jobs:
         with:
           node-version: "18"
           registry-url: "https://registry.npmjs.org"
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 10
       - name: Install and build
         working-directory: ./typescript/packages/x402-next
         run: |
