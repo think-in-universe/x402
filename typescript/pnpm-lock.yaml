@@ -386,9 +386,6 @@ importers:
       viem:
         specifier: ^2.26.2
         version: 2.26.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.2)
-      x402:
-        specifier: workspace:*
-        version: link:../packages/x402
       x402-next:
         specifier: workspace:*
         version: link:../packages/x402-next
