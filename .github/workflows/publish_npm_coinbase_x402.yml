@@ -46,7 +46,7 @@ jobs:
             pnpm publish --provenance --access public
           else
             echo "Dry run only (non-main branch: ${{ github.ref }})"
-            pnpm publish --dry-run
+            pnpm publish --dry-run --no-git-checks
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 

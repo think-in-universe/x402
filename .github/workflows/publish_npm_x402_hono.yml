@@ -37,7 +37,7 @@ jobs:
           # Check if running on main branch
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "Publishing to NPM (main branch)"
-            pnpm publish --provenance --access public --no-git-checks
+            pnpm publish --provenance --access public
           else
             echo "Dry run only (non-main branch: ${{ github.ref }})"
             pnpm publish --dry-run --no-git-checks
