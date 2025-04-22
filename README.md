@@ -4,10 +4,17 @@
 
 ```typescript
 app.use(
-  "/your-endpoint",
   // How much you want to charge, and where you want the funds to land
-  paymentMiddleware("$0.10", "0x209693Bc6afc0C5328bA36FaF03C514EF312287C")
-);
+  paymentMiddleware({
+    payToAddress: "0x209693Bc6afc0C5328bA36FaF03C514EF312287C",
+    routes: {
+      "/your-endpoint": {
+        price: "$0.01",
+        network: "base"
+      }
+    }
+  })
+); 
 // Thats it! See examples/typescript/servers/express.ts for a complete example. Instruction below for running on base-sepolia.
 ```
 
