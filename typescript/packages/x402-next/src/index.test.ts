@@ -72,6 +72,7 @@ describe("paymentMiddleware()", () => {
         host: "example.com",
       },
       headers: new Headers(),
+      method: "GET",
     } as unknown as NextRequest;
 
     // Setup facilitator mocks
@@ -103,15 +104,103 @@ describe("paymentMiddleware()", () => {
   });
 
   it("should return next() when no route matches", async () => {
-    mockRequest.nextUrl.pathname = "/unprotected/test";
-    const response = await middleware(mockRequest);
+    const request = {
+      ...mockRequest,
+      nextUrl: {
+        ...mockRequest.nextUrl,
+        pathname: "/unprotected/test",
+      },
+    } as NextRequest;
+    const response = await middleware(request);
     expect(response).toBeInstanceOf(Response);
     expect(response.status).toBe(200);
   });
 
+  it("should match routes with HTTP verbs", async () => {
+    middleware = paymentMiddleware({
+      ...globalConfig,
+      routes: {
+        "GET /protected/*": {
+          price: 1.0,
+          network: "base",
+          config: middlewareConfig,
+        },
+      },
+    });
+
+    // Test GET request to protected route
+    const getRequest = {
+      ...mockRequest,
+      method: "GET",
+    } as NextRequest;
+    getRequest.nextUrl.pathname = "/protected/test";
+    let response = await middleware(getRequest);
+    expect(response.status).toBe(402);
+
+    // Test POST request to protected route (should not match)
+    const postRequest = {
+      ...mockRequest,
+      method: "POST",
+    } as NextRequest;
+    postRequest.nextUrl.pathname = "/protected/test";
+    response = await middleware(postRequest);
+    expect(response.status).toBe(200);
+  });
+
+  it("should match routes without verbs using any HTTP method", async () => {
+    middleware = paymentMiddleware({
+      ...globalConfig,
+      routes: {
+        "/protected/*": {
+          price: 1.0,
+          network: "base",
+          config: middlewareConfig,
+        },
+      },
+    });
+
+    // Test GET request
+    const getRequest = {
+      ...mockRequest,
+      method: "GET",
+    } as NextRequest;
+    getRequest.nextUrl.pathname = "/protected/test";
+    let response = await middleware(getRequest);
+    expect(response.status).toBe(402);
+
+    // Test POST request (should also match)
+    const postRequest = {
+      ...mockRequest,
+      method: "POST",
+    } as NextRequest;
+    postRequest.nextUrl.pathname = "/protected/test";
+    response = await middleware(postRequest);
+    expect(response.status).toBe(402);
+  });
+
+  it("should throw error for invalid route patterns", async () => {
+    expect(() => {
+      paymentMiddleware({
+        ...globalConfig,
+        routes: {
+          "GET ": {
+            price: 1.0,
+            network: "base",
+            config: middlewareConfig,
+          },
+        },
+      });
+    }).toThrow("Invalid route pattern");
+  });
+
   it("should return 402 with payment requirements when no payment header is present", async () => {
-    mockRequest.headers.set("Accept", "application/json");
-    const response = await middleware(mockRequest);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        "Accept": "application/json",
+      }),
+    } as NextRequest;
+    const response = await middleware(request);
 
     expect(response.status).toBe(402);
     const json = (await response.json()) as {
@@ -135,9 +224,14 @@ describe("paymentMiddleware()", () => {
   });
 
   it("should return HTML paywall for browser requests", async () => {
-    mockRequest.headers.set("Accept", "text/html");
-    mockRequest.headers.set("User-Agent", "Mozilla/5.0");
-    const response = await middleware(mockRequest);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        "Accept": "text/html",
+        "User-Agent": "Mozilla/5.0",
+      }),
+    } as NextRequest;
+    const response = await middleware(request);
 
     expect(response.status).toBe(402);
     expect(response.headers.get("Content-Type")).toBe("text/html");
@@ -147,7 +241,12 @@ describe("paymentMiddleware()", () => {
 
   it("should verify payment and proceed if valid", async () => {
     const validPayment = "valid-payment-header";
-    mockRequest.headers.set("X-PAYMENT", validPayment);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        "X-PAYMENT": validPayment,
+      }),
+    } as NextRequest;
 
     const decodedPayment = {
       scheme: "exact",
@@ -163,7 +262,7 @@ describe("paymentMiddleware()", () => {
       network: "base",
     });
 
-    const response = await middleware(mockRequest);
+    const response = await middleware(request);
 
     expect(mockDecodePayment).toHaveBeenCalledWith(validPayment);
     expect(mockVerify).toHaveBeenCalledWith(
@@ -193,7 +292,12 @@ describe("paymentMiddleware()", () => {
 
   it("should return 402 if payment verification fails", async () => {
     const invalidPayment = "invalid-payment-header";
-    mockRequest.headers.set("X-PAYMENT", invalidPayment);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        "X-PAYMENT": invalidPayment,
+      }),
+    } as NextRequest;
 
     const decodedPayment = {
       scheme: "exact",
@@ -207,7 +311,7 @@ describe("paymentMiddleware()", () => {
       invalidReason: "insufficient_funds",
     });
 
-    const response = await middleware(mockRequest);
+    const response = await middleware(request);
 
     expect(response.status).toBe(402);
     const json = await response.json();
@@ -236,7 +340,12 @@ describe("paymentMiddleware()", () => {
 
   it("should handle settlement after response", async () => {
     const validPayment = "valid-payment-header";
-    mockRequest.headers.set("X-PAYMENT", validPayment);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        "X-PAYMENT": validPayment,
+      }),
+    } as NextRequest;
 
     const decodedPayment = {
       scheme: "exact",
@@ -252,7 +361,7 @@ describe("paymentMiddleware()", () => {
       network: "base",
     });
 
-    const response = await middleware(mockRequest);
+    const response = await middleware(request);
 
     expect(mockSettle).toHaveBeenCalledWith(
       {
@@ -280,7 +389,12 @@ describe("paymentMiddleware()", () => {
 
   it("should handle settlement failure", async () => {
     const validPayment = "valid-payment-header";
-    mockRequest.headers.set("X-PAYMENT", validPayment);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        "X-PAYMENT": validPayment,
+      }),
+    } as NextRequest;
 
     const decodedPayment = {
       scheme: "exact",
@@ -292,7 +406,7 @@ describe("paymentMiddleware()", () => {
     (mockVerify as ReturnType<typeof vi.fn>).mockResolvedValue({ isValid: true });
     (mockSettle as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Settlement failed"));
 
-    const response = await middleware(mockRequest);
+    const response = await middleware(request);
 
     expect(response.status).toBe(402);
     const json = await response.json();
@@ -331,7 +445,12 @@ describe("paymentMiddleware()", () => {
       },
     });
 
-    const response = await middleware(mockRequest);
+    const request = {
+      ...mockRequest,
+      headers: new Headers(),
+    } as NextRequest;
+
+    const response = await middleware(request);
 
     expect(response.status).toBe(500);
     const text = await response.text();
@@ -360,8 +479,14 @@ describe("paymentMiddleware()", () => {
       },
     });
 
-    mockRequest.headers.set("Accept", "application/json");
-    const response = await middleware(mockRequest);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        "Accept": "application/json",
+      }),
+    } as NextRequest;
+
+    const response = await middleware(request);
 
     expect(response.status).toBe(402);
     const json = (await response.json()) as {

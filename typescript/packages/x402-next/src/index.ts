@@ -63,21 +63,34 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
   const x402Version = 1;
 
   // Pre-compile route patterns to regex
-  const routePatterns = Object.entries(routes).map(([pattern, config]) => ({
-    pattern: new RegExp(
-      `^${pattern
-        .replace(/\*/g, ".*?") // Make wildcard non-greedy and optional
-        .replace(/\[([^\]]+)\]/g, "[^/]+")
-        .replace(/\//g, "\\/")}$`,
-    ),
-    config,
-  }));
+  const routePatterns = Object.entries(routes).map(([pattern, config]) => {
+    // Split pattern into verb and path, defaulting to "*" for verb if not specified
+    const [verb, path] = pattern.includes(" ") ? pattern.split(/\s+/) : ["*", pattern];
+    if (!path) {
+      throw new Error(`Invalid route pattern: ${pattern}`);
+    }
+    return {
+      verb: verb.toUpperCase(),
+      pattern: new RegExp(
+        `^${path
+          .replace(/\*/g, ".*?") // Make wildcard non-greedy and optional
+          .replace(/\[([^\]]+)\]/g, "[^/]+")
+          .replace(/\//g, "\\/")}$`,
+      ),
+      config,
+    };
+  });
 
   return async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
+    const method = request.method.toUpperCase();
 
     // Find matching route configuration
-    const routeMatch = routePatterns.find(({ pattern }) => pattern.test(pathname));
+    const routeMatch = routePatterns.find(({ pattern, verb }) => {
+      const matchesPath = pattern.test(pathname);
+      const matchesVerb = verb === "*" || verb === method;
+      return matchesPath && matchesVerb;
+    });
     if (!routeMatch) {
       return NextResponse.next();
     }
