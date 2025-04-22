@@ -5,12 +5,9 @@ const address = process.env.RESOURCE_WALLET_ADDRESS as Address;
 const network = process.env.NETWORK as Network;
 const facilitatorUrl = (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/facilitator` : process.env.NEXT_PUBLIC_FACILITATOR_URL) as Resource;
 
-export const middleware = paymentMiddleware({
-  facilitator: {
-    url: facilitatorUrl,
-  },
-  payToAddress: address,
-  routes: {
+export const middleware = paymentMiddleware(
+  address,
+  {
     "/protected": {
       price: "$0.01",
       config: {
@@ -19,7 +16,10 @@ export const middleware = paymentMiddleware({
       network,
     },
   },
-});
+  {
+    url: facilitatorUrl,
+  },
+);
 
 // Configure which paths the middleware should run on
 export const config = {

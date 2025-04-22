@@ -1,37 +1,36 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { Address } from "viem";
 import { exact } from "x402/schemes";
-import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
-import { getUsdcAddressForChain } from "x402/shared/evm";
 import {
-  GlobalConfig,
-  moneySchema,
+  computeRoutePatterns,
+  findMatchingRoute,
+  getPaywallHtml,
+  processPriceToAtomicAmount,
+  toJsonSafe,
+} from "x402/shared";
+import {
+  FacilitatorConfig,
   PaymentPayload,
   PaymentRequirements,
   Resource,
-  settleResponseHeader,
-  TokenAmount,
+  RoutesConfig,
 } from "x402/types";
 import { useFacilitator } from "x402/verify";
 
 /**
  * Creates a Next.js middleware handler for x402 payments
  *
- * @param globalConfig - Configuration for the payment middleware
+ * @param payToAddress - Address to receive payments
+ * @param routes - Route configuration for payment amounts
+ * @param facilitator - Configuration for the payment facilitator service
  * @returns A Next.js middleware handler
  *
  * @example
  * ```typescript
- * export const middleware = paymentMiddleware({
- *   facilitator: {
- *     url: process.env.NEXT_PUBLIC_FACILITATOR_URL,
- *     createAuthHeaders: async () => ({
- *       verify: { "Authorization": "Bearer token" },
- *       settle: { "Authorization": "Bearer token" }
- *     })
- *   },
- *   payToAddress: process.env.RESOURCE_WALLET_ADDRESS,
- *   routes: {
+ * export const middleware = paymentMiddleware(
+ *   process.env.RESOURCE_WALLET_ADDRESS,
+ *   {
  *     '/protected/*': {
  *       price: '$0.01',
  *       network: 'base',
@@ -53,44 +52,35 @@ import { useFacilitator } from "x402/verify";
  *       },
  *       network: 'base'
  *     }
+ *   },
+ *   {
+ *     url: process.env.NEXT_PUBLIC_FACILITATOR_URL,
+ *     createAuthHeaders: async () => ({
+ *       verify: { "Authorization": "Bearer token" },
+ *       settle: { "Authorization": "Bearer token" }
+ *     })
  *   }
- * });
+ * );
  * ```
  */
-export function paymentMiddleware(globalConfig: GlobalConfig) {
-  const { facilitator, payToAddress, routes } = globalConfig;
+export function paymentMiddleware(
+  payToAddress: Address,
+  routes: RoutesConfig,
+  facilitator?: FacilitatorConfig,
+) {
   const { verify, settle } = useFacilitator(facilitator);
   const x402Version = 1;
 
-  // Pre-compile route patterns to regex
-  const routePatterns = Object.entries(routes).map(([pattern, config]) => {
-    // Split pattern into verb and path, defaulting to "*" for verb if not specified
-    const [verb, path] = pattern.includes(" ") ? pattern.split(/\s+/) : ["*", pattern];
-    if (!path) {
-      throw new Error(`Invalid route pattern: ${pattern}`);
-    }
-    return {
-      verb: verb.toUpperCase(),
-      pattern: new RegExp(
-        `^${path
-          .replace(/\*/g, ".*?") // Make wildcard non-greedy and optional
-          .replace(/\[([^\]]+)\]/g, "[^/]+")
-          .replace(/\//g, "\\/")}$`,
-      ),
-      config,
-    };
-  });
+  // Pre-compile route patterns to regex and extract verbs
+  const routePatterns = computeRoutePatterns(routes);
 
   return async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
     const method = request.method.toUpperCase();
 
     // Find matching route configuration
-    const routeMatch = routePatterns.find(({ pattern, verb }) => {
-      const matchesPath = pattern.test(pathname);
-      const matchesVerb = verb === "*" || verb === method;
-      return matchesPath && matchesVerb;
-    });
+    const routeMatch = findMatchingRoute(routePatterns, pathname, method);
+
     if (!routeMatch) {
       return NextResponse.next();
     }
@@ -99,31 +89,11 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
     const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
       config;
 
-    // Handle USDC amount (string) or token amount (TokenAmount)
-    let maxAmountRequired: string;
-    let asset: TokenAmount["asset"];
-
-    if (typeof price === "string" || typeof price === "number") {
-      // USDC amount in dollars
-      const parsedAmount = moneySchema.safeParse(price);
-      if (!parsedAmount.success) {
-        return new NextResponse("Invalid payment configuration", { status: 500 });
-      }
-      const parsedUsdAmount = parsedAmount.data;
-      asset = {
-        address: getUsdcAddressForChain(getNetworkId(network)),
-        decimals: 6,
-        eip712: {
-          name: "USDC",
-          version: "2",
-        },
-      };
-      maxAmountRequired = (parsedUsdAmount * 10 ** asset.decimals).toString();
-    } else {
-      // Token amount in atomic units
-      maxAmountRequired = price.amount;
-      asset = price.asset;
+    const atomicAmountForAsset = processPriceToAtomicAmount(price, network);
+    if ("error" in atomicAmountForAsset) {
+      return new NextResponse(atomicAmountForAsset.error, { status: 500 });
     }
+    const { maxAmountRequired, asset } = atomicAmountForAsset;
 
     const resourceUrl =
       resource || (`${request.nextUrl.protocol}//${request.nextUrl.host}${pathname}` as Resource);
@@ -134,136 +104,107 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
         maxAmountRequired,
         resource: resourceUrl,
         description: description ?? "",
-        mimeType: mimeType ?? "",
+        mimeType: mimeType ?? "application/json",
         payTo: payToAddress,
-        maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
-        asset: asset.address,
-        outputSchema: outputSchema || undefined,
-        extra: {
-          name: asset.eip712.name,
-          version: asset.eip712.version,
-        },
+        maxTimeoutSeconds: maxTimeoutSeconds ?? 300,
+        asset: asset?.address ?? "",
+        outputSchema,
+        extra: asset?.eip712,
       },
     ];
 
-    const payment = request.headers.get("X-PAYMENT");
-    const userAgent = request.headers.get("User-Agent") || "";
-    const acceptHeader = request.headers.get("Accept") || "";
-    const isWebBrowser = acceptHeader.includes("text/html") && userAgent.includes("Mozilla");
-
-    if (!payment) {
-      if (isWebBrowser) {
-        const displayAmount =
-          typeof price === "string" || typeof price === "number"
-            ? Number(price)
-            : Number(price.amount) / 10 ** price.asset.decimals;
-
-        const html =
-          customPaywallHtml ||
-          getPaywallHtml({
-            amount: displayAmount,
-            paymentRequirements: toJsonSafe(paymentRequirements) as Parameters<
-              typeof getPaywallHtml
-            >[0]["paymentRequirements"],
-            currentUrl: request.url,
-            testnet: network === "base-sepolia",
+    // Check for payment header
+    const paymentHeader = request.headers.get("X-PAYMENT");
+    if (!paymentHeader) {
+      const accept = request.headers.get("Accept");
+      if (accept?.includes("text/html")) {
+        const userAgent = request.headers.get("User-Agent");
+        if (userAgent?.includes("Mozilla")) {
+          const displayAmount =
+            typeof price === "string" || typeof price === "number"
+              ? Number(price)
+              : Number(price.amount) / 10 ** price.asset.decimals;
+          const html =
+            customPaywallHtml ??
+            getPaywallHtml({
+              amount: displayAmount,
+              paymentRequirements: toJsonSafe(paymentRequirements) as Parameters<
+                typeof getPaywallHtml
+              >[0]["paymentRequirements"],
+              currentUrl: request.url,
+              testnet: network === "base-sepolia",
+            });
+          return new NextResponse(html, {
+            status: 402,
+            headers: { "Content-Type": "text/html" },
           });
-
-        return new NextResponse(html, {
-          status: 402,
-          headers: { "Content-Type": "text/html" },
-        });
+        }
       }
 
-      return NextResponse.json(
-        {
+      return new NextResponse(
+        JSON.stringify({
           x402Version,
           error: "X-PAYMENT header is required",
-          accepts: toJsonSafe(paymentRequirements),
-        },
-        { status: 402 },
+          accepts: paymentRequirements,
+        }),
+        { status: 402, headers: { "Content-Type": "application/json" } },
       );
     }
 
+    // Verify payment
     let decodedPayment: PaymentPayload;
     try {
-      decodedPayment = exact.evm.decodePayment(payment);
+      decodedPayment = exact.evm.decodePayment(paymentHeader);
+      decodedPayment.x402Version = x402Version;
     } catch (error) {
-      return NextResponse.json(
-        {
+      return new NextResponse(
+        JSON.stringify({
           x402Version,
-          error: error || "Invalid or malformed payment header",
-          accepts: toJsonSafe(paymentRequirements),
-        },
-        { status: 402 },
+          error: error instanceof Error ? error : "Invalid payment",
+          accepts: paymentRequirements,
+        }),
+        { status: 402, headers: { "Content-Type": "application/json" } },
       );
     }
 
-    const selectedPaymentRequirements = paymentRequirements.find(
-      value => value.scheme === decodedPayment.scheme && value.network === decodedPayment.network,
-    );
-    if (!selectedPaymentRequirements) {
-      return NextResponse.json(
-        {
+    const verification = await verify(decodedPayment, paymentRequirements[0]);
+
+    if (!verification.isValid) {
+      return new NextResponse(
+        JSON.stringify({
           x402Version,
-          error: "Unable to find matching payment requirements",
-          accepts: toJsonSafe(paymentRequirements),
-        },
-        { status: 402 },
+          error: verification.invalidReason,
+          accepts: paymentRequirements,
+        }),
+        { status: 402, headers: { "Content-Type": "application/json" } },
       );
     }
 
+    // Proceed with request
+    const response = await NextResponse.next();
+
+    // Settle payment after response
     try {
-      const response = await verify(
-        {
-          ...decodedPayment,
-          x402Version,
-        },
-        selectedPaymentRequirements,
-      );
-      if (!response.isValid) {
-        return NextResponse.json(
-          {
-            x402Version,
-            error: response.invalidReason,
-            accepts: toJsonSafe(paymentRequirements),
-            payerAddress: response.payerAddress,
-          },
-          { status: 402 },
+      const settlement = await settle(decodedPayment, paymentRequirements[0]);
+
+      if (settlement.success) {
+        response.headers.set(
+          "X-PAYMENT-RESPONSE",
+          JSON.stringify({
+            success: true,
+            transaction: settlement.transaction,
+            network: settlement.network,
+          }),
         );
       }
     } catch (error) {
-      return NextResponse.json(
-        {
+      return new NextResponse(
+        JSON.stringify({
           x402Version,
-          error,
-          accepts: toJsonSafe(paymentRequirements),
-        },
-        { status: 402 },
-      );
-    }
-
-    // Let the request proceed
-    const response = NextResponse.next();
-
-    try {
-      const settleResponse = await settle(
-        {
-          ...decodedPayment,
-          x402Version,
-        },
-        selectedPaymentRequirements,
-      );
-      const responseHeader = settleResponseHeader(settleResponse);
-      response.headers.set("X-PAYMENT-RESPONSE", responseHeader);
-    } catch (error) {
-      return NextResponse.json(
-        {
-          x402Version,
-          error,
-          accepts: toJsonSafe(paymentRequirements),
-        },
-        { status: 402 },
+          error: error instanceof Error ? error : "Settlement failed",
+          accepts: paymentRequirements,
+        }),
+        { status: 402, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -271,4 +212,11 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
   };
 }
 
-export type { GlobalConfig, Money, Network, PaymentMiddlewareConfig, Resource } from "x402/types";
+export type {
+  Money,
+  Network,
+  PaymentMiddlewareConfig,
+  Resource,
+  RouteConfig,
+  RoutesConfig,
+} from "x402/types";

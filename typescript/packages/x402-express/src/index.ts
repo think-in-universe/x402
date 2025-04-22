@@ -1,24 +1,29 @@
-import { NextFunction, Request, RequestHandler, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import { Address } from "viem";
 import { exact } from "x402/schemes";
-import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
-import { getUsdcAddressForChain } from "x402/shared/evm";
 import {
-  GlobalConfig,
-  moneySchema,
-  Network,
+  computeRoutePatterns,
+  findMatchingRoute,
+  getPaywallHtml,
+  processPriceToAtomicAmount,
+  toJsonSafe,
+} from "x402/shared";
+import {
+  FacilitatorConfig,
   PaymentPayload,
   PaymentRequirements,
   Resource,
-  RouteConfig,
+  RoutesConfig,
   settleResponseHeader,
-  TokenAmount,
 } from "x402/types";
 import { useFacilitator } from "x402/verify";
 
 /**
  * Creates a payment middleware factory for Express
  *
- * @param globalConfig - The global configuration for the payment middleware including facilitator settings, payToAddress, and route configurations
+ * @param payToAddress - The Ethereum address to receive payments
+ * @param routes - Configuration for protected routes and their payment requirements
+ * @param facilitator - Optional configuration for the payment facilitator service
  * @returns An Express middleware handler
  *
  * @example
@@ -56,89 +61,41 @@ import { useFacilitator } from "x402/verify";
  * });
  * ```
  */
-export function paymentMiddleware(globalConfig: GlobalConfig) {
-  const { facilitator, payToAddress, routes } = globalConfig;
+export function paymentMiddleware(
+  payToAddress: Address,
+  routes: RoutesConfig,
+  facilitator?: FacilitatorConfig,
+) {
   const { verify, settle } = useFacilitator(facilitator);
   const x402Version = 1;
 
-  // If routes is just a price/network object, convert it to a routes config
-  const normalizedRoutes =
-    "price" in routes && "network" in routes
-      ? ({ "/*": { price: routes.price, network: routes.network } } as Record<string, RouteConfig>)
-      : routes;
-
   // Pre-compile route patterns to regex and extract verbs
-  const routePatterns = Object.entries(normalizedRoutes).map(([pattern, routeConfig]) => {
-    // Split pattern into verb and path, defaulting to "*" for verb if not specified
-    const [verb, path] = pattern.includes(" ") ? pattern.split(/\s+/) : ["*", pattern];
-    if (!path) {
-      throw new Error(`Invalid route pattern: ${pattern}`);
-    }
-    return {
-      verb: verb.toUpperCase(),
-      pattern: new RegExp(
-        `^${path
-          .replace(/\*/g, ".*?") // Make wildcard non-greedy and optional
-          .replace(/\[([^\]]+)\]/g, "[^/]+")
-          .replace(/\//g, "\\/")}$`,
-      ),
-      config: routeConfig,
-    };
-  });
+  const routePatterns = computeRoutePatterns(routes);
 
   return async function paymentMiddleware(
     req: Request,
     res: Response,
     next: NextFunction,
   ): Promise<void> {
-    // Find matching route pattern
-    const matchingRoutes = routePatterns.filter(({ pattern, verb }) => {
-      const matchesPath = pattern.test(req.originalUrl);
-      const matchesVerb = verb === "*" || verb === req.method.toUpperCase();
-      return matchesPath && matchesVerb;
-    });
+    const matchingRoute = findMatchingRoute(
+      routePatterns,
+      req.originalUrl,
+      req.method.toUpperCase(),
+    );
 
-    // If no matching routes, proceed
-    if (matchingRoutes.length === 0) {
+    if (!matchingRoute) {
       return next();
     }
-
-    // Use the most specific route (longest path pattern)
-    const matchingRoute = matchingRoutes.reduce((a, b) =>
-      b.pattern.source.length > a.pattern.source.length ? b : a,
-    );
 
     const { price, network, config = {} } = matchingRoute.config;
     const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
       config;
 
-    // Handle USDC amount (string) or token amount (TokenAmount)
-    let maxAmountRequired: string;
-    let asset: TokenAmount["asset"];
-
-    if (typeof price === "string" || typeof price === "number") {
-      // USDC amount in dollars
-      const parsedAmount = moneySchema.safeParse(price);
-      if (!parsedAmount.success) {
-        throw new Error(
-          `Invalid price (price: ${price}). Must be in the form "$3.10", 0.10, "0.001", ${parsedAmount.error}`,
-        );
-      }
-      const parsedUsdAmount = parsedAmount.data;
-      asset = {
-        address: getUsdcAddressForChain(getNetworkId(network)),
-        decimals: 6,
-        eip712: {
-          name: "USDC",
-          version: "2",
-        },
-      };
-      maxAmountRequired = (parsedUsdAmount * 10 ** asset.decimals).toString();
-    } else {
-      // Token amount in atomic units
-      maxAmountRequired = price.amount;
-      asset = price.asset;
+    const atomicAmountForAsset = processPriceToAtomicAmount(price, network);
+    if ("error" in atomicAmountForAsset) {
+      throw new Error(atomicAmountForAsset.error);
     }
+    const { maxAmountRequired, asset } = atomicAmountForAsset;
 
     // Use req.originalUrl as the resource if none is provided
     const resourceUrl: Resource = resource || (req.originalUrl as Resource);
@@ -279,29 +236,11 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
   };
 }
 
-/**
- * Default configuration for accepting USDC payments
- *
- * @param config - The base configuration for the payment middleware excluding routes
- * @param network - The network to use for USDC payments
- * @returns An Express middleware handler configured for USDC payments
- */
-export const acceptsUSDCMiddleware = (
-  config: Omit<GlobalConfig, "routes">,
-  network: Network,
-): RequestHandler => {
-  return paymentMiddleware({
-    ...config,
-    routes: {
-      "/*": {
-        price: "$0.01",
-        network,
-        config: {
-          description: "Access to content",
-        },
-      },
-    },
-  });
-};
-
-export type { GlobalConfig, Money, Network, PaymentMiddlewareConfig, Resource } from "x402/types";
+export type {
+  Money,
+  Network,
+  PaymentMiddlewareConfig,
+  Resource,
+  RouteConfig,
+  RoutesConfig,
+} from "x402/types";

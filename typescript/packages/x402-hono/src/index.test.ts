@@ -1,8 +1,14 @@
 import { Context } from "hono";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getPaywallHtml } from "x402/shared";
 import { exact } from "x402/schemes";
-import { GlobalConfig, PaymentMiddlewareConfig, PaymentPayload } from "x402/types";
+import { findMatchingRoute, getPaywallHtml } from "x402/shared";
+import {
+  FacilitatorConfig,
+  PaymentMiddlewareConfig,
+  PaymentPayload,
+  RouteConfig,
+  RoutesConfig,
+} from "x402/types";
 import { useFacilitator } from "x402/verify";
 import { paymentMiddleware } from "./index";
 
@@ -11,11 +17,54 @@ vi.mock("x402/verify", () => ({
   useFacilitator: vi.fn(),
 }));
 
-vi.mock("x402/shared", () => ({
-  getPaywallHtml: vi.fn(),
-  getNetworkId: vi.fn().mockReturnValue("base-sepolia"),
-  toJsonSafe: vi.fn(x => x),
-}));
+vi.mock("x402/shared", async importOriginal => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    getPaywallHtml: vi.fn(),
+    getNetworkId: vi.fn().mockReturnValue("base-sepolia"),
+    toJsonSafe: vi.fn(x => x),
+    computeRoutePatterns: vi.fn().mockImplementation(routes => {
+      const normalizedRoutes = Object.fromEntries(
+        Object.entries(routes).map(([pattern, value]) => [
+          pattern,
+          typeof value === "string" || typeof value === "number"
+            ? ({ price: value, network: "base-sepolia" } as RouteConfig)
+            : (value as RouteConfig),
+        ]),
+      );
+
+      return Object.entries(normalizedRoutes).map(([pattern, routeConfig]) => {
+        const [verb, path] = pattern.includes(" ") ? pattern.split(/\s+/) : ["*", pattern];
+        if (!path) {
+          throw new Error(`Invalid route pattern: ${pattern}`);
+        }
+        return {
+          verb: verb.toUpperCase(),
+          pattern: new RegExp(
+            `^${path
+              .replace(/\*/g, ".*?")
+              .replace(/\[([^\]]+)\]/g, "[^/]+")
+              .replace(/\//g, "\\/")}$`,
+          ),
+          config: routeConfig,
+        };
+      });
+    }),
+    findMatchingRoute: vi
+      .fn()
+      .mockImplementation(
+        (routePatterns: Array<{ pattern: RegExp; verb: string }>, path: string, method: string) => {
+          if (!routePatterns) return undefined;
+          return routePatterns.find(({ pattern, verb }) => {
+            const matchesPath = pattern.test(path);
+            const matchesVerb = verb === "*" || verb === method.toUpperCase();
+            return matchesPath && matchesVerb;
+          });
+        },
+      ),
+  };
+});
 
 vi.mock("x402/shared/evm", () => ({
   getUsdcAddressForChain: vi.fn().mockReturnValue("0x036CbD53842c5426634e7929541eC2318f3dCF7e"),
@@ -46,17 +95,17 @@ describe("paymentMiddleware()", () => {
     resource: "https://api.example.com/resource",
   };
 
-  const globalConfig: GlobalConfig = {
-    facilitator: {
-      url: "https://facilitator.example.com",
-    },
-    payToAddress: "0x1234567890123456789012345678901234567890",
-    routes: {
-      "/weather": {
-        price: "$0.001",
-        network: "base-sepolia",
-        config: middlewareConfig,
-      },
+  const facilitatorConfig: FacilitatorConfig = {
+    url: "https://facilitator.example.com",
+  };
+
+  const payToAddress = "0x1234567890123456789012345678901234567890";
+
+  const routesConfig: RoutesConfig = {
+    "/weather": {
+      price: "$0.001",
+      network: "base-sepolia",
+      config: middlewareConfig,
     },
   };
 
@@ -85,6 +134,7 @@ describe("paymentMiddleware()", () => {
       req: {
         url: "/weather",
         path: "/weather",
+        method: "GET",
         header: vi.fn(),
         headers: new Headers(),
       },
@@ -110,7 +160,25 @@ describe("paymentMiddleware()", () => {
     (exact.evm.encodePayment as ReturnType<typeof vi.fn>).mockReturnValue(encodedValidPayment);
     (exact.evm.decodePayment as ReturnType<typeof vi.fn>).mockReturnValue(validPayment);
 
-    middleware = paymentMiddleware(globalConfig);
+    // Setup findMatchingRoute mock
+    (findMatchingRoute as ReturnType<typeof vi.fn>).mockImplementation(
+      (routePatterns, path, method) => {
+        if (path === "/weather" && method === "GET") {
+          return {
+            verb: "GET",
+            pattern: /^\/weather$/,
+            config: {
+              price: "$0.001",
+              network: "base-sepolia",
+              config: middlewareConfig,
+            },
+          };
+        }
+        return undefined;
+      },
+    );
+
+    middleware = paymentMiddleware(payToAddress, routesConfig, facilitatorConfig);
   });
 
   it("should return 402 with payment requirements when no payment header is present", async () => {
@@ -134,7 +202,7 @@ describe("paymentMiddleware()", () => {
             mimeType: "application/json",
             payTo: "0x1234567890123456789012345678901234567890",
             maxTimeoutSeconds: 300,
-            asset: undefined,
+            asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
             outputSchema: { type: "object" },
             extra: {
               name: "USDC",
@@ -207,7 +275,7 @@ describe("paymentMiddleware()", () => {
             mimeType: "application/json",
             payTo: "0x1234567890123456789012345678901234567890",
             maxTimeoutSeconds: 300,
-            asset: undefined,
+            asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
             outputSchema: { type: "object" },
             extra: {
               name: "USDC",
@@ -273,7 +341,7 @@ describe("paymentMiddleware()", () => {
             mimeType: "application/json",
             payTo: "0x1234567890123456789012345678901234567890",
             maxTimeoutSeconds: 300,
-            asset: undefined,
+            asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
             outputSchema: { type: "object" },
             extra: {
               name: "USDC",
