@@ -61,9 +61,8 @@ export interface RouteConfig {
   config?: PaymentMiddlewareConfig;
 }
 
-
 export type GlobalConfig = {
   facilitator?: FacilitatorConfig;
   payToAddress: Hex;
-  routes: Record<string, RouteConfig> | { price: Money | TokenAmount, network: Network };
+  routes: Record<string, RouteConfig> | { price: Money | TokenAmount; network: Network };
 };

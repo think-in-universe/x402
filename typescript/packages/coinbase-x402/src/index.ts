@@ -46,6 +46,13 @@ export function createCdpAuthHeaders(apiKeyId?: string, apiKeySecret?: string): 
   };
 }
 
+/**
+ * Creates a facilitator config for the Coinbase X402 facilitator
+ *
+ * @param apiKeyId - The CDP API key ID
+ * @param apiKeySecret - The CDP API key secret
+ * @returns A facilitator config
+ */
 export function createConfig(apiKeyId?: string, apiKeySecret?: string): FacilitatorConfig {
   return {
     url: `${COINBASE_FACILITATOR_BASE_URL}${COINBASE_FACILITATOR_V2_ROUTE}`,

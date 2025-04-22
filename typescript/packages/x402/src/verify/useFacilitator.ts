@@ -1,12 +1,12 @@
+import axios from "axios";
+import { toJsonSafe } from "../shared";
+import { FacilitatorConfig } from "../types";
 import {
   PaymentPayload,
   PaymentRequirements,
   SettleResponse,
   VerifyResponse,
 } from "../types/verify";
-import axios from "axios";
-import { toJsonSafe } from "../shared";
-import { FacilitatorConfig } from "../types";
 
 const DEFAULT_FACILITATOR_URL = "https://x402.org/facilitator";
 
@@ -18,13 +18,10 @@ export type CreateHeaders = () => Promise<{
 /**
  * Creates a facilitator client for interacting with the X402 payment facilitator service
  *
- * @param url - The base URL of the facilitator service (defaults to "https://x402.org/facilitator")
- * @param createAuthHeaders - Optional function to create an auth header for the facilitator service. If using Coinbase's facilitator, use the createAuthHeaders function.
+ * @param facilitator - The facilitator config to use. If not provided, the default facilitator will be used.
  * @returns An object containing verify and settle functions for interacting with the facilitator
  */
-export function useFacilitator(
-  facilitator?: FacilitatorConfig,
-) {
+export function useFacilitator(facilitator?: FacilitatorConfig) {
   /**
    * Verifies a payment payload with the facilitator service
    *
@@ -46,7 +43,9 @@ export function useFacilitator(
         paymentRequirements: toJsonSafe(paymentRequirements),
       },
       {
-        headers: facilitator?.createAuthHeaders ? (await facilitator.createAuthHeaders()).verify : undefined,
+        headers: facilitator?.createAuthHeaders
+          ? (await facilitator.createAuthHeaders()).verify
+          : undefined,
       },
     );
 
@@ -78,7 +77,9 @@ export function useFacilitator(
         paymentRequirements: toJsonSafe(paymentRequirements),
       },
       {
-        headers: facilitator?.createAuthHeaders ? (await facilitator.createAuthHeaders()).settle : undefined,
+        headers: facilitator?.createAuthHeaders
+          ? (await facilitator.createAuthHeaders()).settle
+          : undefined,
       },
     );
 

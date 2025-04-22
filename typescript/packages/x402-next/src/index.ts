@@ -1,19 +1,18 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { exact } from "x402/schemes";
 import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
 import { getUsdcAddressForChain } from "x402/shared/evm";
-import { useFacilitator } from "x402/verify";
-import { Network, PaymentPayload, Resource } from "x402/types";
 import {
   GlobalConfig,
-  Money,
   moneySchema,
-  PaymentMiddlewareConfig,
+  PaymentPayload,
   PaymentRequirements,
+  Resource,
   settleResponseHeader,
   TokenAmount,
 } from "x402/types";
-import { exact } from "x402/schemes";
+import { useFacilitator } from "x402/verify";
 
 /**
  * Creates a Next.js middleware handler for x402 payments
@@ -26,7 +25,7 @@ import { exact } from "x402/schemes";
  * export const middleware = paymentMiddleware({
  *   facilitator: {
  *     url: process.env.NEXT_PUBLIC_FACILITATOR_URL,
- *     createAuthHeaders: async () => ({ 
+ *     createAuthHeaders: async () => ({
  *       verify: { "Authorization": "Bearer token" },
  *       settle: { "Authorization": "Bearer token" }
  *     })
@@ -84,7 +83,8 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
     }
 
     const { price, network, config = {} } = routeMatch.config;
-    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } = config;
+    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
+      config;
 
     // Handle USDC amount (string) or token amount (TokenAmount)
     let maxAmountRequired: string;
@@ -112,7 +112,8 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
       asset = price.asset;
     }
 
-    const resourceUrl = resource || (`${request.nextUrl.protocol}//${request.nextUrl.host}${pathname}` as Resource);
+    const resourceUrl =
+      resource || (`${request.nextUrl.protocol}//${request.nextUrl.host}${pathname}` as Resource);
     const paymentRequirements: PaymentRequirements[] = [
       {
         scheme: "exact",
@@ -139,9 +140,10 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
 
     if (!payment) {
       if (isWebBrowser) {
-        const displayAmount = typeof price === "string" || typeof price === "number"
-          ? Number(price)
-          : Number(price.amount) / 10 ** price.asset.decimals;
+        const displayAmount =
+          typeof price === "string" || typeof price === "number"
+            ? Number(price)
+            : Number(price.amount) / 10 ** price.asset.decimals;
 
         const html =
           customPaywallHtml ||
@@ -256,4 +258,4 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
   };
 }
 
-export type { Resource, Network, GlobalConfig, PaymentMiddlewareConfig, Money } from "x402/types";
+export type { GlobalConfig, Money, Network, PaymentMiddlewareConfig, Resource } from "x402/types";

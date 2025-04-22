@@ -1,36 +1,33 @@
-import { Request, Response, NextFunction, RequestHandler } from "express";
-import { useFacilitator, CreateHeaders } from "x402/verify";
-import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import { exact } from "x402/schemes";
+import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
 import { getUsdcAddressForChain } from "x402/shared/evm";
 import {
-  Money,
-  FacilitatorConfig,
   GlobalConfig,
-  PaymentMiddlewareConfig,
-  Resource,
   moneySchema,
-  PaymentRequirements,
-  PaymentPayload,
-  settleResponseHeader,
   Network,
-  TokenAmount,
+  PaymentPayload,
+  PaymentRequirements,
+  Resource,
   RouteConfig,
+  settleResponseHeader,
+  TokenAmount,
 } from "x402/types";
+import { useFacilitator } from "x402/verify";
 
 /**
  * Creates a payment middleware factory for Express
- * 
- * @param config - The configuration for the payment middleware
+ *
+ * @param globalConfig - The global configuration for the payment middleware including facilitator settings, payToAddress, and route configurations
  * @returns An Express middleware handler
- * 
+ *
  * @example
  * ```typescript
  * // Full configuration with specific routes
  * const middleware = paymentMiddleware({
  *   facilitator: {
  *     url: 'https://facilitator.example.com',
- *     createAuthHeaders: async () => ({ 
+ *     createAuthHeaders: async () => ({
  *       verify: { "Authorization": "Bearer token" },
  *       settle: { "Authorization": "Bearer token" }
  *     })
@@ -45,7 +42,7 @@ import {
  *     }
  *   }
  * });
- * 
+ *
  * // Simple configuration with a single price for all routes
  * const middleware = paymentMiddleware({
  *   facilitator: {
@@ -65,9 +62,10 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
   const x402Version = 1;
 
   // If routes is just a price/network object, convert it to a routes config
-  const normalizedRoutes = 'price' in routes && 'network' in routes
-    ? { '/*': { price: routes.price, network: routes.network } } as Record<string, RouteConfig>
-    : routes;
+  const normalizedRoutes =
+    "price" in routes && "network" in routes
+      ? ({ "/*": { price: routes.price, network: routes.network } } as Record<string, RouteConfig>)
+      : routes;
 
   // Pre-compile route patterns to regex and extract verbs
   const routePatterns = Object.entries(normalizedRoutes).map(([pattern, routeConfig]) => {
@@ -88,7 +86,11 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
     };
   });
 
-  return async function paymentMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
+  return async function paymentMiddleware(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     // Find matching route pattern
     const matchingRoutes = routePatterns.filter(({ pattern, verb }) => {
       const matchesPath = pattern.test(req.originalUrl);
@@ -103,11 +105,12 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
 
     // Use the most specific route (longest path pattern)
     const matchingRoute = matchingRoutes.reduce((a, b) =>
-      b.pattern.source.length > a.pattern.source.length ? b : a
+      b.pattern.source.length > a.pattern.source.length ? b : a,
     );
 
     const { price, network, config = {} } = matchingRoute.config;
-    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } = config;
+    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
+      config;
 
     // Handle USDC amount (string) or token amount (TokenAmount)
     let maxAmountRequired: string;
@@ -165,9 +168,10 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
 
     if (!payment) {
       if (isWebBrowser) {
-        const displayAmount = typeof price === "string" || typeof price === "number"
-          ? Number(price)
-          : Number(price.amount) / 10 ** price.asset.decimals;
+        const displayAmount =
+          typeof price === "string" || typeof price === "number"
+            ? Number(price)
+            : Number(price.amount) / 10 ** price.asset.decimals;
 
         const html =
           customPaywallHtml ||
@@ -277,8 +281,15 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
 
 /**
  * Default configuration for accepting USDC payments
+ *
+ * @param config - The base configuration for the payment middleware excluding routes
+ * @param network - The network to use for USDC payments
+ * @returns An Express middleware handler configured for USDC payments
  */
-export const acceptsUSDCMiddleware = (config: Omit<GlobalConfig, "routes">, network: Network): RequestHandler => {
+export const acceptsUSDCMiddleware = (
+  config: Omit<GlobalConfig, "routes">,
+  network: Network,
+): RequestHandler => {
   return paymentMiddleware({
     ...config,
     routes: {
@@ -293,4 +304,4 @@ export const acceptsUSDCMiddleware = (config: Omit<GlobalConfig, "routes">, netw
   });
 };
 
-export type { Resource, Network, GlobalConfig, PaymentMiddlewareConfig, Money } from "x402/types";
+export type { GlobalConfig, Money, Network, PaymentMiddlewareConfig, Resource } from "x402/types";

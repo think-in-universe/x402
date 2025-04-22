@@ -10,7 +10,7 @@ import {
   Resource,
   RouteConfig,
   settleResponseHeader,
-  TokenAmount
+  TokenAmount,
 } from "x402/types";
 import { useFacilitator } from "x402/verify";
 
@@ -36,7 +36,7 @@ import { useFacilitator } from "x402/verify";
  * const middleware = paymentMiddleware({
  *   facilitator: {
  *     url: 'https://facilitator.example.com',
- *     createAuthHeaders: async () => ({ 
+ *     createAuthHeaders: async () => ({
  *       verify: { "Authorization": "Bearer token" },
  *       settle: { "Authorization": "Bearer token" }
  *     })
@@ -59,9 +59,13 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
   const x402Version = 1;
 
   // If routes is just a price/network object, convert it to a routes config
-  const normalizedRoutes = 'price' in routes && 'network' in routes
-    ? { '/*': { price: routes.price, network: routes.network, config: {} } } as Record<string, RouteConfig>
-    : routes;
+  const normalizedRoutes =
+    "price" in routes && "network" in routes
+      ? ({ "/*": { price: routes.price, network: routes.network, config: {} } } as Record<
+          string,
+          RouteConfig
+        >)
+      : routes;
 
   // Pre-compile route patterns to regex and extract verbs
   const routePatterns = Object.entries(normalizedRoutes).map(([pattern, routeConfig]) => {
@@ -97,11 +101,12 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
 
     // Use the most specific route (longest path pattern)
     const matchingRoute = matchingRoutes.reduce((a, b) =>
-      b.pattern.source.length > a.pattern.source.length ? b : a
+      b.pattern.source.length > a.pattern.source.length ? b : a,
     );
 
     const { price, network } = matchingRoute.config;
-    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } = matchingRoute.config.config || {};
+    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
+      matchingRoute.config.config || {};
 
     // Handle USDC amount (string) or token amount (TokenAmount)
     let maxAmountRequired: string;
@@ -159,9 +164,10 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
 
     if (!payment) {
       if (isWebBrowser) {
-        const displayAmount = typeof price === "string" || typeof price === "number"
-          ? Number(price)
-          : Number(price.amount) / 10 ** price.asset.decimals;
+        const displayAmount =
+          typeof price === "string" || typeof price === "number"
+            ? Number(price)
+            : Number(price.amount) / 10 ** price.asset.decimals;
 
         const html =
           customPaywallHtml ||
@@ -269,4 +275,3 @@ export function paymentMiddleware(globalConfig: GlobalConfig) {
 }
 
 export type { GlobalConfig, Money, Network, PaymentMiddlewareConfig, Resource } from "x402/types";
-
