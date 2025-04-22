@@ -53,11 +53,11 @@ export function createCdpAuthHeaders(apiKeyId?: string, apiKeySecret?: string): 
  * @param apiKeySecret - The CDP API key secret
  * @returns A facilitator config
  */
-export function createConfig(apiKeyId?: string, apiKeySecret?: string): FacilitatorConfig {
+export function createFacilitatorConfig(apiKeyId?: string, apiKeySecret?: string): FacilitatorConfig {
   return {
     url: `${COINBASE_FACILITATOR_BASE_URL}${COINBASE_FACILITATOR_V2_ROUTE}`,
     createAuthHeaders: createCdpAuthHeaders(apiKeyId, apiKeySecret),
   };
 }
 
-export const config = createConfig();
+export const facilitator = createFacilitatorConfig();
