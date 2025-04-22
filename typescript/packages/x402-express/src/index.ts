@@ -147,7 +147,13 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       }
 
       try {
-        const response = await verify(decodedPayment, selectedPaymentRequirements);
+        const response = await verify(
+          {
+            ...decodedPayment,
+            x402Version,
+          },
+          selectedPaymentRequirements,
+        );
         if (!response.isValid) {
           return res.status(402).json({
             x402Version,
@@ -183,7 +189,13 @@ export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
       await next();
 
       try {
-        const settleResponse = await settle(decodedPayment, selectedPaymentRequirements);
+        const settleResponse = await settle(
+          {
+            ...decodedPayment,
+            x402Version,
+          },
+          selectedPaymentRequirements,
+        );
         const responseHeader = settleResponseHeader(settleResponse);
         res.setHeader("X-PAYMENT-RESPONSE", responseHeader);
       } catch (error) {

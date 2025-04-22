@@ -9,8 +9,8 @@ import {
 } from "x402/types";
 
 type SettleRequest = {
-  payload: PaymentPayload;
-  details: PaymentRequirements;
+  paymentPayload: PaymentPayload;
+  paymentRequirements: PaymentRequirements;
 };
 
 /**
@@ -24,8 +24,8 @@ export async function POST(req: Request) {
 
   const body: SettleRequest = await req.json();
 
-  const paymentPayload = PaymentPayloadSchema.parse(body.payload);
-  const paymentRequirements = PaymentRequirementsSchema.parse(body.details);
+  const paymentPayload = PaymentPayloadSchema.parse(body.paymentPayload);
+  const paymentRequirements = PaymentRequirementsSchema.parse(body.paymentRequirements);
 
   const response = await settle(wallet, paymentPayload, paymentRequirements);
 
@@ -42,8 +42,8 @@ export async function GET() {
     endpoint: "/settle",
     description: "POST to settle x402 payments",
     body: {
-      payload: "PaymentPayload",
-      details: "PaymentRequirements",
+      paymentPayload: "PaymentPayload",
+      paymentRequirements: "PaymentRequirements",
     },
   });
 }

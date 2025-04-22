@@ -153,7 +153,10 @@ describe("createPaymentMiddleware()", () => {
 
     expect(mockDecodePayment).toHaveBeenCalledWith(validPayment);
     expect(mockVerify).toHaveBeenCalledWith(
-      decodedPayment,
+      {
+        ...decodedPayment,
+        x402Version: 1,
+      },
       expect.objectContaining({
         scheme: "exact",
         network: "base-sepolia",
@@ -218,7 +221,10 @@ describe("createPaymentMiddleware()", () => {
     const response = await middleware(mockRequest);
 
     expect(mockSettle).toHaveBeenCalledWith(
-      decodedPayment,
+      {
+        ...decodedPayment,
+        x402Version: 1,
+      },
       expect.objectContaining({
         scheme: "exact",
         network: "base-sepolia",

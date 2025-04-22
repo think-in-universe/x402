@@ -190,7 +190,13 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     }
 
     try {
-      const response = await verify(decodedPayment, selectedPaymentRequirements);
+      const response = await verify(
+        {
+          ...decodedPayment,
+          x402Version,
+        },
+        selectedPaymentRequirements,
+      );
       if (!response.isValid) {
         return NextResponse.json(
           {
@@ -217,7 +223,13 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
     const response = NextResponse.next();
 
     try {
-      const settleResponse = await settle(decodedPayment, selectedPaymentRequirements);
+      const settleResponse = await settle(
+        {
+          ...decodedPayment,
+          x402Version,
+        },
+        selectedPaymentRequirements,
+      );
       const responseHeader = settleResponseHeader(settleResponse);
       response.headers.set("X-PAYMENT-RESPONSE", responseHeader);
     } catch (error) {
