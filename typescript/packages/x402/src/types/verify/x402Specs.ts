@@ -75,3 +75,17 @@ export const SettleResponseSchema = z.object({
   network: NetworkSchema,
 });
 export type SettleResponse = z.infer<typeof SettleResponseSchema>;
+
+// x402SupportedPaymentKind
+export const SupportedPaymentKindSchema = z.object({
+  x402Version: z.number().refine(val => x402Versions.includes(val as 1)),
+  scheme: z.enum(schemes),
+  network: NetworkSchema,
+});
+export type SupportedPaymentKind = z.infer<typeof SupportedPaymentKindSchema>;
+
+// x402SupportedPaymentKindsResponse
+export const SupportedPaymentKindsResponseSchema = z.object({
+  kinds: z.array(SupportedPaymentKindSchema),
+});
+export type SupportedPaymentKindsResponse = z.infer<typeof SupportedPaymentKindsResponseSchema>;

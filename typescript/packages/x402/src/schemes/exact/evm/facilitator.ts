@@ -165,22 +165,22 @@ export async function verify<
  * The facilitator wallet submits the transaction but does not need to hold or transfer any tokens itself.
  *
  * @param wallet - The facilitator wallet that will submit the transaction
- * @param payload - The signed payment payload containing the transfer parameters and signature
+ * @param paymentPayload - The signed payment payload containing the transfer parameters and signature
  * @param paymentRequirements - The original payment details that were used to create the payload
  * @returns A PaymentExecutionResponse containing the transaction status and hash
  */
 export async function settle<transport extends Transport, chain extends Chain>(
   wallet: SignerWallet<chain, transport>,
-  payload: PaymentPayload,
+  paymentPayload: PaymentPayload,
   paymentRequirements: PaymentRequirements,
 ): Promise<SettleResponse> {
   // re-verify to ensure the payment is still valid
-  const valid = await verify(wallet, payload, paymentRequirements);
+  const valid = await verify(wallet, paymentPayload, paymentRequirements);
 
   if (!valid.isValid) {
     return {
       success: false,
-      network: payload.network,
+      network: paymentPayload.network,
       transaction: "",
       errorReason: "invalid_scheme", //`Payment is no longer valid: ${valid.invalidReason}`,
     };
@@ -191,13 +191,13 @@ export async function settle<transport extends Transport, chain extends Chain>(
     abi,
     functionName: "transferWithAuthorization" as const,
     args: [
-      payload.payload.authorization.from as Address,
-      payload.payload.authorization.to as Address,
-      BigInt(payload.payload.authorization.value),
-      BigInt(payload.payload.authorization.validAfter),
-      BigInt(payload.payload.authorization.validBefore),
-      payload.payload.authorization.nonce as Hex,
-      payload.payload.signature as Hex,
+      paymentPayload.payload.authorization.from as Address,
+      paymentPayload.payload.authorization.to as Address,
+      BigInt(paymentPayload.payload.authorization.value),
+      BigInt(paymentPayload.payload.authorization.validAfter),
+      BigInt(paymentPayload.payload.authorization.validBefore),
+      paymentPayload.payload.authorization.nonce as Hex,
+      paymentPayload.payload.signature as Hex,
     ],
     chain: wallet.chain as Chain,
   });
@@ -209,13 +209,13 @@ export async function settle<transport extends Transport, chain extends Chain>(
       success: false,
       errorReason: "invalid_scheme", //`Transaction failed`,
       transaction: tx,
-      network: payload.network,
+      network: paymentPayload.network,
     };
   }
 
   return {
     success: true,
     transaction: tx,
-    network: payload.network,
+    network: paymentPayload.network,
   };
 }

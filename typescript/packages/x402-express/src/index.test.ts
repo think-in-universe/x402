@@ -127,7 +127,8 @@ describe("configurePaymentMiddleware()", () => {
     expect(mockRes.json).toHaveBeenCalledWith(
       expect.objectContaining({
         error: "X-PAYMENT header is required",
-        paymentRequirements: expect.any(Object),
+        accepts: expect.any(Array),
+        x402Version: 1,
       }),
     );
   });
@@ -181,8 +182,26 @@ describe("configurePaymentMiddleware()", () => {
     expect(mockRes.status).toHaveBeenCalledWith(402);
     expect(mockRes.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        error: expect.any(Error),
-        paymentRequirements: expect.any(Object),
+        error: new Error("Invalid payment"),
+        accepts: [
+          expect.objectContaining({
+            scheme: "exact",
+            network: "base-sepolia",
+            maxAmountRequired: "1000000",
+            resource: "https://api.example.com/resource",
+            description: "Test payment",
+            mimeType: "application/json",
+            payTo: "0x1234567890123456789012345678901234567890",
+            maxTimeoutSeconds: 300,
+            asset: undefined,
+            outputSchema: { type: "object" },
+            extra: {
+              name: "USDC",
+              version: "2",
+            },
+          }),
+        ],
+        x402Version: 1,
       }),
     );
   });
@@ -230,7 +249,25 @@ describe("configurePaymentMiddleware()", () => {
     expect(mockRes.json).toHaveBeenCalledWith(
       expect.objectContaining({
         error: expect.any(Error),
-        paymentRequirements: expect.any(Object),
+        accepts: [
+          expect.objectContaining({
+            scheme: "exact",
+            network: "base-sepolia",
+            maxAmountRequired: "1000000",
+            resource: "https://api.example.com/resource",
+            description: "Test payment",
+            mimeType: "application/json",
+            payTo: "0x1234567890123456789012345678901234567890",
+            maxTimeoutSeconds: 300,
+            asset: undefined,
+            outputSchema: { type: "object" },
+            extra: {
+              name: "USDC",
+              version: "2",
+            },
+          }),
+        ],
+        x402Version: 1,
       }),
     );
   });

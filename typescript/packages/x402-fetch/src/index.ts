@@ -50,10 +50,11 @@ export function wrapFetchWithPayment(
       return response;
     }
 
-    const { paymentRequirements } = (await response.json()) as { paymentRequirements: unknown[] };
-    const parsedPaymentRequirements = paymentRequirements.map(x =>
-      PaymentRequirementsSchema.parse(x),
-    );
+    const { x402Version, accepts } = (await response.json()) as {
+      x402Version: number;
+      accepts: unknown[];
+    };
+    const parsedPaymentRequirements = accepts.map(x => PaymentRequirementsSchema.parse(x));
 
     const selectedPaymentRequirements = paymentRequirementsSelector(parsedPaymentRequirements);
 
@@ -61,7 +62,11 @@ export function wrapFetchWithPayment(
       throw new Error("Payment amount exceeds maximum allowed");
     }
 
-    const paymentHeader = await createPaymentHeader(walletClient, selectedPaymentRequirements);
+    const paymentHeader = await createPaymentHeader(
+      walletClient,
+      x402Version,
+      selectedPaymentRequirements,
+    );
 
     if (!init) {
       throw new Error("Missing fetch request configuration");

@@ -28,13 +28,13 @@ const port = parseInt(PORT);
 app.use(express.json());
 
 type VerifyRequest = {
-  payload: PaymentPayload;
-  details: PaymentRequirements;
+  paymentPayload: PaymentPayload;
+  paymentRequirements: PaymentRequirements;
 };
 
 type SettleRequest = {
-  payload: PaymentPayload;
-  details: PaymentRequirements;
+  paymentPayload: PaymentPayload;
+  paymentRequirements: PaymentRequirements;
 };
 
 const client = createClientSepolia();
@@ -44,8 +44,8 @@ app.get("/verify", (req, res) => {
     endpoint: "/verify",
     description: "POST to verify x402 payments",
     body: {
-      payload: "string",
-      details: "PaymentRequirements",
+      paymentPayload: "PaymentPayload",
+      paymentRequirements: "PaymentRequirements",
     },
   });
 });
@@ -53,8 +53,8 @@ app.get("/verify", (req, res) => {
 app.post("/verify", async (req, res) => {
   try {
     const body: VerifyRequest = req.body;
-    const paymentRequirements = PaymentRequirementsSchema.parse(body.details);
-    const paymentPayload = PaymentPayloadSchema.parse(body.payload);
+    const paymentRequirements = PaymentRequirementsSchema.parse(body.paymentRequirements);
+    const paymentPayload = PaymentPayloadSchema.parse(body.paymentPayload);
     const valid = await verify(client, paymentPayload, paymentRequirements);
     res.json(valid);
   } catch {
@@ -67,9 +67,21 @@ app.get("/settle", (req, res) => {
     endpoint: "/settle",
     description: "POST to settle x402 payments",
     body: {
-      payload: "string",
-      details: "PaymentRequirements",
+      paymentPayload: "PaymentPayload",
+      paymentRequirements: "PaymentRequirements",
     },
+  });
+});
+
+app.get("/supported", (req, res) => {
+  res.json({
+    kinds: [
+      {
+        x402Version: 1,
+        scheme: "exact",
+        network: "base-sepolia",
+      },
+    ],
   });
 });
 
@@ -77,8 +89,8 @@ app.post("/settle", async (req, res) => {
   try {
     const signer = createSignerSepolia(PRIVATE_KEY as `0x${string}`);
     const body: SettleRequest = req.body;
-    const paymentRequirements = PaymentRequirementsSchema.parse(body.details);
-    const paymentPayload = PaymentPayloadSchema.parse(body.payload);
+    const paymentRequirements = PaymentRequirementsSchema.parse(body.paymentRequirements);
+    const paymentPayload = PaymentPayloadSchema.parse(body.paymentPayload);
     const response = await settle(signer, paymentPayload, paymentRequirements);
     res.json(response);
   } catch {

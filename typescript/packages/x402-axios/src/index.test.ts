@@ -45,7 +45,7 @@ describe("withPaymentInterceptor()", () => {
   const createAxiosError = (
     status: number,
     config?: InternalAxiosRequestConfig,
-    data?: { paymentRequirements: PaymentRequirements[] },
+    data?: { accepts: PaymentRequirements[]; x402Version: number },
   ): AxiosError => {
     return new AxiosError(
       "Error",
@@ -119,14 +119,19 @@ describe("withPaymentInterceptor()", () => {
     (mockAxiosClient.request as ReturnType<typeof vi.fn>).mockResolvedValue(successResponse);
 
     const error = createAxiosError(402, createErrorConfig(), {
-      paymentRequirements: validPaymentRequirements,
+      accepts: validPaymentRequirements,
+      x402Version: 1,
     });
 
     const result = await interceptor(error);
 
     expect(result).toBe(successResponse);
     expect(selectPaymentRequirements).toHaveBeenCalledWith(validPaymentRequirements);
-    expect(createPaymentHeader).toHaveBeenCalledWith(mockWalletClient, validPaymentRequirements[0]);
+    expect(createPaymentHeader).toHaveBeenCalledWith(
+      mockWalletClient,
+      1,
+      validPaymentRequirements[0],
+    );
     expect(mockAxiosClient.request).toHaveBeenCalledWith({
       ...error.config,
       headers: new AxiosHeaders({
@@ -139,14 +144,16 @@ describe("withPaymentInterceptor()", () => {
 
   it("should not retry if already retried", async () => {
     const error = createAxiosError(402, createErrorConfig(true), {
-      paymentRequirements: validPaymentRequirements,
+      accepts: validPaymentRequirements,
+      x402Version: 1,
     });
     await expect(interceptor(error)).rejects.toBe(error);
   });
 
   it("should reject if missing request config", async () => {
     const error = createAxiosError(402, undefined, {
-      paymentRequirements: validPaymentRequirements,
+      accepts: validPaymentRequirements,
+      x402Version: 1,
     });
     await expect(interceptor(error)).rejects.toThrow("Missing axios request configuration");
   });
@@ -157,7 +164,8 @@ describe("withPaymentInterceptor()", () => {
     (createPaymentHeader as ReturnType<typeof vi.fn>).mockRejectedValue(paymentError);
 
     const error = createAxiosError(402, createErrorConfig(), {
-      paymentRequirements: validPaymentRequirements,
+      accepts: validPaymentRequirements,
+      x402Version: 1,
     });
     await expect(interceptor(error)).rejects.toBe(paymentError);
   });

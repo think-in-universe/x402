@@ -115,7 +115,25 @@ describe("configurePaymentMiddleware()", () => {
     expect(mockContext.json).toHaveBeenCalledWith(
       {
         error: "X-PAYMENT header is required",
-        paymentRequirements: expect.any(Object),
+        accepts: [
+          expect.objectContaining({
+            scheme: "exact",
+            network: "base-sepolia",
+            maxAmountRequired: "1000000",
+            resource: "https://api.example.com/resource",
+            description: "Test payment",
+            mimeType: "application/json",
+            payTo: "0x1234567890123456789012345678901234567890",
+            maxTimeoutSeconds: 300,
+            asset: undefined,
+            outputSchema: { type: "object" },
+            extra: {
+              name: "USDC",
+              version: "2",
+            },
+          }),
+        ],
+        x402Version: 1,
       },
       402,
     );
@@ -169,7 +187,25 @@ describe("configurePaymentMiddleware()", () => {
     expect(mockContext.json).toHaveBeenCalledWith(
       {
         error: expect.any(Error),
-        paymentRequirements: expect.any(Object),
+        accepts: [
+          expect.objectContaining({
+            scheme: "exact",
+            network: "base-sepolia",
+            maxAmountRequired: "1000000",
+            resource: "https://api.example.com/resource",
+            description: "Test payment",
+            mimeType: "application/json",
+            payTo: "0x1234567890123456789012345678901234567890",
+            maxTimeoutSeconds: 300,
+            asset: undefined,
+            outputSchema: { type: "object" },
+            extra: {
+              name: "USDC",
+              version: "2",
+            },
+          }),
+        ],
+        x402Version: 1,
       },
       402,
     );
@@ -217,7 +253,25 @@ describe("configurePaymentMiddleware()", () => {
     expect(mockContext.json).toHaveBeenCalledWith(
       {
         error: expect.any(Error),
-        paymentRequirements: expect.any(Object),
+        accepts: [
+          expect.objectContaining({
+            scheme: "exact",
+            network: "base-sepolia",
+            maxAmountRequired: "1000000",
+            resource: "https://api.example.com/resource",
+            description: "Test payment",
+            mimeType: "application/json",
+            payTo: "0x1234567890123456789012345678901234567890",
+            maxTimeoutSeconds: 300,
+            asset: undefined,
+            outputSchema: { type: "object" },
+            extra: {
+              name: "USDC",
+              version: "2",
+            },
+          }),
+        ],
+        x402Version: 1,
       },
       402,
     );
