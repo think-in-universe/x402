@@ -2,12 +2,8 @@ name: Publish x402 base package to NPM
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'typescript/packages/x402/**'
   pull_request:
-    paths:
-      - 'typescript/packages/x402/**'
+    # No path restrictions - run on all PRs
 
 jobs:
   publish-npm-x402:
