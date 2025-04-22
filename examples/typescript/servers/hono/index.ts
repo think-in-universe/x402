@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { configurePaymentMiddleware, Network, Resource } from "x402-hono";
+import { paymentMiddleware, Network, Resource } from "x402-hono";
 
 config();
 
@@ -15,17 +15,21 @@ if (!FACILITATOR_URL || !ADDRESS || !NETWORK || !PORT) {
 const app = new Hono();
 const port = parseInt(PORT);
 
-const paymentMiddleware = configurePaymentMiddleware({
-  facilitatorUrl: FACILITATOR_URL as Resource,
-  address: ADDRESS as `0x${string}`,
-  network: NETWORK as Network,
-});
+app.use(paymentMiddleware({
+  facilitator: {
+    url: FACILITATOR_URL as Resource,
+  },
+  payToAddress: ADDRESS as `0x${string}`,
+  routes: {
+    "/weather": {
+      price: "$0.001",
+      network: NETWORK as Network,
+    },
+  },
+}));
 
 app.get(
   "/weather",
-  paymentMiddleware("$0.001", {
-    resource: `http://localhost:${port}/weather`,
-  }),
   c => {
     return c.json({
       report: {

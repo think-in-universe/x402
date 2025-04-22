@@ -6,7 +6,9 @@ import {
 } from "../types/verify";
 import axios from "axios";
 import { toJsonSafe } from "../shared";
-import { Resource } from "../types";
+import { FacilitatorConfig } from "../types";
+
+const DEFAULT_FACILITATOR_URL = "https://x402.org/facilitator";
 
 export type CreateHeaders = () => Promise<{
   verify: Record<string, string>;
@@ -21,8 +23,7 @@ export type CreateHeaders = () => Promise<{
  * @returns An object containing verify and settle functions for interacting with the facilitator
  */
 export function useFacilitator(
-  url: Resource = "https://x402.org/facilitator",
-  createAuthHeaders?: CreateHeaders,
+  facilitator?: FacilitatorConfig,
 ) {
   /**
    * Verifies a payment payload with the facilitator service
@@ -35,6 +36,8 @@ export function useFacilitator(
     payload: PaymentPayload,
     paymentRequirements: PaymentRequirements,
   ): Promise<VerifyResponse> {
+    const url = facilitator?.url || DEFAULT_FACILITATOR_URL;
+
     const res = await axios.post(
       `${url}/verify`,
       {
@@ -43,7 +46,7 @@ export function useFacilitator(
         paymentRequirements: toJsonSafe(paymentRequirements),
       },
       {
-        headers: createAuthHeaders ? (await createAuthHeaders()).verify : undefined,
+        headers: facilitator?.createAuthHeaders ? (await facilitator.createAuthHeaders()).verify : undefined,
       },
     );
 
@@ -65,6 +68,8 @@ export function useFacilitator(
     payload: PaymentPayload,
     paymentRequirements: PaymentRequirements,
   ): Promise<SettleResponse> {
+    const url = facilitator?.url || DEFAULT_FACILITATOR_URL;
+
     const res = await axios.post(
       `${url}/settle`,
       {
@@ -73,7 +78,7 @@ export function useFacilitator(
         paymentRequirements: toJsonSafe(paymentRequirements),
       },
       {
-        headers: createAuthHeaders ? (await createAuthHeaders()).settle : undefined,
+        headers: facilitator?.createAuthHeaders ? (await facilitator.createAuthHeaders()).settle : undefined,
       },
     );
 

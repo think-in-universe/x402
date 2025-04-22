@@ -4,7 +4,7 @@ import { getPaywallHtml } from "x402/shared";
 import { exact } from "x402/schemes";
 import { GlobalConfig, PaymentMiddlewareConfig, PaymentPayload } from "x402/types";
 import { useFacilitator } from "x402/verify";
-import { configurePaymentMiddleware } from "./index";
+import { paymentMiddleware } from "./index";
 
 // Mock dependencies
 vi.mock("x402/verify", () => ({
@@ -31,18 +31,12 @@ vi.mock("x402/schemes", () => ({
   },
 }));
 
-describe("configurePaymentMiddleware()", () => {
+describe("paymentMiddleware()", () => {
   let mockContext: Context;
   let mockNext: () => Promise<void>;
-  let middleware: ReturnType<ReturnType<typeof configurePaymentMiddleware>>;
+  let middleware: ReturnType<typeof paymentMiddleware>;
   let mockVerify: ReturnType<typeof useFacilitator>["verify"];
   let mockSettle: ReturnType<typeof useFacilitator>["settle"];
-
-  const globalConfig: GlobalConfig = {
-    facilitatorUrl: "https://facilitator.example.com",
-    address: "0x1234567890123456789012345678901234567890",
-    network: "base-sepolia",
-  };
 
   const middlewareConfig: PaymentMiddlewareConfig = {
     description: "Test payment",
@@ -50,6 +44,20 @@ describe("configurePaymentMiddleware()", () => {
     maxTimeoutSeconds: 300,
     outputSchema: { type: "object" },
     resource: "https://api.example.com/resource",
+  };
+
+  const globalConfig: GlobalConfig = {
+    facilitator: {
+      url: "https://facilitator.example.com",
+    },
+    payToAddress: "0x1234567890123456789012345678901234567890",
+    routes: {
+      "/weather": {
+        price: "$0.001",
+        network: "base-sepolia",
+        config: middlewareConfig,
+      },
+    },
   };
 
   const validPayment: PaymentPayload = {
@@ -75,7 +83,8 @@ describe("configurePaymentMiddleware()", () => {
 
     mockContext = {
       req: {
-        url: "/test",
+        url: "/weather",
+        path: "/weather",
         header: vi.fn(),
         headers: new Headers(),
       },
@@ -101,7 +110,7 @@ describe("configurePaymentMiddleware()", () => {
     (exact.evm.encodePayment as ReturnType<typeof vi.fn>).mockReturnValue(encodedValidPayment);
     (exact.evm.decodePayment as ReturnType<typeof vi.fn>).mockReturnValue(validPayment);
 
-    middleware = configurePaymentMiddleware(globalConfig)(1.0, middlewareConfig);
+    middleware = paymentMiddleware(globalConfig);
   });
 
   it("should return 402 with payment requirements when no payment header is present", async () => {
@@ -116,10 +125,10 @@ describe("configurePaymentMiddleware()", () => {
       {
         error: "X-PAYMENT header is required",
         accepts: [
-          expect.objectContaining({
+          {
             scheme: "exact",
             network: "base-sepolia",
-            maxAmountRequired: "1000000",
+            maxAmountRequired: "1000",
             resource: "https://api.example.com/resource",
             description: "Test payment",
             mimeType: "application/json",
@@ -131,7 +140,7 @@ describe("configurePaymentMiddleware()", () => {
               name: "USDC",
               version: "2",
             },
-          }),
+          },
         ],
         x402Version: 1,
       },
@@ -186,12 +195,13 @@ describe("configurePaymentMiddleware()", () => {
 
     expect(mockContext.json).toHaveBeenCalledWith(
       {
-        error: expect.any(Error),
+        x402Version: 1,
+        error: new Error("Invalid payment"),
         accepts: [
-          expect.objectContaining({
+          {
             scheme: "exact",
             network: "base-sepolia",
-            maxAmountRequired: "1000000",
+            maxAmountRequired: "1000",
             resource: "https://api.example.com/resource",
             description: "Test payment",
             mimeType: "application/json",
@@ -203,9 +213,8 @@ describe("configurePaymentMiddleware()", () => {
               name: "USDC",
               version: "2",
             },
-          }),
+          },
         ],
-        x402Version: 1,
       },
       402,
     );
@@ -252,12 +261,13 @@ describe("configurePaymentMiddleware()", () => {
 
     expect(mockContext.json).toHaveBeenCalledWith(
       {
-        error: expect.any(Error),
+        x402Version: 1,
+        error: new Error("Settlement failed"),
         accepts: [
-          expect.objectContaining({
+          {
             scheme: "exact",
             network: "base-sepolia",
-            maxAmountRequired: "1000000",
+            maxAmountRequired: "1000",
             resource: "https://api.example.com/resource",
             description: "Test payment",
             mimeType: "application/json",
@@ -269,9 +279,8 @@ describe("configurePaymentMiddleware()", () => {
               name: "USDC",
               version: "2",
             },
-          }),
+          },
         ],
-        x402Version: 1,
       },
       402,
     );

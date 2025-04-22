@@ -4,7 +4,7 @@ import { getPaywallHtml } from "x402/shared";
 import { exact } from "x402/schemes";
 import { GlobalConfig, PaymentMiddlewareConfig, PaymentPayload } from "x402/types";
 import { useFacilitator } from "x402/verify";
-import { configurePaymentMiddleware } from "./index";
+import { paymentMiddleware } from "./index";
 
 // Mock dependencies
 vi.mock("x402/verify", () => ({
@@ -31,19 +31,13 @@ vi.mock("x402/schemes", () => ({
   },
 }));
 
-describe("configurePaymentMiddleware()", () => {
+describe("paymentMiddleware()", () => {
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
   let mockNext: NextFunction;
-  let middleware: ReturnType<ReturnType<typeof configurePaymentMiddleware>>;
+  let middleware: ReturnType<typeof paymentMiddleware>;
   let mockVerify: ReturnType<typeof useFacilitator>["verify"];
   let mockSettle: ReturnType<typeof useFacilitator>["settle"];
-
-  const globalConfig: GlobalConfig = {
-    facilitatorUrl: "https://facilitator.example.com",
-    address: "0x1234567890123456789012345678901234567890",
-    network: "base-sepolia",
-  };
 
   const middlewareConfig: PaymentMiddlewareConfig = {
     description: "Test payment",
@@ -51,6 +45,20 @@ describe("configurePaymentMiddleware()", () => {
     maxTimeoutSeconds: 300,
     outputSchema: { type: "object" },
     resource: "https://api.example.com/resource",
+  };
+
+  const globalConfig: GlobalConfig = {
+    facilitator: {
+      url: "https://facilitator.example.com",
+    },
+    payToAddress: "0x1234567890123456789012345678901234567890",
+    routes: {
+      "/test": {
+        price: "$0.001",
+        network: "base-sepolia",
+        config: middlewareConfig,
+      },
+    },
   };
 
   const validPayment: PaymentPayload = {
@@ -111,7 +119,7 @@ describe("configurePaymentMiddleware()", () => {
     (exact.evm.decodePayment as ReturnType<typeof vi.fn>).mockReturnValue(validPayment);
 
     // Create middleware
-    middleware = configurePaymentMiddleware(globalConfig)(1.0, middlewareConfig);
+    middleware = paymentMiddleware(globalConfig);
   });
 
   it("should return 402 with payment requirements when no payment header is present", async () => {
@@ -180,30 +188,28 @@ describe("configurePaymentMiddleware()", () => {
     await middleware(mockReq as Request, mockRes as Response, mockNext);
 
     expect(mockRes.status).toHaveBeenCalledWith(402);
-    expect(mockRes.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        error: new Error("Invalid payment"),
-        accepts: [
-          expect.objectContaining({
-            scheme: "exact",
-            network: "base-sepolia",
-            maxAmountRequired: "1000000",
-            resource: "https://api.example.com/resource",
-            description: "Test payment",
-            mimeType: "application/json",
-            payTo: "0x1234567890123456789012345678901234567890",
-            maxTimeoutSeconds: 300,
-            asset: undefined,
-            outputSchema: { type: "object" },
-            extra: {
-              name: "USDC",
-              version: "2",
-            },
-          }),
-        ],
-        x402Version: 1,
-      }),
-    );
+    expect(mockRes.json).toHaveBeenCalledWith({
+      x402Version: 1,
+      error: new Error("Invalid payment"),
+      accepts: [
+        {
+          scheme: "exact",
+          network: "base-sepolia",
+          maxAmountRequired: "1000",
+          resource: "https://api.example.com/resource",
+          description: "Test payment",
+          mimeType: "application/json",
+          payTo: "0x1234567890123456789012345678901234567890",
+          maxTimeoutSeconds: 300,
+          asset: undefined,
+          outputSchema: { type: "object" },
+          extra: {
+            name: "USDC",
+            version: "2",
+          },
+        },
+      ],
+    });
   });
 
   it("should handle settlement after response", async () => {
@@ -246,30 +252,28 @@ describe("configurePaymentMiddleware()", () => {
     await middleware(mockReq as Request, mockRes as Response, mockNext);
 
     expect(mockRes.status).toHaveBeenCalledWith(402);
-    expect(mockRes.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        error: expect.any(Error),
-        accepts: [
-          expect.objectContaining({
-            scheme: "exact",
-            network: "base-sepolia",
-            maxAmountRequired: "1000000",
-            resource: "https://api.example.com/resource",
-            description: "Test payment",
-            mimeType: "application/json",
-            payTo: "0x1234567890123456789012345678901234567890",
-            maxTimeoutSeconds: 300,
-            asset: undefined,
-            outputSchema: { type: "object" },
-            extra: {
-              name: "USDC",
-              version: "2",
-            },
-          }),
-        ],
-        x402Version: 1,
-      }),
-    );
+    expect(mockRes.json).toHaveBeenCalledWith({
+      x402Version: 1,
+      error: new Error("Settlement failed"),
+      accepts: [
+        {
+          scheme: "exact",
+          network: "base-sepolia",
+          maxAmountRequired: "1000",
+          resource: "https://api.example.com/resource",
+          description: "Test payment",
+          mimeType: "application/json",
+          payTo: "0x1234567890123456789012345678901234567890",
+          maxTimeoutSeconds: 300,
+          asset: undefined,
+          outputSchema: { type: "object" },
+          extra: {
+            name: "USDC",
+            version: "2",
+          },
+        },
+      ],
+    });
   });
 
   it("should handle settlement failure after response is sent", async () => {

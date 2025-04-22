@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getPaywallHtml } from "x402/shared";
 import { GlobalConfig, PaymentMiddlewareConfig } from "x402/types";
 import { useFacilitator } from "x402/verify";
-import { createPaymentMiddleware } from "./index";
+import { paymentMiddleware } from "./index";
 import { exact } from "x402/schemes";
 
 // Mock dependencies
@@ -29,17 +29,28 @@ vi.mock("x402/schemes", () => ({
   },
 }));
 
-describe("createPaymentMiddleware()", () => {
+describe("paymentMiddleware()", () => {
   let mockRequest: NextRequest;
-  let middleware: ReturnType<typeof createPaymentMiddleware>;
+  let middleware: ReturnType<typeof paymentMiddleware>;
   let mockVerify: ReturnType<typeof useFacilitator>["verify"];
   let mockSettle: ReturnType<typeof useFacilitator>["settle"];
   let mockDecodePayment: ReturnType<typeof vi.fn>;
 
   const globalConfig: GlobalConfig = {
-    facilitatorUrl: "https://facilitator.example.com",
-    address: "0x1234567890123456789012345678901234567890",
-    network: "base-sepolia",
+    facilitator: {
+      url: "https://facilitator.example.com",
+      createAuthHeaders: async () => ({
+        verify: { Authorization: "Bearer token" },
+        settle: { Authorization: "Bearer token" },
+      }),
+    },
+    payToAddress: "0x1234567890123456789012345678901234567890",
+    routes: {
+      "/*": {
+        price: "$0.01",
+        network: "base",
+      },
+    },
   };
 
   const middlewareConfig: PaymentMiddlewareConfig = {
@@ -48,14 +59,6 @@ describe("createPaymentMiddleware()", () => {
     maxTimeoutSeconds: 300,
     outputSchema: { type: "object" },
     resource: "https://api.example.com/resource",
-    asset: {
-      address: "0xCustomAssetAddress",
-      decimals: 18,
-      eip712: {
-        name: "Custom Token",
-        version: "1.0",
-      },
-    },
   };
 
   beforeEach(() => {
@@ -87,11 +90,12 @@ describe("createPaymentMiddleware()", () => {
     (exact.evm.decodePayment as ReturnType<typeof vi.fn>).mockImplementation(mockDecodePayment);
 
     // Create middleware with test routes
-    middleware = createPaymentMiddleware({
+    middleware = paymentMiddleware({
       ...globalConfig,
       routes: {
         "/protected/*": {
-          amount: 1.0,
+          price: 1.0,
+          network: "base",
           config: middlewareConfig,
         },
       },
@@ -113,11 +117,21 @@ describe("createPaymentMiddleware()", () => {
     const json = (await response.json()) as {
       accepts: Array<{ maxAmountRequired: string }>;
     };
-    expect(json.accepts[0]).toEqual(
-      expect.objectContaining({
-        maxAmountRequired: "1000000000000000000",
-      }),
-    );
+    expect(json.accepts[0]).toEqual({
+      scheme: "exact",
+      network: "base",
+      maxAmountRequired: "1000000",
+      resource: "https://api.example.com/resource",
+      description: "Test payment",
+      mimeType: "application/json",
+      payTo: "0x1234567890123456789012345678901234567890",
+      maxTimeoutSeconds: 300,
+      outputSchema: { type: "object" },
+      extra: {
+        name: "USDC",
+        version: "2",
+      },
+    });
   });
 
   it("should return HTML paywall for browser requests", async () => {
@@ -137,7 +151,7 @@ describe("createPaymentMiddleware()", () => {
 
     const decodedPayment = {
       scheme: "exact",
-      network: "base-sepolia",
+      network: "base",
       // ... other payment fields
     };
     mockDecodePayment.mockReturnValue(decodedPayment);
@@ -146,7 +160,7 @@ describe("createPaymentMiddleware()", () => {
     (mockSettle as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       transaction: "0x123",
-      network: "base-sepolia",
+      network: "base",
     });
 
     const response = await middleware(mockRequest);
@@ -159,8 +173,18 @@ describe("createPaymentMiddleware()", () => {
       },
       expect.objectContaining({
         scheme: "exact",
-        network: "base-sepolia",
-        asset: "0xCustomAssetAddress",
+        network: "base",
+        maxAmountRequired: "1000000",
+        description: "Test payment",
+        mimeType: "application/json",
+        maxTimeoutSeconds: 300,
+        outputSchema: { type: "object" },
+        resource: "https://api.example.com/resource",
+        payTo: "0x1234567890123456789012345678901234567890",
+        extra: {
+          name: "USDC",
+          version: "2",
+        },
       }),
     );
     expect(response.status).toBe(200);
@@ -173,7 +197,7 @@ describe("createPaymentMiddleware()", () => {
 
     const decodedPayment = {
       scheme: "exact",
-      network: "base-sepolia",
+      network: "base",
       // ... other payment fields
     };
     mockDecodePayment.mockReturnValue(decodedPayment);
@@ -188,15 +212,25 @@ describe("createPaymentMiddleware()", () => {
     expect(response.status).toBe(402);
     const json = await response.json();
     expect(json).toEqual({
-      error: "insufficient_funds",
-      accepts: expect.arrayContaining([
-        expect.objectContaining({
-          scheme: "exact",
-          network: "base-sepolia",
-          asset: "0xCustomAssetAddress",
-        }),
-      ]),
       x402Version: 1,
+      error: "insufficient_funds",
+      accepts: [
+        {
+          scheme: "exact",
+          network: "base",
+          maxAmountRequired: "1000000",
+          resource: "https://api.example.com/resource",
+          description: "Test payment",
+          mimeType: "application/json",
+          payTo: "0x1234567890123456789012345678901234567890",
+          maxTimeoutSeconds: 300,
+          outputSchema: { type: "object" },
+          extra: {
+            name: "USDC",
+            version: "2",
+          },
+        },
+      ],
     });
   });
 
@@ -206,7 +240,7 @@ describe("createPaymentMiddleware()", () => {
 
     const decodedPayment = {
       scheme: "exact",
-      network: "base-sepolia",
+      network: "base",
       // ... other payment fields
     };
     mockDecodePayment.mockReturnValue(decodedPayment);
@@ -215,7 +249,7 @@ describe("createPaymentMiddleware()", () => {
     (mockSettle as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       transaction: "0x123",
-      network: "base-sepolia",
+      network: "base",
     });
 
     const response = await middleware(mockRequest);
@@ -227,8 +261,18 @@ describe("createPaymentMiddleware()", () => {
       },
       expect.objectContaining({
         scheme: "exact",
-        network: "base-sepolia",
-        asset: "0xCustomAssetAddress",
+        network: "base",
+        maxAmountRequired: "1000000",
+        description: "Test payment",
+        mimeType: "application/json",
+        maxTimeoutSeconds: 300,
+        outputSchema: { type: "object" },
+        resource: "https://api.example.com/resource",
+        payTo: "0x1234567890123456789012345678901234567890",
+        extra: {
+          name: "USDC",
+          version: "2",
+        },
       }),
     );
     expect(response.headers.get("X-PAYMENT-RESPONSE")).toBeDefined();
@@ -240,7 +284,7 @@ describe("createPaymentMiddleware()", () => {
 
     const decodedPayment = {
       scheme: "exact",
-      network: "base-sepolia",
+      network: "base",
       // ... other payment fields
     };
     mockDecodePayment.mockReturnValue(decodedPayment);
@@ -253,24 +297,35 @@ describe("createPaymentMiddleware()", () => {
     expect(response.status).toBe(402);
     const json = await response.json();
     expect(json).toEqual({
-      error: expect.any(Object),
-      accepts: expect.arrayContaining([
-        expect.objectContaining({
-          scheme: "exact",
-          network: "base-sepolia",
-          asset: "0xCustomAssetAddress",
-        }),
-      ]),
       x402Version: 1,
+      error: expect.any(Object),
+      accepts: [
+        {
+          scheme: "exact",
+          network: "base",
+          maxAmountRequired: "1000000",
+          resource: "https://api.example.com/resource",
+          description: "Test payment",
+          mimeType: "application/json",
+          payTo: "0x1234567890123456789012345678901234567890",
+          maxTimeoutSeconds: 300,
+          outputSchema: { type: "object" },
+          extra: {
+            name: "USDC",
+            version: "2",
+          },
+        },
+      ],
     });
   });
 
   it("should handle invalid payment amount configuration", async () => {
-    middleware = createPaymentMiddleware({
+    middleware = paymentMiddleware({
       ...globalConfig,
       routes: {
         "/protected/*": {
-          amount: "invalid",
+          price: "invalid",
+          network: "base",
           config: middlewareConfig,
         },
       },
@@ -283,16 +338,24 @@ describe("createPaymentMiddleware()", () => {
     expect(text).toBe("Invalid payment configuration");
   });
 
-  it("should use default USDC address and decimals when asset is not configured", async () => {
-    middleware = createPaymentMiddleware({
+  it("should handle custom token amounts", async () => {
+    middleware = paymentMiddleware({
       ...globalConfig,
       routes: {
         "/protected/*": {
-          amount: 1.0,
-          config: {
-            ...middlewareConfig,
-            asset: undefined,
+          price: {
+            amount: "1000000000000000000",
+            asset: {
+              address: "0xCustomAssetAddress",
+              decimals: 18,
+              eip712: {
+                name: "Custom Token",
+                version: "1.0",
+              },
+            },
           },
+          network: "base",
+          config: middlewareConfig,
         },
       },
     });
@@ -304,10 +367,21 @@ describe("createPaymentMiddleware()", () => {
     const json = (await response.json()) as {
       accepts: Array<{ maxAmountRequired: string }>;
     };
-    expect(json.accepts[0]).toEqual(
-      expect.objectContaining({
-        maxAmountRequired: "1000000",
-      }),
-    );
+    expect(json.accepts[0]).toEqual({
+      scheme: "exact",
+      network: "base",
+      maxAmountRequired: "1000000000000000000",
+      resource: "https://api.example.com/resource",
+      description: "Test payment",
+      mimeType: "application/json",
+      payTo: "0x1234567890123456789012345678901234567890",
+      maxTimeoutSeconds: 300,
+      outputSchema: { type: "object" },
+      asset: "0xCustomAssetAddress",
+      extra: {
+        name: "Custom Token",
+        version: "1.0",
+      },
+    });
   });
 });

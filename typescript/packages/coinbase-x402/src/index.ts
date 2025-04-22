@@ -1,5 +1,9 @@
 import { createAuthHeader } from "x402/shared";
+import { FacilitatorConfig } from "x402/types";
 import { CreateHeaders } from "x402/verify";
+
+const COINBASE_FACILITATOR_BASE_URL = "https://cloud-api-dev.cbhq.net";
+const COINBASE_FACILITATOR_V2_ROUTE = "/platform/v2/x402";
 
 /**
  * Creates a CDP auth header for the facilitator service
@@ -18,26 +22,35 @@ export function createCdpAuthHeaders(apiKeyId?: string, apiKeySecret?: string): 
     );
   }
 
+  const requestHost = COINBASE_FACILITATOR_BASE_URL.replace("https://", "");
+
   return async () => {
     return {
       verify: {
         Authorization: await createAuthHeader(
           apiKeyId,
           apiKeySecret,
-
-          "cloud-api-dev.cbhq.net",
-          "/platform/v2/x402/verify",
+          requestHost,
+          `${COINBASE_FACILITATOR_V2_ROUTE}/verify`,
         ),
       },
       settle: {
         Authorization: await createAuthHeader(
           apiKeyId,
           apiKeySecret,
-
-          "cloud-api-dev.cbhq.net",
-          "/platform/v2/x402/settle",
+          requestHost,
+          `${COINBASE_FACILITATOR_V2_ROUTE}/settle`,
         ),
       },
     };
   };
 }
+
+export function createConfig(apiKeyId?: string, apiKeySecret?: string): FacilitatorConfig {
+  return {
+    url: `${COINBASE_FACILITATOR_BASE_URL}${COINBASE_FACILITATOR_V2_ROUTE}`,
+    createAuthHeaders: createCdpAuthHeaders(apiKeyId, apiKeySecret),
+  };
+}
+
+export const config = createConfig();

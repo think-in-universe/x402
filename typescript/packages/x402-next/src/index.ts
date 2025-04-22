@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
 import { getUsdcAddressForChain } from "x402/shared/evm";
 import { useFacilitator } from "x402/verify";
-import { PaymentPayload, Resource } from "x402/types";
+import { Network, PaymentPayload, Resource } from "x402/types";
 import {
   GlobalConfig,
   Money,
@@ -11,25 +11,9 @@ import {
   PaymentMiddlewareConfig,
   PaymentRequirements,
   settleResponseHeader,
+  TokenAmount,
 } from "x402/types";
 import { exact } from "x402/schemes";
-
-/**
- * Configuration for the Next.js payment middleware
- */
-export interface NextPaymentConfig extends GlobalConfig {
-  /**
-   * Map of route patterns to payment configurations
-   * The key is a path pattern that matches Next.js route patterns
-   * The value is the payment configuration for that route
-   */
-  routes: {
-    [pattern: string]: {
-      amount: Money;
-      config?: PaymentMiddlewareConfig;
-    };
-  };
-}
 
 /**
  * Creates a Next.js middleware handler for x402 payments
@@ -39,30 +23,44 @@ export interface NextPaymentConfig extends GlobalConfig {
  *
  * @example
  * ```typescript
- * export const middleware = createPaymentMiddleware({
- *   facilitatorUrl: process.env.NEXT_PUBLIC_FACILITATOR_URL,
- *   address: process.env.RESOURCE_WALLET_ADDRESS,
- *   network: process.env.NETWORK,
+ * export const middleware = paymentMiddleware({
+ *   facilitator: {
+ *     url: process.env.NEXT_PUBLIC_FACILITATOR_URL,
+ *     createAuthHeaders: async () => ({ 
+ *       verify: { "Authorization": "Bearer token" },
+ *       settle: { "Authorization": "Bearer token" }
+ *     })
+ *   },
+ *   payToAddress: process.env.RESOURCE_WALLET_ADDRESS,
  *   routes: {
  *     '/protected/*': {
- *       amount: '$0.01',
+ *       price: '$0.01',
+ *       network: 'base',
  *       config: {
  *         description: 'Access to protected content'
  *       }
  *     },
  *     '/api/premium/*': {
- *       amount: '$0.10',
- *       config: {
- *         description: 'Premium API access'
- *       }
+ *       price: {
+ *         amount: '100000',
+ *         asset: {
+ *           address: '0xabc',
+ *           decimals: 18,
+ *           eip712: {
+ *             name: 'WETH',
+ *             version: '1'
+ *           }
+ *         }
+ *       },
+ *       network: 'base'
  *     }
  *   }
  * });
  * ```
  */
-export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
-  const { facilitatorUrl, address, network, routes, createAuthHeaders } = globalConfig;
-  const { verify, settle } = useFacilitator(facilitatorUrl, createAuthHeaders);
+export function paymentMiddleware(globalConfig: GlobalConfig) {
+  const { facilitator, payToAddress, routes } = globalConfig;
+  const { verify, settle } = useFacilitator(facilitator);
   const x402Version = 1;
 
   // Pre-compile route patterns to regex
@@ -85,38 +83,45 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
       return NextResponse.next();
     }
 
-    const { amount, config = {} } = routeMatch.config;
-    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
-      config;
+    const { price, network, config = {} } = routeMatch.config;
+    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } = config;
 
-    const asset = config.asset ?? {
-      address: getUsdcAddressForChain(getNetworkId(network)),
-      decimals: 6,
-      eip712: {
-        name: "USDC",
-        version: "2",
-      },
-    };
+    // Handle USDC amount (string) or token amount (TokenAmount)
+    let maxAmountRequired: string;
+    let asset: TokenAmount["asset"];
 
-    const parsedAmount = moneySchema.safeParse(amount);
-    if (!parsedAmount.success) {
-      return new NextResponse("Invalid payment configuration", { status: 500 });
+    if (typeof price === "string" || typeof price === "number") {
+      // USDC amount in dollars
+      const parsedAmount = moneySchema.safeParse(price);
+      if (!parsedAmount.success) {
+        return new NextResponse("Invalid payment configuration", { status: 500 });
+      }
+      const parsedUsdAmount = parsedAmount.data;
+      asset = {
+        address: getUsdcAddressForChain(getNetworkId(network)),
+        decimals: 6,
+        eip712: {
+          name: "USDC",
+          version: "2",
+        },
+      };
+      maxAmountRequired = (parsedUsdAmount * 10 ** asset.decimals).toString();
+    } else {
+      // Token amount in atomic units
+      maxAmountRequired = price.amount;
+      asset = price.asset;
     }
 
-    const parsedUsdAmount = parsedAmount.data;
-    const maxAmountRequired = parsedUsdAmount * 10 ** asset.decimals;
-
-    const resourceUrl =
-      resource || (`${request.nextUrl.protocol}//${request.nextUrl.host}${pathname}` as Resource);
+    const resourceUrl = resource || (`${request.nextUrl.protocol}//${request.nextUrl.host}${pathname}` as Resource);
     const paymentRequirements: PaymentRequirements[] = [
       {
         scheme: "exact",
         network,
-        maxAmountRequired: maxAmountRequired.toString(),
+        maxAmountRequired,
         resource: resourceUrl,
         description: description ?? "",
         mimeType: mimeType ?? "",
-        payTo: address,
+        payTo: payToAddress,
         maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
         asset: asset.address,
         outputSchema: outputSchema || undefined,
@@ -134,10 +139,14 @@ export function createPaymentMiddleware(globalConfig: NextPaymentConfig) {
 
     if (!payment) {
       if (isWebBrowser) {
+        const displayAmount = typeof price === "string" || typeof price === "number"
+          ? Number(price)
+          : Number(price.amount) / 10 ** price.asset.decimals;
+
         const html =
           customPaywallHtml ||
           getPaywallHtml({
-            amount: parsedAmount.data,
+            amount: displayAmount,
             paymentRequirements: toJsonSafe(paymentRequirements) as Parameters<
               typeof getPaywallHtml
             >[0]["paymentRequirements"],
