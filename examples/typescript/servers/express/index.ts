@@ -3,44 +3,47 @@ import express from "express";
 import { paymentMiddleware, Resource } from "x402-express";
 config();
 
-const { FACILITATOR_URL, ADDRESS, PORT } = process.env;
+const facilitatorUrl = process.env.FACILITATOR_URL as Resource;
+const payToAddress = process.env.ADDRESS as `0x${string}`;
+const port = parseInt(process.env.PORT as string);
 
-if (!FACILITATOR_URL || !ADDRESS || !PORT) {
+if (!facilitatorUrl || !payToAddress || !port) {
   console.error("Missing required environment variables");
   process.exit(1);
 }
 
 const app = express();
-const port = parseInt(PORT);
 
-app.use(paymentMiddleware({
-  facilitator: {
-    url: FACILITATOR_URL as Resource,
-  },
-  payToAddress: ADDRESS as `0x${string}`,
-  routes: {
-    "GET /weather": {
-      // USDC amount in dollars
-      price: "$0.001",
-      network: "base"
-    },
-    "/premium/*": {
-      // Define atomic amounts in any EIP-3009 token
-      price: {
-        amount: "100000",
-        asset: {
-          address: "0xabc",
-          decimals: 18,
-          eip712: {
-            name: "WETH",
-            version: "1",
+app.use(
+  paymentMiddleware(
+    payToAddress,
+    {
+      "GET /weather": {
+        // USDC amount in dollars
+        price: "$0.001",
+        network: "base",
+      },
+      "/premium/*": {
+        // Define atomic amounts in any EIP-3009 token
+        price: {
+          amount: "100000",
+          asset: {
+            address: "0xabc",
+            decimals: 18,
+            eip712: {
+              name: "WETH",
+              version: "1",
+            },
           },
         },
+        network: "base",
       },
-      network: "base"
-    }
-  },
-}));
+    },
+    {
+      url: facilitatorUrl,
+    },
+  ),
+);
 
 app.get("/weather", (req, res) => {
   res.send({
