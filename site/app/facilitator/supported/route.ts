@@ -11,11 +11,6 @@ export async function GET() {
       {
         x402Version: 1,
         scheme: "exact",
-        network: "base",
-      },
-      {
-        x402Version: 1,
-        scheme: "exact",
         network: "base-sepolia",
       },
     ],
