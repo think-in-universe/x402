@@ -14,6 +14,6 @@ Example of all possible keys can be found in `example_config.json`. The Minimal 
 {
   "targetURL": "https://httpbin.org",
   "amount": 0.01,
-  "payToAddress": "0x<your address>"
+  "payTo": "0x<your address>"
 }
 ```

@@ -1,4 +1,4 @@
-module github.com/coinbase/x402
+module github.com/coinbase/x402/go
 
 go 1.23.3
 

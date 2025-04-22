@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/coinbase/x402/pkg/x402"
+	"github.com/coinbase/x402/go/pkg/types"
 )
 
 // DefaultFacilitatorURL is the default URL for the x402 facilitator service
@@ -30,10 +30,11 @@ func NewFacilitatorClient(url string) *FacilitatorClient {
 }
 
 // Verify sends a payment verification request to the facilitator
-func (c *FacilitatorClient) Verify(payload string, details x402.PaymentDetails) (*x402.VerifyResponse, error) {
+func (c *FacilitatorClient) Verify(payload *types.PaymentPayload, requirements *types.PaymentRequirements) (*types.VerifyResponse, error) {
 	reqBody := map[string]any{
-		"payload": payload,
-		"details": details,
+		"x402Version": 1,
+		"payload":     payload,
+		"details":     requirements,
 	}
 
 	jsonBody, err := json.Marshal(reqBody)
@@ -57,7 +58,7 @@ func (c *FacilitatorClient) Verify(payload string, details x402.PaymentDetails) 
 		return nil, fmt.Errorf("failed to verify payment: %s", resp.Status)
 	}
 
-	var verifyResp x402.VerifyResponse
+	var verifyResp types.VerifyResponse
 	if err := json.NewDecoder(resp.Body).Decode(&verifyResp); err != nil {
 		return nil, fmt.Errorf("failed to decode verify response: %w", err)
 	}
@@ -66,10 +67,11 @@ func (c *FacilitatorClient) Verify(payload string, details x402.PaymentDetails) 
 }
 
 // Settle sends a payment settlement request to the facilitator
-func (c *FacilitatorClient) Settle(payload string, details x402.PaymentDetails) (*x402.SettleResponse, error) {
+func (c *FacilitatorClient) Settle(payload *types.PaymentPayload, requirements *types.PaymentRequirements) (*types.SettleResponse, error) {
 	reqBody := map[string]any{
-		"payload": payload,
-		"details": details,
+		"x402Version": 1,
+		"payload":     payload,
+		"details":     requirements,
 	}
 
 	jsonBody, err := json.Marshal(reqBody)
@@ -93,7 +95,7 @@ func (c *FacilitatorClient) Settle(payload string, details x402.PaymentDetails) 
 		return nil, fmt.Errorf("failed to settle payment: %s", resp.Status)
 	}
 
-	var settleResp x402.SettleResponse
+	var settleResp types.SettleResponse
 	if err := json.NewDecoder(resp.Body).Decode(&settleResp); err != nil {
 		return nil, fmt.Errorf("failed to decode settle response: %w", err)
 	}

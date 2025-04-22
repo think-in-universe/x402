@@ -11,21 +11,23 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coinbase/x402/pkg/x402"
-	x402gin "github.com/coinbase/x402/pkg/x402/gin"
+	x402gin "github.com/coinbase/x402/go/pkg/gin"
+	"github.com/coinbase/x402/go/pkg/types"
 )
 
 // TestServerConfig configures how the test facilitator server responds.
 type TestServerConfig struct {
+	PaymentPayload *types.PaymentPayload
+
 	// Verification response
 	VerifySuccess bool
 	InvalidReason string
 
 	// Settlement response
-	SettleSuccess bool
-	SettleError   string
-	TxHash        string
-	NetworkID     string
+	SettleSuccess     bool
+	SettleErrorReason string
+	Transaction       string
+	Network           string
 
 	// Server behavior
 	VerifyStatusCode int
@@ -35,14 +37,30 @@ type TestServerConfig struct {
 // NewTestConfig returns a default test configuration with successful responses.
 func NewTestConfig() TestServerConfig {
 	return TestServerConfig{
-		VerifySuccess:    true,
-		InvalidReason:    "Invalid payment",
-		SettleSuccess:    true,
-		SettleError:      "Settlement failed",
-		TxHash:           "0xtesthash",
-		NetworkID:        "84532",
-		VerifyStatusCode: http.StatusOK,
-		SettleStatusCode: http.StatusOK,
+		PaymentPayload: &types.PaymentPayload{
+			X402Version: 1,
+			Scheme:      "exact",
+			Network:     "base-sepolia",
+			Payload: &types.ExactEvmPayload{
+				Signature: "0xvalidSignature",
+				Authorization: &types.ExactEvmPayloadAuthorization{
+					From:        "0xvalidFrom",
+					To:          "0xvalidTo",
+					Value:       "1000000",
+					ValidAfter:  "1745323800",
+					ValidBefore: "1745323985",
+					Nonce:       "0xvalidNonce",
+				},
+			},
+		},
+		VerifySuccess:     true,
+		InvalidReason:     "Invalid payment",
+		SettleSuccess:     true,
+		SettleErrorReason: "Settlement failed",
+		Transaction:       "0xtesthash",
+		Network:           "base-sepolia",
+		VerifyStatusCode:  http.StatusOK,
+		SettleStatusCode:  http.StatusOK,
 	}
 }
 
@@ -55,16 +73,16 @@ func setupTest(t *testing.T, amount *big.Float, address string, config TestServe
 		switch r.URL.Path {
 		case "/verify":
 			w.WriteHeader(config.VerifyStatusCode)
-			json.NewEncoder(w).Encode(x402.VerifyResponse{
+			json.NewEncoder(w).Encode(types.VerifyResponse{
 				IsValid:       config.VerifySuccess,
 				InvalidReason: config.InvalidReason,
 			})
 		case "/settle":
 			w.WriteHeader(config.SettleStatusCode)
-			json.NewEncoder(w).Encode(x402.SettleResponse{
-				Success:   config.SettleSuccess,
-				TxHash:    config.TxHash,
-				NetworkID: config.NetworkID,
+			json.NewEncoder(w).Encode(types.SettleResponse{
+				Success:     config.SettleSuccess,
+				Transaction: config.Transaction,
+				Network:     config.Network,
 			})
 		}
 	}))
@@ -96,7 +114,7 @@ func TestPaymentMiddleware_NoPaymentHeader(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Contains(t, response, "error")
-	assert.Contains(t, response, "paymentDetails")
+	assert.Contains(t, response, "paymentRequirements")
 }
 
 func TestPaymentMiddleware_WebBrowserRequest(t *testing.T) {
@@ -112,9 +130,15 @@ func TestPaymentMiddleware_WebBrowserRequest(t *testing.T) {
 }
 
 func TestPaymentMiddleware_ValidPayment(t *testing.T) {
-	router, w, req := setupTest(t, big.NewFloat(1.0), "0xTestAddress", NewTestConfig())
+	config := NewTestConfig()
 
-	req.Header.Set("X-PAYMENT", "validPaymentToken")
+	router, w, req := setupTest(t, big.NewFloat(1.0), "0xTestAddress", config)
+
+	paymentPayloadJson, err := json.Marshal(config.PaymentPayload)
+	assert.NoError(t, err, "marshaling payment payload should not fail")
+
+	paymentPayloadBase64 := base64.StdEncoding.EncodeToString(paymentPayloadJson)
+	req.Header.Set("X-PAYMENT", paymentPayloadBase64)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -129,25 +153,30 @@ func TestPaymentMiddleware_ValidPayment(t *testing.T) {
 	err = json.Unmarshal(responseBytes, &settleResponse)
 	assert.NoError(t, err)
 	assert.True(t, settleResponse.Success)
-	assert.Equal(t, "0xtesthash", settleResponse.TxHash)
+	assert.Equal(t, "0xtesthash", settleResponse.Transaction)
 }
 
 func TestPaymentMiddleware_VerificationFails(t *testing.T) {
 	config := NewTestConfig()
 	config.VerifySuccess = false
+	config.PaymentPayload.Payload.Signature = "0xInvalidSignature"
 
 	router, w, req := setupTest(t, big.NewFloat(1.0), "0xTestAddress", config)
 
-	req.Header.Set("X-PAYMENT", "invalidPaymentToken")
+	paymentPayloadJson, err := json.Marshal(config.PaymentPayload)
+	assert.NoError(t, err, "marshaling payment payload should not fail")
+
+	paymentPayloadBase64 := base64.StdEncoding.EncodeToString(paymentPayloadJson)
+	req.Header.Set("X-PAYMENT", paymentPayloadBase64)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusPaymentRequired, w.Code)
 
 	var response map[string]any
-	err := json.Unmarshal(w.Body.Bytes(), &response)
+	err = json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Contains(t, response, "error")
-	assert.Contains(t, response, "paymentDetails")
+	assert.Contains(t, response, "paymentRequirements")
 	assert.Equal(t, config.InvalidReason, response["error"])
 }
 
@@ -157,13 +186,17 @@ func TestPaymentMiddleware_VerificationServerError(t *testing.T) {
 
 	router, w, req := setupTest(t, big.NewFloat(1.0), "0xTestAddress", config)
 
-	req.Header.Set("X-PAYMENT", "validPaymentToken")
+	paymentPayloadJson, err := json.Marshal(config.PaymentPayload)
+	assert.NoError(t, err, "marshaling payment payload should not fail")
+
+	paymentPayloadBase64 := base64.StdEncoding.EncodeToString(paymentPayloadJson)
+	req.Header.Set("X-PAYMENT", paymentPayloadBase64)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 
 	var response map[string]any
-	err := json.Unmarshal(w.Body.Bytes(), &response)
+	err = json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Contains(t, response, "error")
 }
@@ -174,7 +207,11 @@ func TestPaymentMiddleware_SettlementFails(t *testing.T) {
 
 	router, w, req := setupTest(t, big.NewFloat(1.0), "0xTestAddress", config)
 
-	req.Header.Set("X-PAYMENT", "validPaymentToken")
+	paymentPayloadJson, err := json.Marshal(config.PaymentPayload)
+	assert.NoError(t, err, "marshaling payment payload should not fail")
+
+	paymentPayloadBase64 := base64.StdEncoding.EncodeToString(paymentPayloadJson)
+	req.Header.Set("X-PAYMENT", paymentPayloadBase64)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -198,7 +235,11 @@ func TestPaymentMiddleware_SettlementServerError(t *testing.T) {
 
 	router, w, req := setupTest(t, big.NewFloat(1.0), "0xTestAddress", config)
 
-	req.Header.Set("X-PAYMENT", "validPaymentToken")
+	paymentPayloadJson, err := json.Marshal(config.PaymentPayload)
+	assert.NoError(t, err, "marshaling payment payload should not fail")
+
+	paymentPayloadBase64 := base64.StdEncoding.EncodeToString(paymentPayloadJson)
+	req.Header.Set("X-PAYMENT", paymentPayloadBase64)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -219,7 +260,7 @@ func TestPaymentMiddleware_Options(t *testing.T) {
 			opts: []x402gin.Options{
 				x402gin.WithDescription("Test Description"),
 				x402gin.WithMimeType("application/json"),
-				x402gin.WithMaxDeadlineSeconds(120),
+				x402gin.WithMaxTimeoutSeconds(120),
 				x402gin.WithTestnet(true),
 			},
 			amount:  big.NewFloat(1.0),
@@ -238,9 +279,15 @@ func TestPaymentMiddleware_Options(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			router, w, req := setupTest(t, tc.amount, tc.address, NewTestConfig(), tc.opts...)
+			config := NewTestConfig()
 
-			req.Header.Set("X-PAYMENT", "validPaymentToken")
+			router, w, req := setupTest(t, tc.amount, tc.address, config, tc.opts...)
+
+			paymentPayloadJson, err := json.Marshal(config.PaymentPayload)
+			assert.NoError(t, err, "marshaling payment payload should not fail")
+
+			paymentPayloadBase64 := base64.StdEncoding.EncodeToString(paymentPayloadJson)
+			req.Header.Set("X-PAYMENT", paymentPayloadBase64)
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, http.StatusOK, w.Code)
@@ -283,14 +330,18 @@ func TestPaymentMiddleware_NetworkSelection(t *testing.T) {
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			assert.NoError(t, err)
 
-			details, ok := response["paymentDetails"].(map[string]any)
+			requirementsSlice, ok := response["paymentRequirements"].([]any)
 			assert.True(t, ok)
 
-			expectedNetworkID := "8453"
+			requirements, ok := requirementsSlice[0].(map[string]any)
+			assert.True(t, ok)
+
+			expectedNetwork := "base"
 			if tc.testnet {
-				expectedNetworkID = "84532"
+				expectedNetwork = "base-sepolia"
 			}
-			assert.Equal(t, expectedNetworkID, details["networkId"])
+
+			assert.Equal(t, expectedNetwork, requirements["network"])
 		})
 	}
 }

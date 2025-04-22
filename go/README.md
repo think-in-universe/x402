@@ -1,9 +1,22 @@
+# Go x402
+
+## Installation
+
+```bash
+go get github.com/coinbase/x402/go
+```
+
+## Usage
+
+### Accepting x402 Payments with a [Gin](https://github.com/gin-gonic/gin) Resource Server
+
+```go
 package main
 
 import (
 	"math/big"
 
-	x402gin "github.com/coinbase/x402/pkg/x402/gin"
+	x402gin "github.com/coinbase/x402/go/pkg/gin"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,3 +40,4 @@ func main() {
 
 	r.Run(":4021") // Start the server on 0.0.0.0:4021 (for windows "localhost:4021")
 }
+```

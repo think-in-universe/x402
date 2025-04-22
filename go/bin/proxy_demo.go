@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"os"
 
-	x402gin "github.com/coinbase/x402/pkg/x402/gin"
+	x402gin "github.com/coinbase/x402/go/pkg/gin"
 	"github.com/gin-gonic/gin"
 )
 
@@ -34,13 +34,13 @@ func main() {
 	r.Any("/*path",
 		x402gin.PaymentMiddleware(
 			big.NewFloat(config.Amount),
-			config.PayToAddress,
+			config.PayTo,
 			x402gin.WithFacilitatorURL(config.FacilitatorURL),
 			x402gin.WithResource(config.TargetURL),
 			x402gin.WithTestnet(config.Testnet),
 			x402gin.WithDescription(config.Description),
 			x402gin.WithMimeType(config.MimeType),
-			x402gin.WithMaxDeadlineSeconds(config.MaxDeadlineSeconds),
+			x402gin.WithMaxTimeoutSeconds(config.MaxTimeoutSeconds),
 		),
 		proxyHandler(config.TargetURL, config.Headers))
 
@@ -52,15 +52,15 @@ func main() {
 }
 
 type ProxyConfig struct {
-	TargetURL          string            `json:"targetURL"`
-	Amount             float64           `json:"amount"`
-	PayToAddress       string            `json:"payToAddress"`
-	Description        string            `json:"description"`
-	FacilitatorURL     string            `json:"facilitatorURL"`
-	MimeType           string            `json:"mimeType"`
-	MaxDeadlineSeconds int               `json:"maxDeadlineSeconds"`
-	Testnet            bool              `json:"testnet"`
-	Headers            map[string]string `json:"headers"`
+	TargetURL         string            `json:"targetURL"`
+	Amount            float64           `json:"amount"`
+	PayTo             string            `json:"payTo"`
+	Description       string            `json:"description"`
+	FacilitatorURL    string            `json:"facilitatorURL"`
+	MimeType          string            `json:"mimeType"`
+	MaxTimeoutSeconds int               `json:"maxTimeoutSeconds"`
+	Testnet           bool              `json:"testnet"`
+	Headers           map[string]string `json:"headers"`
 }
 
 func proxyHandler(targetURL string, headers map[string]string) gin.HandlerFunc {
@@ -107,9 +107,9 @@ func proxyHandler(targetURL string, headers map[string]string) gin.HandlerFunc {
 func loadConfig(configPath string) (*ProxyConfig, error) {
 	config := &ProxyConfig{
 		// default values
-		FacilitatorURL:     "https://x402.org/facilitator",
-		Testnet:            true,
-		MaxDeadlineSeconds: 60,
+		FacilitatorURL:    "https://x402.org/facilitator",
+		Testnet:           true,
+		MaxTimeoutSeconds: 60,
 	}
 
 	data, err := os.ReadFile(configPath)
@@ -121,7 +121,7 @@ func loadConfig(configPath string) (*ProxyConfig, error) {
 		return nil, fmt.Errorf("error parsing config file: %w", err)
 	}
 
-	if config.TargetURL == "" || config.Amount == 0 || config.PayToAddress == "" {
+	if config.TargetURL == "" || config.Amount == 0 || config.PayTo == "" {
 		return nil, fmt.Errorf("config is missing required fields")
 	}
 
