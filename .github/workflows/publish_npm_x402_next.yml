@@ -1,10 +1,10 @@
-name: Publish x402 base package to NPM
+name: Publish x402-next package to NPM
 
 on:
   workflow_dispatch:
 
 jobs:
-  publish-npm-x402:
+  publish-npm-x402-next:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'npm' || '' }}
     permissions:
@@ -20,13 +20,13 @@ jobs:
         with:
           version: 8
       - name: Install and build
-        working-directory: ./typescript/packages/x402
+        working-directory: ./typescript/packages/x402-next
         run: |
           pnpm install
           pnpm run build
-      
-      - name: Publish x402 package
-        working-directory: ./typescript/packages/x402
+          
+      - name: Publish x402-next package
+        working-directory: ./typescript/packages/x402-next
         run: |
           # Get package information directly
           PACKAGE_NAME=$(node -p "require('./package.json').name")
@@ -43,4 +43,4 @@ jobs:
             pnpm publish --dry-run --no-git-checks
           fi
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 
