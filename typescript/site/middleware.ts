@@ -1,10 +1,14 @@
 import { Address } from "viem";
 import { createPaymentMiddleware, Network, Resource } from "x402-next";
 
+const address = process.env.RESOURCE_WALLET_ADDRESS as Address;
+const network = process.env.NETWORK as Network;
+const facilitatorUrl = (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/facilitator` : process.env.NEXT_PUBLIC_FACILITATOR_URL) as Resource;
+
 export const middleware = createPaymentMiddleware({
-  facilitatorUrl: process.env.NEXT_PUBLIC_FACILITATOR_URL as Resource,
-  address: process.env.RESOURCE_WALLET_ADDRESS as Address,
-  network: process.env.NETWORK as Network,
+  facilitatorUrl,
+  address,
+  network,
   routes: {
     "/protected": {
       amount: "$0.01",
