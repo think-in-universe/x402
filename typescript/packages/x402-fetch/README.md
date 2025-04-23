@@ -13,7 +13,7 @@ npm install x402-fetch
 ```typescript
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { fetchWithPayment } from "x402-fetch";
+import { wrapFetchWithPayment } from "x402-fetch";
 import { baseSepolia } from "viem/chains";
 
 // Create a wallet client
@@ -25,7 +25,7 @@ const client = createWalletClient({
 });
 
 // Wrap the fetch function with payment handling
-const fetchWithPay = fetchWithPayment(fetch, client);
+const fetchWithPay = wrapFetchWithPayment(fetch, client);
 
 // Make a request that may require payment
 const response = await fetchWithPay("https://api.example.com/paid-endpoint", {
@@ -45,7 +45,7 @@ const data = await response.json();
 
 ## API
 
-### `fetchWithPayment(fetch, walletClient, maxValue?)`
+### `wrapFetchWithPayment(fetch, walletClient, maxValue?, paymentRequirementsSelector?)`
 
 Wraps the native fetch API to handle 402 Payment Required responses automatically.
 
@@ -54,6 +54,7 @@ Wraps the native fetch API to handle 402 Payment Required responses automaticall
 - `fetch`: The fetch function to wrap (typically `globalThis.fetch`)
 - `walletClient`: The wallet client used to sign payment messages (must implement the x402 wallet interface)
 - `maxValue`: Optional maximum allowed payment amount in base units (defaults to 0.1 USDC)
+- `paymentRequirementsSelector`: Optional function to select payment requirements from the response (defaults to `selectPaymentRequirements`)
 
 #### Returns
 
@@ -79,7 +80,7 @@ The wrapped fetch function may throw the following errors:
 import { config } from "dotenv";
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { fetchWithPayment } from "x402-fetch";
+import { wrapFetchWithPayment } from "x402-fetch";
 import { baseSepolia } from "viem/chains";
 
 config();
@@ -93,7 +94,7 @@ const client = createWalletClient({
   chain: baseSepolia,
 });
 
-const fetchWithPay = fetchWithPayment(fetch, client);
+const fetchWithPay = wrapFetchWithPayment(fetch, client);
 
 // Make a request to a paid API endpoint
 fetchWithPay(API_URL, {

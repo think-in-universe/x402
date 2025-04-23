@@ -12,28 +12,28 @@ npm install x402-hono
 
 ```typescript
 import { Hono } from "hono";
-import { configurePaymentMiddleware, Network } from "x402-hono";
+import { paymentMiddleware, Network } from "x402-hono";
 
 const app = new Hono();
 
 // Configure the payment middleware
-const paymentMiddleware = configurePaymentMiddleware({
-  facilitatorUrl: "https://your-facilitator-url.com",
-  address: "0xYourAddress",
-  network: "base" as Network, // or "base-sepolia" for testnet
-});
-
-// Apply the middleware to a route
-app.get(
-  "/protected-route",
-  paymentMiddleware("$0.10", {
-    description: "Access to premium content",
-    resource: "https://your-api.com/protected-route"
-  }),
-  (c) => {
-    return c.json({ message: "This content is behind a paywall" });
+app.use(paymentMiddleware(
+  "0xYourAddress",
+  {
+    "/protected-route": {
+      price: "$0.10",
+      network: "base-sepolia",
+      config: {
+        description: "Access to premium content",
+      }
+    }
   }
-);
+));
+
+// Implement your route
+app.get("/protected-route", (c) => {
+  return c.json({ message: "This content is behind a paywall" });
+});
 
 serve({
   fetch: app.fetch,
@@ -43,19 +43,31 @@ serve({
 
 ## Configuration
 
-The `configurePaymentMiddleware` function accepts a global configuration object with the following properties:
+The `paymentMiddleware` function accepts three parameters:
 
-```typescript
-interface GlobalConfig {
-  facilitatorUrl: string;  // URL of the x402 facilitator service
-  address: `0x${string}`;  // Your receiving address
-  network: Network;        // "base" or "base-sepolia"
-}
-```
+1. `payToAddress`: Your receiving address (`0x${string}`)
+2. `routes`: Route configurations for protected endpoints
+3. `facilitator`: (Optional) Configuration for the x402 facilitator service
+
+See the Middleware Options section below for detailed configuration options.
 
 ## Middleware Options
 
-When applying the middleware to a route, you can specify the following options:
+The middleware supports various configuration options:
+
+### Route Configuration
+
+```typescript
+type RoutesConfig = Record<string, Price | RouteConfig>;
+
+interface RouteConfig {
+  price: Price;           // Price in USD or token amount
+  network: Network;       // "base" or "base-sepolia"
+  config?: PaymentMiddlewareConfig;
+}
+```
+
+### Payment Configuration
 
 ```typescript
 interface PaymentMiddlewareConfig {
@@ -66,6 +78,15 @@ interface PaymentMiddlewareConfig {
   customPaywallHtml?: string;         // Custom HTML for the paywall
   resource?: string;                  // Resource URL (defaults to request URL)
 }
+```
+
+### Facilitator Configuration
+
+```typescript
+type FacilitatorConfig = {
+  url: string;                        // URL of the x402 facilitator service
+  createAuthHeaders?: CreateHeaders;  // Optional function to create authentication headers
+};
 ```
 
 ## Features

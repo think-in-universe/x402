@@ -5,29 +5,28 @@ Next.js middleware integration for the x402 Payment Protocol. This package allow
 ## Installation
 
 ```bash
-npm install x402 x402-next
+npm install x402-next
 ```
 
 ## Quick Start
 
-1. Create a middleware file in your Next.js project (e.g., `middleware.ts`):
+Create a middleware file in your Next.js project (e.g., `middleware.ts`):
 
 ```typescript
-import { createPaymentMiddleware, Network } from 'x402-next';
+import { paymentMiddleware, Network } from 'x402-next';
 
-export const middleware = createPaymentMiddleware({
-  facilitatorUrl: process.env.NEXT_PUBLIC_FACILITATOR_URL,
-  address: process.env.RESOURCE_WALLET_ADDRESS,
-  network: process.env.NETWORK as Network,
-  routes: {
+export const middleware = paymentMiddleware(
+  "0xYourAddress",
+  {
     '/protected': {
-      amount: '$0.01',
+      price: '$0.01',
+      network: "base-sepolia",
       config: {
         description: 'Access to protected content'
       }
     },
   }
-});
+);
 
 // Configure which paths the middleware should run on
 export const config = {
@@ -37,35 +36,33 @@ export const config = {
 };
 ```
 
-2. Set up your environment variables in `.env.local`:
-
-```env
-NEXT_PUBLIC_FACILITATOR_URL=https://your-facilitator-url.com
-RESOURCE_WALLET_ADDRESS=0xYourAddress
-NETWORK=base # or 'base-sepolia' for testnet
-```
-
 ## Configuration
 
-The `createPaymentMiddleware` function accepts a configuration object with the following properties:
+The `paymentMiddleware` function accepts three parameters:
 
-```typescript
-interface NextPaymentConfig {
-  facilitatorUrl: string;  // URL of the x402 facilitator service
-  address: string;         // Your receiving address
-  network: Network;        // 'base' or 'base-sepolia'
-  routes: {
-    [pattern: string]: {
-      amount: Money;       // Payment amount (e.g., '$0.01')
-      config?: PaymentMiddlewareConfig;
-    };
-  };
-}
-```
+1. `payToAddress`: Your receiving address (`0x${string}`)
+2. `routes`: Route configurations for protected endpoints
+3. `facilitator`: (Optional) Configuration for the x402 facilitator service
+
+See the Middleware Options section below for detailed configuration options.
 
 ## Middleware Options
 
-Each route can be configured with the following options:
+The middleware supports various configuration options:
+
+### Route Configuration
+
+```typescript
+type RoutesConfig = Record<string, Price | RouteConfig>;
+
+interface RouteConfig {
+  price: Price;           // Price in USD or token amount
+  network: Network;       // "base" or "base-sepolia"
+  config?: PaymentMiddlewareConfig;
+}
+```
+
+### Payment Configuration
 
 ```typescript
 interface PaymentMiddlewareConfig {
@@ -76,6 +73,15 @@ interface PaymentMiddlewareConfig {
   customPaywallHtml?: string;         // Custom HTML for the paywall
   resource?: string;                  // Resource URL (defaults to request URL)
 }
+```
+
+### Facilitator Configuration
+
+```typescript
+type FacilitatorConfig = {
+  url: string;                        // URL of the x402 facilitator service
+  createAuthHeaders?: CreateHeaders;  // Optional function to create authentication headers
+};
 ```
 
 ## Features
