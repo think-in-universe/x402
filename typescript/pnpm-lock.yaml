@@ -386,6 +386,9 @@ importers:
       x402:
         specifier: workspace:*
         version: link:../packages/x402
+      x402-legacy:
+        specifier: npm:x402@0.1.2
+        version: x402@0.1.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
       x402-next:
         specifier: workspace:*
         version: link:../packages/x402-next
@@ -1212,6 +1215,12 @@ packages:
     resolution: {integrity: sha512-LMcepvRaS9LYHJGsF0zzmgKCUim/X3N/DQKc4jepAXJ7l8QxJ1PmxJzqplF2Z3FE4PqBAIGyJAQ/w4B5dsqbtQ==}
     peerDependencies:
       react: '>= 16 || ^19.0.0-rc'
+
+  '@hono/node-server@1.14.1':
+    resolution: {integrity: sha512-vmbuM+HPinjWzPe7FFPWMMQMsbKE9gDPhaH0FFdqbGpkT5lp++tcWDTxwBl5EgS5y6JVgIaCdjeHRfQ4XRBRjQ==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      hono: ^4
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -4210,6 +4219,9 @@ packages:
       utf-8-validate:
         optional: true
 
+  x402@0.1.2:
+    resolution: {integrity: sha512-TiQHNS/ygLxZzEwNDYpUS6Tu0Kquf13KENcgSQEPd5cgrEvBF3+hUZ8hZnbJL7a9oCORkRCb6TSIFz6V/XcgHw==}
+
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
@@ -5117,6 +5129,10 @@ snapshots:
   '@heroicons/react@2.2.0(react@19.1.0)':
     dependencies:
       react: 19.1.0
+
+  '@hono/node-server@1.14.1(hono@4.7.6)':
+    dependencies:
+      hono: 4.7.6
 
   '@humanfs/core@0.19.1': {}
 
@@ -8405,6 +8421,21 @@ snapshots:
     optionalDependencies:
       bufferutil: 4.0.9
       utf-8-validate: 5.0.10
+
+  x402@0.1.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10):
+    dependencies:
+      '@hono/node-server': 1.14.1(hono@4.7.6)
+      axios: 1.8.4
+      express: 4.21.2
+      hono: 4.7.6
+      viem: 2.26.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.2)
+      zod: 3.24.2
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - supports-color
+      - typescript
+      - utf-8-validate
 
   yallist@3.1.1: {}
 
