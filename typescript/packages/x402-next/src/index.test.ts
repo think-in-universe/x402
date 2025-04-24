@@ -1,21 +1,68 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getPaywallHtml } from "x402/shared";
-import { GlobalConfig, PaymentMiddlewareConfig } from "x402/types";
-import { useFacilitator } from "x402/verify";
-import { createPaymentMiddleware } from "./index";
 import { exact } from "x402/schemes";
+import { findMatchingRoute, getPaywallHtml } from "x402/shared";
+import { FacilitatorConfig, PaymentMiddlewareConfig, RouteConfig } from "x402/types";
+import { useFacilitator } from "x402/verify";
+import { paymentMiddleware } from "./index";
 
 // Mock dependencies
 vi.mock("x402/verify", () => ({
   useFacilitator: vi.fn(),
 }));
 
-vi.mock("x402/shared", () => ({
-  getPaywallHtml: vi.fn(),
-  getNetworkId: vi.fn().mockReturnValue(84532),
-  toJsonSafe: vi.fn(x => x),
-}));
+vi.mock("x402/shared", async importOriginal => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    getPaywallHtml: vi.fn(),
+    getNetworkId: vi.fn().mockReturnValue(84532),
+    toJsonSafe: vi.fn(x => x),
+    computeRoutePatterns: vi.fn().mockImplementation(routes => {
+      const normalizedRoutes = Object.fromEntries(
+        Object.entries(routes).map(([pattern, value]) => [
+          pattern,
+          typeof value === "string" || typeof value === "number"
+            ? ({ price: value, network: "base-sepolia" } as RouteConfig)
+            : (value as RouteConfig),
+        ]),
+      );
+
+      return Object.entries(normalizedRoutes).map(([pattern, routeConfig]) => {
+        const [verb, path] = pattern.includes(" ") ? pattern.split(/\s+/) : ["*", pattern];
+        if (!path) {
+          throw new Error(`Invalid route pattern: ${pattern}`);
+        }
+        return {
+          verb: verb.toUpperCase(),
+          pattern: new RegExp(
+            `^${path
+              .replace(/\*/g, ".*?")
+              .replace(/\[([^\]]+)\]/g, "[^/]+")
+              .replace(/\//g, "\\/")}$`,
+          ),
+          config: routeConfig,
+        };
+      });
+    }),
+    findMatchingRoute: vi
+      .fn()
+      .mockImplementation(
+        (
+          routePatterns: Array<{ pattern: RegExp; verb: string; config: RouteConfig }>,
+          path: string,
+          _method: string,
+        ) => {
+          if (!routePatterns) return undefined;
+          return routePatterns.find(({ pattern, verb }) => {
+            const matchesPath = pattern.test(path);
+            const matchesVerb = verb === "*" || verb === _method.toUpperCase();
+            return matchesPath && matchesVerb;
+          });
+        },
+      ),
+  };
+});
 
 vi.mock("x402/shared/evm", () => ({
   getUsdcAddressForChain: vi.fn().mockReturnValue("0x036CbD53842c5426634e7929541eC2318f3dCF7e"),
@@ -29,18 +76,12 @@ vi.mock("x402/schemes", () => ({
   },
 }));
 
-describe("createPaymentMiddleware()", () => {
+describe("paymentMiddleware()", () => {
   let mockRequest: NextRequest;
-  let middleware: ReturnType<typeof createPaymentMiddleware>;
+  let middleware: ReturnType<typeof paymentMiddleware>;
   let mockVerify: ReturnType<typeof useFacilitator>["verify"];
   let mockSettle: ReturnType<typeof useFacilitator>["settle"];
   let mockDecodePayment: ReturnType<typeof vi.fn>;
-
-  const globalConfig: GlobalConfig = {
-    facilitatorUrl: "https://facilitator.example.com",
-    address: "0x1234567890123456789012345678901234567890",
-    network: "base-sepolia",
-  };
 
   const middlewareConfig: PaymentMiddlewareConfig = {
     description: "Test payment",
@@ -48,15 +89,17 @@ describe("createPaymentMiddleware()", () => {
     maxTimeoutSeconds: 300,
     outputSchema: { type: "object" },
     resource: "https://api.example.com/resource",
-    asset: {
-      address: "0xCustomAssetAddress",
-      decimals: 18,
-      eip712: {
-        name: "Custom Token",
-        version: "1.0",
-      },
-    },
   };
+
+  const facilitatorConfig: FacilitatorConfig = {
+    url: "https://facilitator.example.com",
+    createAuthHeaders: async () => ({
+      verify: { Authorization: "Bearer token" },
+      settle: { Authorization: "Bearer token" },
+    }),
+  };
+
+  const payToAddress = "0x1234567890123456789012345678901234567890";
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -69,6 +112,7 @@ describe("createPaymentMiddleware()", () => {
         host: "example.com",
       },
       headers: new Headers(),
+      method: "GET",
     } as unknown as NextRequest;
 
     // Setup facilitator mocks
@@ -86,44 +130,216 @@ describe("createPaymentMiddleware()", () => {
     mockDecodePayment = vi.fn();
     (exact.evm.decodePayment as ReturnType<typeof vi.fn>).mockImplementation(mockDecodePayment);
 
+    // Setup route pattern matching mock
+    (findMatchingRoute as ReturnType<typeof vi.fn>).mockImplementation(
+      (routePatterns, path, method) => {
+        if (path === "/protected/test" && method === "GET") {
+          return {
+            pattern: /^\/protected\/test$/,
+            verb: "GET",
+            config: {
+              price: "$0.001",
+              network: "base-sepolia",
+              config: middlewareConfig,
+            },
+          };
+        }
+        return undefined;
+      },
+    );
+
     // Create middleware with test routes
-    middleware = createPaymentMiddleware({
-      ...globalConfig,
-      routes: {
+    middleware = paymentMiddleware(
+      payToAddress,
+      {
         "/protected/*": {
-          amount: 1.0,
+          price: 1.0,
+          network: "base",
           config: middlewareConfig,
         },
       },
-    });
+      facilitatorConfig,
+    );
   });
 
   it("should return next() when no route matches", async () => {
-    mockRequest.nextUrl.pathname = "/unprotected/test";
-    const response = await middleware(mockRequest);
+    const request = {
+      ...mockRequest,
+      nextUrl: {
+        ...mockRequest.nextUrl,
+        pathname: "/unprotected/test",
+      },
+    } as NextRequest;
+    const response = await middleware(request);
     expect(response).toBeInstanceOf(Response);
     expect(response.status).toBe(200);
   });
 
+  it("should match routes with HTTP verbs", async () => {
+    middleware = paymentMiddleware(
+      payToAddress,
+      {
+        "GET /protected/*": {
+          price: 1.0,
+          network: "base",
+          config: middlewareConfig,
+        },
+      },
+      facilitatorConfig,
+    );
+
+    // Test GET request to protected route
+    const getRequest = {
+      ...mockRequest,
+      method: "GET",
+    } as NextRequest;
+    getRequest.nextUrl.pathname = "/protected/test";
+    let response = await middleware(getRequest);
+    expect(response.status).toBe(402);
+
+    // Test POST request to protected route (should not match)
+    const postRequest = {
+      ...mockRequest,
+      method: "POST",
+    } as NextRequest;
+    postRequest.nextUrl.pathname = "/protected/test";
+    response = await middleware(postRequest);
+    expect(response.status).toBe(200);
+  });
+
+  it("should match routes without verbs using any HTTP method", async () => {
+    middleware = paymentMiddleware(
+      payToAddress,
+      {
+        "/protected/*": {
+          price: 1.0,
+          network: "base-sepolia",
+          config: middlewareConfig,
+        },
+      },
+      facilitatorConfig,
+    );
+
+    // Setup route pattern matching mock
+    (findMatchingRoute as ReturnType<typeof vi.fn>).mockImplementation((routePatterns, path) => {
+      if (path === "/protected/test") {
+        return {
+          pattern: /^\/protected\/test$/,
+          verb: "*",
+          config: {
+            price: 1.0,
+            network: "base-sepolia",
+            config: middlewareConfig,
+          },
+        };
+      }
+      return undefined;
+    });
+
+    // Test GET request
+    const getRequest = {
+      ...mockRequest,
+      method: "GET",
+    } as NextRequest;
+    getRequest.nextUrl.pathname = "/protected/test";
+    let response = await middleware(getRequest);
+    expect(response.status).toBe(402);
+
+    // Test POST request (should also match)
+    const postRequest = {
+      ...mockRequest,
+      method: "POST",
+    } as NextRequest;
+    postRequest.nextUrl.pathname = "/protected/test";
+    response = await middleware(postRequest);
+    expect(response.status).toBe(402);
+  });
+
+  it("should throw error for invalid route patterns", async () => {
+    const middleware = paymentMiddleware(
+      payToAddress,
+      {
+        "GET ": {
+          price: 1.0,
+          network: "base-sepolia",
+          config: middlewareConfig,
+        },
+      },
+      facilitatorConfig,
+    );
+
+    const request = {
+      ...mockRequest,
+      headers: new Headers(),
+    } as NextRequest;
+
+    const response = await middleware(request);
+    expect(response.status).toBe(402);
+    const json = await response.json();
+    expect(json).toEqual({
+      x402Version: 1,
+      error: "X-PAYMENT header is required",
+      accepts: [
+        {
+          scheme: "exact",
+          network: "base-sepolia",
+          maxAmountRequired: "1000",
+          resource: "https://api.example.com/resource",
+          description: "Test payment",
+          mimeType: "application/json",
+          payTo: "0x1234567890123456789012345678901234567890",
+          maxTimeoutSeconds: 300,
+          outputSchema: { type: "object" },
+          asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          extra: {
+            name: "USDC",
+            version: "2",
+          },
+        },
+      ],
+    });
+  });
+
   it("should return 402 with payment requirements when no payment header is present", async () => {
-    mockRequest.headers.set("Accept", "application/json");
-    const response = await middleware(mockRequest);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        Accept: "application/json",
+      }),
+    } as NextRequest;
+    const response = await middleware(request);
 
     expect(response.status).toBe(402);
     const json = (await response.json()) as {
       accepts: Array<{ maxAmountRequired: string }>;
     };
-    expect(json.accepts[0]).toEqual(
-      expect.objectContaining({
-        maxAmountRequired: "1000000000000000000",
-      }),
-    );
+    expect(json.accepts[0]).toEqual({
+      scheme: "exact",
+      network: "base-sepolia",
+      maxAmountRequired: "1000",
+      resource: "https://api.example.com/resource",
+      description: "Test payment",
+      mimeType: "application/json",
+      payTo: "0x1234567890123456789012345678901234567890",
+      maxTimeoutSeconds: 300,
+      outputSchema: { type: "object" },
+      asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      extra: {
+        name: "USDC",
+        version: "2",
+      },
+    });
   });
 
   it("should return HTML paywall for browser requests", async () => {
-    mockRequest.headers.set("Accept", "text/html");
-    mockRequest.headers.set("User-Agent", "Mozilla/5.0");
-    const response = await middleware(mockRequest);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        Accept: "text/html",
+        "User-Agent": "Mozilla/5.0",
+      }),
+    } as NextRequest;
+    const response = await middleware(request);
 
     expect(response.status).toBe(402);
     expect(response.headers.get("Content-Type")).toBe("text/html");
@@ -133,12 +349,17 @@ describe("createPaymentMiddleware()", () => {
 
   it("should verify payment and proceed if valid", async () => {
     const validPayment = "valid-payment-header";
-    mockRequest.headers.set("X-PAYMENT", validPayment);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        "X-PAYMENT": validPayment,
+      }),
+    } as NextRequest;
 
     const decodedPayment = {
       scheme: "exact",
-      network: "base-sepolia",
-      // ... other payment fields
+      network: "base",
+      x402Version: 1,
     };
     mockDecodePayment.mockReturnValue(decodedPayment);
 
@@ -146,34 +367,44 @@ describe("createPaymentMiddleware()", () => {
     (mockSettle as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       transaction: "0x123",
-      network: "base-sepolia",
+      network: "base",
     });
 
-    const response = await middleware(mockRequest);
+    const response = await middleware(request);
 
     expect(mockDecodePayment).toHaveBeenCalledWith(validPayment);
-    expect(mockVerify).toHaveBeenCalledWith(
-      {
-        ...decodedPayment,
-        x402Version: 1,
+    expect(mockVerify).toHaveBeenCalledWith(decodedPayment, {
+      scheme: "exact",
+      network: "base-sepolia",
+      maxAmountRequired: "1000",
+      resource: "https://api.example.com/resource",
+      description: "Test payment",
+      mimeType: "application/json",
+      payTo: "0x1234567890123456789012345678901234567890",
+      maxTimeoutSeconds: 300,
+      outputSchema: { type: "object" },
+      asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      extra: {
+        name: "USDC",
+        version: "2",
       },
-      expect.objectContaining({
-        scheme: "exact",
-        network: "base-sepolia",
-        asset: "0xCustomAssetAddress",
-      }),
-    );
+    });
     expect(response.status).toBe(200);
     expect(response.headers.get("X-PAYMENT-RESPONSE")).toBeDefined();
   });
 
   it("should return 402 if payment verification fails", async () => {
     const invalidPayment = "invalid-payment-header";
-    mockRequest.headers.set("X-PAYMENT", invalidPayment);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        "X-PAYMENT": invalidPayment,
+      }),
+    } as NextRequest;
 
     const decodedPayment = {
       scheme: "exact",
-      network: "base-sepolia",
+      network: "base",
       // ... other payment fields
     };
     mockDecodePayment.mockReturnValue(decodedPayment);
@@ -183,31 +414,47 @@ describe("createPaymentMiddleware()", () => {
       invalidReason: "insufficient_funds",
     });
 
-    const response = await middleware(mockRequest);
+    const response = await middleware(request);
 
     expect(response.status).toBe(402);
     const json = await response.json();
     expect(json).toEqual({
+      x402Version: 1,
       error: "insufficient_funds",
-      accepts: expect.arrayContaining([
-        expect.objectContaining({
+      accepts: [
+        {
           scheme: "exact",
           network: "base-sepolia",
-          asset: "0xCustomAssetAddress",
-        }),
-      ]),
-      x402Version: 1,
+          maxAmountRequired: "1000",
+          resource: "https://api.example.com/resource",
+          description: "Test payment",
+          mimeType: "application/json",
+          payTo: "0x1234567890123456789012345678901234567890",
+          maxTimeoutSeconds: 300,
+          outputSchema: { type: "object" },
+          asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          extra: {
+            name: "USDC",
+            version: "2",
+          },
+        },
+      ],
     });
   });
 
   it("should handle settlement after response", async () => {
     const validPayment = "valid-payment-header";
-    mockRequest.headers.set("X-PAYMENT", validPayment);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        "X-PAYMENT": validPayment,
+      }),
+    } as NextRequest;
 
     const decodedPayment = {
       scheme: "exact",
-      network: "base-sepolia",
-      // ... other payment fields
+      network: "base",
+      x402Version: 1,
     };
     mockDecodePayment.mockReturnValue(decodedPayment);
 
@@ -215,32 +462,42 @@ describe("createPaymentMiddleware()", () => {
     (mockSettle as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       transaction: "0x123",
-      network: "base-sepolia",
+      network: "base",
     });
 
-    const response = await middleware(mockRequest);
+    const response = await middleware(request);
 
-    expect(mockSettle).toHaveBeenCalledWith(
-      {
-        ...decodedPayment,
-        x402Version: 1,
+    expect(mockSettle).toHaveBeenCalledWith(decodedPayment, {
+      scheme: "exact",
+      network: "base-sepolia",
+      maxAmountRequired: "1000",
+      resource: "https://api.example.com/resource",
+      description: "Test payment",
+      mimeType: "application/json",
+      payTo: "0x1234567890123456789012345678901234567890",
+      maxTimeoutSeconds: 300,
+      outputSchema: { type: "object" },
+      asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      extra: {
+        name: "USDC",
+        version: "2",
       },
-      expect.objectContaining({
-        scheme: "exact",
-        network: "base-sepolia",
-        asset: "0xCustomAssetAddress",
-      }),
-    );
+    });
     expect(response.headers.get("X-PAYMENT-RESPONSE")).toBeDefined();
   });
 
   it("should handle settlement failure", async () => {
     const validPayment = "valid-payment-header";
-    mockRequest.headers.set("X-PAYMENT", validPayment);
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        "X-PAYMENT": validPayment,
+      }),
+    } as NextRequest;
 
     const decodedPayment = {
       scheme: "exact",
-      network: "base-sepolia",
+      network: "base",
       // ... other payment fields
     };
     mockDecodePayment.mockReturnValue(decodedPayment);
@@ -248,66 +505,131 @@ describe("createPaymentMiddleware()", () => {
     (mockVerify as ReturnType<typeof vi.fn>).mockResolvedValue({ isValid: true });
     (mockSettle as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Settlement failed"));
 
-    const response = await middleware(mockRequest);
+    const response = await middleware(request);
 
     expect(response.status).toBe(402);
     const json = await response.json();
     expect(json).toEqual({
+      x402Version: 1,
       error: expect.any(Object),
-      accepts: expect.arrayContaining([
-        expect.objectContaining({
+      accepts: [
+        {
           scheme: "exact",
           network: "base-sepolia",
-          asset: "0xCustomAssetAddress",
-        }),
-      ]),
-      x402Version: 1,
+          maxAmountRequired: "1000",
+          resource: "https://api.example.com/resource",
+          description: "Test payment",
+          mimeType: "application/json",
+          payTo: "0x1234567890123456789012345678901234567890",
+          maxTimeoutSeconds: 300,
+          outputSchema: { type: "object" },
+          asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          extra: {
+            name: "USDC",
+            version: "2",
+          },
+        },
+      ],
     });
   });
 
   it("should handle invalid payment amount configuration", async () => {
-    middleware = createPaymentMiddleware({
-      ...globalConfig,
-      routes: {
+    middleware = paymentMiddleware(
+      payToAddress,
+      {
         "/protected/*": {
-          amount: "invalid",
+          price: "invalid",
+          network: "base-sepolia",
           config: middlewareConfig,
         },
       },
-    });
+      facilitatorConfig,
+    );
 
-    const response = await middleware(mockRequest);
+    const request = {
+      ...mockRequest,
+      headers: new Headers(),
+    } as NextRequest;
 
-    expect(response.status).toBe(500);
-    const text = await response.text();
-    expect(text).toBe("Invalid payment configuration");
-  });
+    const response = await middleware(request);
 
-  it("should use default USDC address and decimals when asset is not configured", async () => {
-    middleware = createPaymentMiddleware({
-      ...globalConfig,
-      routes: {
-        "/protected/*": {
-          amount: 1.0,
-          config: {
-            ...middlewareConfig,
-            asset: undefined,
+    expect(response.status).toBe(402);
+    const json = await response.json();
+    expect(json).toEqual({
+      x402Version: 1,
+      error: "X-PAYMENT header is required",
+      accepts: [
+        {
+          scheme: "exact",
+          network: "base-sepolia",
+          maxAmountRequired: "1000",
+          resource: "https://api.example.com/resource",
+          description: "Test payment",
+          mimeType: "application/json",
+          payTo: "0x1234567890123456789012345678901234567890",
+          maxTimeoutSeconds: 300,
+          outputSchema: { type: "object" },
+          asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          extra: {
+            name: "USDC",
+            version: "2",
           },
         },
-      },
+      ],
     });
+  });
 
-    mockRequest.headers.set("Accept", "application/json");
-    const response = await middleware(mockRequest);
+  it("should handle custom token amounts", async () => {
+    middleware = paymentMiddleware(
+      payToAddress,
+      {
+        "/protected/*": {
+          price: {
+            amount: "1000000000000000000",
+            asset: {
+              address: "0xCustomAssetAddress",
+              decimals: 18,
+              eip712: {
+                name: "Custom Token",
+                version: "1.0",
+              },
+            },
+          },
+          network: "base",
+          config: middlewareConfig,
+        },
+      },
+      facilitatorConfig,
+    );
+
+    const request = {
+      ...mockRequest,
+      headers: new Headers({
+        Accept: "application/json",
+      }),
+    } as NextRequest;
+
+    const response = await middleware(request);
 
     expect(response.status).toBe(402);
     const json = (await response.json()) as {
       accepts: Array<{ maxAmountRequired: string }>;
     };
-    expect(json.accepts[0]).toEqual(
-      expect.objectContaining({
-        maxAmountRequired: "1000000",
-      }),
-    );
+    expect(json.accepts[0]).toEqual({
+      scheme: "exact",
+      network: "base-sepolia",
+      maxAmountRequired: "1000",
+      resource: "https://api.example.com/resource",
+      description: "Test payment",
+      mimeType: "application/json",
+      payTo: "0x1234567890123456789012345678901234567890",
+      maxTimeoutSeconds: 300,
+      outputSchema: { type: "object" },
+      asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      extra: {
+        name: "USDC",
+        version: "2",
+      },
+    });
   });
 });

@@ -1,19 +1,25 @@
 import { Address } from "viem";
-import { createPaymentMiddleware, Network, Resource } from "x402-next";
+import { paymentMiddleware, Network, Resource } from "x402-next";
 
-export const middleware = createPaymentMiddleware({
-  facilitatorUrl: process.env.NEXT_PUBLIC_FACILITATOR_URL as Resource,
-  address: process.env.RESOURCE_WALLET_ADDRESS as Address,
-  network: process.env.NETWORK as Network,
-  routes: {
+const facilitatorUrl = process.env.NEXT_PUBLIC_FACILITATOR_URL as Resource;
+const payToAddress = process.env.RESOURCE_WALLET_ADDRESS as Address;
+const network = process.env.NETWORK as Network;
+
+export const middleware = paymentMiddleware(
+  payToAddress,
+  {
     "/protected": {
-      amount: "$0.01",
+      price: "$0.01",
+      network,
       config: {
         description: "Access to protected content",
       },
     },
   },
-});
+  {
+    url: facilitatorUrl,
+  },
+);
 
 // Configure which paths the middleware should run on
 export const config = {

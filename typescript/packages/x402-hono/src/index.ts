@@ -1,16 +1,19 @@
-import type { MiddlewareHandler } from "hono";
+import type { Context } from "hono";
+import { Address } from "viem";
 import { exact } from "x402/schemes";
-import { getNetworkId, getPaywallHtml, toJsonSafe } from "x402/shared";
-import { getUsdcAddressForChain } from "x402/shared/evm";
 import {
-  GlobalConfig,
-  Money,
-  moneySchema,
-  PaymentMiddlewareConfig,
+  computeRoutePatterns,
+  findMatchingRoute,
+  getPaywallHtml,
+  processPriceToAtomicAmount,
+  toJsonSafe,
+} from "x402/shared";
+import {
+  FacilitatorConfig,
   PaymentPayload,
   PaymentRequirements,
   Resource,
-  settleResponseHeader,
+  RoutesConfig,
 } from "x402/types";
 import { useFacilitator } from "x402/verify";
 
@@ -24,184 +27,175 @@ import { useFacilitator } from "x402/verify";
  * 4. Verifies and settles payments
  * 5. Sets appropriate response headers
  *
- * @param globalConfig - Global configuration for the payment middleware
- * @param globalConfig.facilitatorUrl - URL of the payment facilitator service
- * @param globalConfig.address - Address to receive payments
- * @param globalConfig.network - Network identifier (e.g. 'base-sepolia')
- * @param globalConfig.createAuthHeaders - Function to create creates for the payment facilitator service..
+ * @param payToAddress - Address to receive payments
+ * @param routes - Route configuration for payment amounts
+ * @param facilitator - Configuration for the payment facilitator service
  *
  * @returns A function that creates a Hono middleware handler for a specific payment amount
  *
  * @example
  * ```typescript
- * const middleware = configurePaymentMiddleware({
- *   facilitatorUrl: 'https://facilitator.example.com',
- *   address: '0x123...',
- *   network: 'base-sepolia'
- * })(1.0, {
- *   description: 'Access to premium content',
- *   mimeType: 'application/json'
- * });
+ * const middleware = paymentMiddleware(
+ *   '0x123...',
+ *   {
+ *     '/premium/*': {
+ *       price: '$0.01',
+ *       network: 'base'
+ *     }
+ *   },
+ *   {
+ *     url: 'https://facilitator.example.com',
+ *     createAuthHeaders: async () => ({
+ *       verify: { "Authorization": "Bearer token" },
+ *       settle: { "Authorization": "Bearer token" }
+ *     })
+ *   }
+ * );
  *
  * app.use('/premium', middleware);
  * ```
  */
-export function configurePaymentMiddleware(globalConfig: GlobalConfig) {
-  const { facilitatorUrl, address, network, createAuthHeaders } = globalConfig;
-  const { verify, settle } = useFacilitator(facilitatorUrl, createAuthHeaders);
+export function paymentMiddleware(
+  payToAddress: Address,
+  routes: RoutesConfig,
+  facilitator?: FacilitatorConfig,
+) {
+  const { verify, settle } = useFacilitator(facilitator);
   const x402Version = 1;
 
-  return function paymentMiddleware(
-    amount: Money,
-    config: PaymentMiddlewareConfig = {},
-  ): MiddlewareHandler {
-    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
-      config;
+  // Pre-compile route patterns to regex and extract verbs
+  const routePatterns = computeRoutePatterns(routes);
 
-    const asset = config.asset ?? {
-      address: getUsdcAddressForChain(getNetworkId(network)),
-      decimals: 6,
-      eip712: {
-        name: "USDC",
-        version: "2",
-      },
-    };
-
-    const parsedAmount = moneySchema.safeParse(amount);
-    if (!parsedAmount.success) {
-      throw new Error(
-        `Invalid amount (amount: ${amount}). Must be in the form "$3.10", 0.10, "0.001", ${parsedAmount.error}`,
-      );
+  return async function paymentMiddleware(c: Context, next: () => Promise<void>) {
+    const matchingRoute = findMatchingRoute(routePatterns, c.req.path, c.req.method.toUpperCase());
+    if (!matchingRoute) {
+      return next();
     }
-    const parsedUsdAmount = parsedAmount.data;
-    const maxAmountRequired = parsedUsdAmount * 10 ** asset.decimals;
 
-    return async (c, next) => {
-      let resourceUrl = resource || (c.req.url as Resource);
-      const paymentRequirements: PaymentRequirements[] = [
+    const { price, network } = matchingRoute.config;
+    const { description, mimeType, maxTimeoutSeconds, outputSchema, customPaywallHtml, resource } =
+      matchingRoute.config.config || {};
+
+    const atomicAmountForAsset = processPriceToAtomicAmount(price, network);
+    if ("error" in atomicAmountForAsset) {
+      throw new Error(atomicAmountForAsset.error);
+    }
+    const { maxAmountRequired, asset } = atomicAmountForAsset;
+
+    const resourceUrl: Resource = resource || (c.req.url as Resource);
+
+    const paymentRequirements: PaymentRequirements[] = [
+      {
+        scheme: "exact",
+        network,
+        maxAmountRequired,
+        resource: resourceUrl,
+        description: description ?? "",
+        mimeType: mimeType ?? "application/json",
+        payTo: payToAddress,
+        maxTimeoutSeconds: maxTimeoutSeconds ?? 300,
+        asset: asset?.address ?? "",
+        outputSchema,
+        extra: asset?.eip712,
+      },
+    ];
+
+    const payment = c.req.header("X-PAYMENT");
+    const userAgent = c.req.header("User-Agent") || "";
+    const acceptHeader = c.req.header("Accept") || "";
+    const isWebBrowser = acceptHeader.includes("text/html") && userAgent.includes("Mozilla");
+
+    if (!payment) {
+      if (isWebBrowser) {
+        const displayAmount =
+          typeof price === "string" || typeof price === "number"
+            ? Number(price)
+            : Number(price.amount) / 10 ** price.asset.decimals;
+        const html =
+          customPaywallHtml ??
+          getPaywallHtml({
+            amount: displayAmount,
+            paymentRequirements: toJsonSafe(paymentRequirements) as Parameters<
+              typeof getPaywallHtml
+            >[0]["paymentRequirements"],
+            currentUrl: c.req.path,
+            testnet: network === "base-sepolia",
+          });
+        return c.html(html, 402);
+      }
+      return c.json(
         {
-          scheme: "exact",
-          network,
-          maxAmountRequired: maxAmountRequired.toString(),
-          resource: resourceUrl,
-          description: description ?? "",
-          mimeType: mimeType ?? "",
-          payTo: address,
-          maxTimeoutSeconds: maxTimeoutSeconds ?? 60,
-          asset: asset.address,
-          outputSchema: outputSchema || undefined,
-          extra: {
-            name: asset.eip712.name,
-            version: asset.eip712.version,
-          },
-        },
-      ];
-
-      const payment = c.req.header("X-PAYMENT");
-      const userAgent = c.req.header("User-Agent") || "";
-      const acceptHeader = c.req.header("Accept") || "";
-      const isWebBrowser = acceptHeader.includes("text/html") && userAgent.includes("Mozilla");
-
-      if (!payment) {
-        // If it's a browser request, serve the paywall page
-        if (isWebBrowser) {
-          const html =
-            customPaywallHtml ||
-            getPaywallHtml({
-              amount: parsedAmount.data,
-              paymentRequirements: toJsonSafe(paymentRequirements) as Parameters<
-                typeof getPaywallHtml
-              >[0]["paymentRequirements"],
-              currentUrl: c.req.url,
-              testnet: network == "base-sepolia",
-            });
-
-          return c.html(html, 402);
-        }
-
-        // For API requests, return JSON with payment details
-        return c.json(
-          {
-            error: "X-PAYMENT header is required",
-            accepts: toJsonSafe(paymentRequirements),
-            x402Version: 1,
-          },
-          402,
-        );
-      }
-
-      let decodedPayment: PaymentPayload;
-      try {
-        decodedPayment = exact.evm.decodePayment(payment);
-      } catch (error) {
-        return c.json(
-          {
-            x402Version,
-            error: error || "Invalid or malformed payment header",
-            accepts: toJsonSafe(paymentRequirements),
-          },
-          402,
-        );
-      }
-
-      const selectedPaymentRequirements = paymentRequirements.find(
-        value => value.scheme === decodedPayment.scheme && value.network === decodedPayment.network,
-      );
-      if (!selectedPaymentRequirements) {
-        return c.json(
-          {
-            x402Version,
-            error: "Unable to find matching payment requirements",
-            accepts: toJsonSafe(paymentRequirements),
-          },
-          402,
-        );
-      }
-
-      const response = await verify(
-        {
-          ...decodedPayment,
+          error: "X-PAYMENT header is required",
+          accepts: paymentRequirements,
           x402Version,
         },
-        selectedPaymentRequirements,
+        402,
       );
-      if (!response.isValid) {
-        return c.json(
-          {
-            x402Version,
-            error: response.invalidReason,
-            accepts: toJsonSafe(paymentRequirements),
-            payerAddress: response.payerAddress,
-          },
-          402,
+    }
+
+    // Verify payment
+    let decodedPayment: PaymentPayload;
+    try {
+      decodedPayment = exact.evm.decodePayment(payment);
+    } catch (error) {
+      return c.json(
+        {
+          error: error instanceof Error ? error : new Error("Invalid or malformed payment header"),
+          accepts: paymentRequirements,
+          x402Version,
+        },
+        402,
+      );
+    }
+
+    const verification = await verify(decodedPayment, paymentRequirements[0]);
+
+    if (!verification.isValid) {
+      return c.json(
+        {
+          error: new Error(verification.invalidReason),
+          accepts: paymentRequirements,
+          x402Version,
+        },
+        402,
+      );
+    }
+
+    // Proceed with request
+    await next();
+
+    // Settle payment after response
+    try {
+      const settlement = await settle(decodedPayment, paymentRequirements[0]);
+
+      if (settlement.success) {
+        c.header(
+          "X-PAYMENT-RESPONSE",
+          JSON.stringify({
+            success: true,
+            transaction: settlement.transaction,
+            network: settlement.network,
+          }),
         );
       }
-
-      await next();
-
-      try {
-        const settleResponse = await settle(
-          {
-            ...decodedPayment,
-            x402Version,
-          },
-          selectedPaymentRequirements,
-        );
-        const responseHeader = settleResponseHeader(settleResponse);
-
-        c.header("X-PAYMENT-RESPONSE", responseHeader);
-      } catch (error) {
-        c.res = c.json(
-          {
-            x402Version,
-            error: error || "Failed to settle payment",
-            accepts: toJsonSafe(paymentRequirements),
-          },
-          402,
-        );
-      }
-    };
+    } catch (error) {
+      return c.json(
+        {
+          error: error instanceof Error ? error : new Error("Failed to settle payment"),
+          accepts: paymentRequirements,
+          x402Version,
+        },
+        402,
+      );
+    }
   };
 }
 
-export type { Resource, Network, GlobalConfig, PaymentMiddlewareConfig, Money } from "x402/types";
+export type {
+  Money,
+  Network,
+  PaymentMiddlewareConfig,
+  Resource,
+  RouteConfig,
+  RoutesConfig,
+} from "x402/types";

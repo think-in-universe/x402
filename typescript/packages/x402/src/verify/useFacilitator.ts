@@ -1,12 +1,14 @@
+import axios from "axios";
+import { toJsonSafe } from "../shared";
+import { FacilitatorConfig } from "../types";
 import {
   PaymentPayload,
   PaymentRequirements,
   SettleResponse,
   VerifyResponse,
 } from "../types/verify";
-import axios from "axios";
-import { toJsonSafe } from "../shared";
-import { Resource } from "../types";
+
+const DEFAULT_FACILITATOR_URL = "https://x402.org/facilitator";
 
 export type CreateHeaders = () => Promise<{
   verify: Record<string, string>;
@@ -16,14 +18,10 @@ export type CreateHeaders = () => Promise<{
 /**
  * Creates a facilitator client for interacting with the X402 payment facilitator service
  *
- * @param url - The base URL of the facilitator service (defaults to "https://x402.org/facilitator")
- * @param createAuthHeaders - Optional function to create an auth header for the facilitator service. If using Coinbase's facilitator, use the createAuthHeaders function.
+ * @param facilitator - The facilitator config to use. If not provided, the default facilitator will be used.
  * @returns An object containing verify and settle functions for interacting with the facilitator
  */
-export function useFacilitator(
-  url: Resource = "https://x402.org/facilitator",
-  createAuthHeaders?: CreateHeaders,
-) {
+export function useFacilitator(facilitator?: FacilitatorConfig) {
   /**
    * Verifies a payment payload with the facilitator service
    *
@@ -35,6 +33,8 @@ export function useFacilitator(
     payload: PaymentPayload,
     paymentRequirements: PaymentRequirements,
   ): Promise<VerifyResponse> {
+    const url = facilitator?.url || DEFAULT_FACILITATOR_URL;
+
     const res = await axios.post(
       `${url}/verify`,
       {
@@ -43,7 +43,9 @@ export function useFacilitator(
         paymentRequirements: toJsonSafe(paymentRequirements),
       },
       {
-        headers: createAuthHeaders ? (await createAuthHeaders()).verify : undefined,
+        headers: facilitator?.createAuthHeaders
+          ? (await facilitator.createAuthHeaders()).verify
+          : undefined,
       },
     );
 
@@ -65,6 +67,8 @@ export function useFacilitator(
     payload: PaymentPayload,
     paymentRequirements: PaymentRequirements,
   ): Promise<SettleResponse> {
+    const url = facilitator?.url || DEFAULT_FACILITATOR_URL;
+
     const res = await axios.post(
       `${url}/settle`,
       {
@@ -73,7 +77,9 @@ export function useFacilitator(
         paymentRequirements: toJsonSafe(paymentRequirements),
       },
       {
-        headers: createAuthHeaders ? (await createAuthHeaders()).settle : undefined,
+        headers: facilitator?.createAuthHeaders
+          ? (await facilitator.createAuthHeaders()).settle
+          : undefined,
       },
     );
 
