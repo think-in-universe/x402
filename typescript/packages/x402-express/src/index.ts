@@ -183,7 +183,7 @@ export function paymentMiddleware(
           x402Version,
           error: response.invalidReason,
           accepts: toJsonSafe(paymentRequirements),
-          payerAddress: response.payerAddress,
+          payer: response.payer,
         });
         return;
       }

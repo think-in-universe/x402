@@ -155,6 +155,7 @@ export function paymentMiddleware(
         {
           error: new Error(verification.invalidReason),
           accepts: paymentRequirements,
+          payer: verification.payer,
           x402Version,
         },
         402,

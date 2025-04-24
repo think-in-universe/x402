@@ -37,6 +37,7 @@ export async function verify<
   return {
     isValid: false,
     invalidReason: "invalid_scheme",
+    payer: payload.payload.authorization.from,
   };
 }
 
@@ -66,6 +67,7 @@ export async function settle<transport extends Transport, chain extends Chain>(
     errorReason: "invalid_scheme",
     transaction: "",
     network: paymentRequirements.network,
+    payer: payload.payload.authorization.from,
   };
 }
 
