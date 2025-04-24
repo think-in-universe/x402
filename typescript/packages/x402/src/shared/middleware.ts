@@ -1,4 +1,4 @@
-import { moneySchema, Network, Price, RouteConfig, RoutePattern, TokenAmount } from "../types";
+import { moneySchema, Network, Price, RouteConfig, RoutePattern, ERC20TokenAmount } from "../types";
 import { RoutesConfig } from "../types";
 import { getUsdcAddressForChain } from "./evm";
 import { getNetworkId } from "./network";
@@ -97,10 +97,10 @@ export function getDefaultAsset(network: Network) {
 export function processPriceToAtomicAmount(
   price: Price,
   network: Network,
-): { maxAmountRequired: string; asset: TokenAmount["asset"] } | { error: string } {
-  // Handle USDC amount (string) or token amount (TokenAmount)
+): { maxAmountRequired: string; asset: ERC20TokenAmount["asset"] } | { error: string } {
+  // Handle USDC amount (string) or token amount (ERC20TokenAmount)
   let maxAmountRequired: string;
-  let asset: TokenAmount["asset"];
+  let asset: ERC20TokenAmount["asset"];
 
   if (typeof price === "string" || typeof price === "number") {
     // USDC amount in dollars

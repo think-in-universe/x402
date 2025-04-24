@@ -17,7 +17,7 @@ export type PaymentMiddlewareConfig = {
   resource?: Resource;
 };
 
-export interface TokenAmount {
+export interface ERC20TokenAmount {
   amount: string;
   asset: {
     address: `0x${string}`;
@@ -29,7 +29,7 @@ export interface TokenAmount {
   };
 }
 
-export type Price = Money | TokenAmount;
+export type Price = Money | ERC20TokenAmount;
 
 export interface RouteConfig {
   price: Price;
