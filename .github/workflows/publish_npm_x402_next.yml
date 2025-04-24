@@ -1,10 +1,10 @@
-name: Publish x402 base package to NPM
+name: Publish x402-next package to NPM
 
 on:
   workflow_dispatch:
 
 jobs:
-  publish-npm-x402:
+  publish-npm-x402-next:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'npm' || '' }}
     permissions:
@@ -12,27 +12,21 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup pnpm
-        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
-        with:
-          version: 10.7.0
-      
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
-          cache: "pnpm"
-          cache-dependency-path: ./typescript
-      
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+        with:
+          version: 10.7.0
       - name: Install and build
         working-directory: ./typescript
         run: |
           pnpm install --frozen-lockfile
-          pnpm -r --filter=x402 run build
-      
-      - name: Publish x402 package
-        working-directory: ./typescript/packages/x402
+          pnpm -r --filter=x402-next run build
+          
+      - name: Publish x402-next package
+        working-directory: ./typescript/packages/x402-next
         run: |
           # Get package information directly
           PACKAGE_NAME=$(node -p "require('./package.json').name")
@@ -49,4 +43,4 @@ jobs:
             pnpm publish --dry-run --no-git-checks
           fi
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_X402 }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_X402_NEXT }} 
