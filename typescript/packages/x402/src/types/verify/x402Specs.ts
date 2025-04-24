@@ -63,7 +63,7 @@ export type UnsignedPaymentPayload = Omit<PaymentPayload, "payload"> & {
 export const VerifyResponseSchema = z.object({
   isValid: z.boolean(),
   invalidReason: z.enum(ErrorReasons).optional(),
-  payerAddress: z.string().regex(MixedAddressRegex).optional(),
+  payer: z.string().regex(MixedAddressRegex).optional(),
 });
 export type VerifyResponse = z.infer<typeof VerifyResponseSchema>;
 
@@ -71,6 +71,7 @@ export type VerifyResponse = z.infer<typeof VerifyResponseSchema>;
 export const SettleResponseSchema = z.object({
   success: z.boolean(),
   errorReason: z.enum(ErrorReasons).optional(),
+  payer: z.string().regex(MixedAddressRegex).optional(),
   transaction: z.string().regex(MixedAddressRegex),
   network: NetworkSchema,
 });

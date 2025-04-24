@@ -175,6 +175,7 @@ export function paymentMiddleware(
           x402Version,
           error: verification.invalidReason,
           accepts: paymentRequirements,
+          payer: verification.payer,
         }),
         { status: 402, headers: { "Content-Type": "application/json" } },
       );
@@ -194,6 +195,7 @@ export function paymentMiddleware(
             success: true,
             transaction: settlement.transaction,
             network: settlement.network,
+            payer: settlement.payer,
           }),
         );
       }
