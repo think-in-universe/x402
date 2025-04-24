@@ -288,7 +288,7 @@ export function getPaywallHtml({
   }
 
   window.x402.utils.signAuthorization = async (walletClient, authorizationParameters, paymentRequirements, publicClient) => {
-    const chainId = getNetworkId(paymentRequirements.network);
+    const chainId = window.x402.utils.getNetworkId(paymentRequirements.network);
     const name = paymentRequirements.extra?.name ?? window.x402.config.chainConfig[chainId].usdcName;
     const erc20Address = paymentRequirements.asset;
     const version = paymentRequirements.extra?.version ?? await window.x402.utils.getVersion(publicClient, erc20Address);
@@ -326,7 +326,7 @@ export function getPaywallHtml({
     }
 
     const nonce = window.x402.utils.createNonce();
-    const version = await window.x402.utils.getVersion(publicClient, window.x402.utils.getUsdcAddressForChain(getNetworkId(window.x402.paymentRequirements.network)));
+    const version = await window.x402.utils.getVersion(publicClient, window.x402.utils.getUsdcAddressForChain(window.x402.utils.getNetworkId(window.x402.paymentRequirements.network)));
     const from = client.account.address;
 
     const validAfter = BigInt(
