@@ -97,7 +97,8 @@ export function paymentMiddleware(
     }
     const { maxAmountRequired, asset } = atomicAmountForAsset;
 
-    const resourceUrl: Resource = resource || (`${req.protocol}://${req.headers.host}${req.originalUrl}` as Resource);
+    const resourceUrl: Resource =
+      resource || (`${req.protocol}://${req.headers.host}${req.originalUrl}` as Resource);
 
     const paymentRequirements: PaymentRequirements[] = [
       {
