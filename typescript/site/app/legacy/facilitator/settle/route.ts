@@ -11,8 +11,6 @@ type SettleRequest = {
   details: PaymentDetails;
 };
 
-const wallet = evm.wallet.createSignerSepolia(process.env.PRIVATE_KEY as Hex);
-
 /**
  * Settles a payment request using the legacy x402 protocol. This endpoint processes
  * the payment and returns the settlement result.
@@ -30,6 +28,7 @@ const wallet = evm.wallet.createSignerSepolia(process.env.PRIVATE_KEY as Hex);
  */
 export async function POST(req: Request) {
   const body: SettleRequest = await req.json();
+  const wallet = evm.wallet.createSignerSepolia(process.env.PRIVATE_KEY as Hex);
 
   const paymentDetails = paymentDetailsSchema.parse(body.details);
 

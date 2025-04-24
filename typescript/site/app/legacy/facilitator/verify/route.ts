@@ -10,8 +10,6 @@ type VerifyRequest = {
   details: PaymentDetails;
 };
 
-const client = evm.wallet.createClientSepolia();
-
 /**
  * Verifies a payment request using the legacy x402 protocol. This endpoint checks if a payment header
  * is valid for the given payment details.
@@ -29,9 +27,11 @@ const client = evm.wallet.createClientSepolia();
  */
 export async function POST(req: Request) {
   const body: VerifyRequest = await req.json();
+  const client = evm.wallet.createClientSepolia();
 
   const paymentDetails = paymentDetailsSchema.parse(body.details);
 
+  // @ts-expect-error infinite instantiation
   const valid = await verify(client, body.payload, paymentDetails);
 
   return Response.json(valid);
