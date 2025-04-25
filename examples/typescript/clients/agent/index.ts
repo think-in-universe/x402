@@ -3,7 +3,7 @@ import { baseSepolia } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { Hex } from "viem";
 import Anthropic from "@anthropic-ai/sdk";
-import { fetchWithPayment } from "x402-fetch";
+import { wrapFetchWithPayment } from "x402-fetch";
 import { config } from "dotenv";
 
 config();
@@ -24,7 +24,7 @@ const wallet = createWalletClient({
 const anthropic = new Anthropic({
   baseURL: RESOURCE_SERVER_URL,
   apiKey: "not needed",
-  fetch: fetchWithPayment(fetch, wallet),
+  fetch: wrapFetchWithPayment(fetch, wallet),
 });
 
 const msg = await anthropic.messages.create({

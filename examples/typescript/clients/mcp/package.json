@@ -12,7 +12,6 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.9.0",
     "axios": "^1.8.4",
-    "dotenv": "^16.4.7",
     "viem": "^2.26.2",
     "x402-axios": "workspace:*",
     "zod": "^3.24.2"

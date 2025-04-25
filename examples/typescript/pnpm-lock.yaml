@@ -588,9 +588,6 @@ importers:
       axios:
         specifier: ^1.8.4
         version: 1.8.4
-      dotenv:
-        specifier: ^16.4.7
-        version: 16.5.0
       viem:
         specifier: ^2.26.2
         version: 2.27.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.3)

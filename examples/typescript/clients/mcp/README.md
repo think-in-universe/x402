@@ -42,10 +42,17 @@ ENDPOINT_PATH=/weather
 {
   "mcpServers": {
     "demo": {
-      "command": "npm",
-      "args": ["--prefix", "<absolute path to this repo>/example", "run", "mcp:local"],
+      "command": "pnpm",
+      "args": [
+        "--silent",
+        "-C",
+        "<absolute path to this repo>/examples/typescript/clients/mcp",
+        "dev"
+      ],
       "env": {
-        "PRIVATE_KEY": "<private key of a wallet with USDC on Base Sepolia>"
+        "PRIVATE_KEY": "<private key of a wallet with USDC on Base Sepolia>",
+        "RESOURCE_SERVER_URL": "<resource server>",
+        "ENDPOINT_PATH": "</path/to/api>"
       }
     }
   }

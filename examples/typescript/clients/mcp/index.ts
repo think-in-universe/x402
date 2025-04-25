@@ -35,7 +35,7 @@ const server = new McpServer({
 
 // Add an addition tool
 server.tool("get-data-from-resource-server", {}, async () => {
-  const res = await client.post(`${ENDPOINT_PATH}`);
+  const res = await client.get(`${ENDPOINT_PATH}`);
   return {
     content: [{ type: "text", text: JSON.stringify(res.data) }],
   };
