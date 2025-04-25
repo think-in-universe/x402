@@ -18,7 +18,7 @@ This example demonstrates how to use x402 to pay for Anthropic API calls using a
 
 1. Navigate to the proxy directory:
    ```bash
-   cd packages/go/x402/bin
+   cd go/bin
    ```
 
 2. Create an `anthropic_config.json` file with the following configuration:
@@ -26,7 +26,7 @@ This example demonstrates how to use x402 to pay for Anthropic API calls using a
    {
      "targetURL": "https://api.anthropic.com",
      "amount": 0.01,
-     "payToAddress": "address to pay to",
+     "payTo": "address to pay to",
      "headers": {
        "x-api-key": "<your-anthropic-api-key>",
        "anthropic-version": "2023-06-01",
@@ -44,25 +44,25 @@ This example demonstrates how to use x402 to pay for Anthropic API calls using a
 
 1. Navigate to the x402 package directory:
    ```bash
-   cd packages/typescript/x402
+   cd typescript/packages/x402
    ```
 
 2. Install dependencies and build the package:
    ```bash
-   npm install
-   npm run build
+   pnpm install
+   pnpm run build
    ```
 
 ### 3. Configure and Run the Agent
 
 1. Navigate to the agent directory:
    ```bash
-   cd ../../../example/agent
+   cd examples/typescript/clients/agent
    ```
 
 2. Install dependencies:
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. Configure your environment:
@@ -77,9 +77,11 @@ This example demonstrates how to use x402 to pay for Anthropic API calls using a
      RESOURCE_SERVER_URL=http://localhost:4021
      ```
 
+ask Carson if it's possible to configure the network or if base-sepolia is the default/hardcoded
+
 4. Run the agent:
    ```bash
-   npm run agent
+   pnpm run agent
    ```
 
 ## Troubleshooting
