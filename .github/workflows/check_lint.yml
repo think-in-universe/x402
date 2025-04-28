@@ -19,7 +19,7 @@ jobs:
         working-directory: ./typescript
         run: |
           pnpm install --frozen-lockfile
-          pnpm run lint
+          pnpm lint:check
 
   check-lint-examples-typescript:
     runs-on: ubuntu-latest
@@ -38,4 +38,4 @@ jobs:
         working-directory: ./examples/typescript
         run: |
           pnpm install --frozen-lockfile
-          pnpm run lint
+          pnpm lint:check
