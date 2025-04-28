@@ -24,7 +24,10 @@ export function getPaywallHtml({
   paymentRequirements,
   currentUrl,
 }: PaywallOptions): string {
-  const selectedPaymentRequirements = selectPaymentRequirements(paymentRequirements);
+  const selectedPaymentRequirements = selectPaymentRequirements(
+    paymentRequirements,
+    testnet ? "base-sepolia" : "base",
+  );
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -477,8 +480,9 @@ export function getPaywallHtml({
         });
 
         if (balance === 0n) {
-          statusDiv.textContent = \`Your USDC balance is 0. Please make sure you have USDC tokens on ${testnet ? "Base Sepolia" : "Base"
-    }.\`;
+          statusDiv.textContent = \`Your USDC balance is 0. Please make sure you have USDC tokens on ${
+            testnet ? "Base Sepolia" : "Base"
+          }.\`;
           return;
         }
 
