@@ -2,7 +2,7 @@ import { createAuthHeader } from "x402/shared";
 import { FacilitatorConfig } from "x402/types";
 import { CreateHeaders } from "x402/verify";
 
-const COINBASE_FACILITATOR_BASE_URL = "https://cloud-api-dev.cbhq.net";
+const COINBASE_FACILITATOR_BASE_URL = "https://api.cdp.coinbase.com";
 const COINBASE_FACILITATOR_V2_ROUTE = "/platform/v2/x402";
 
 /**
