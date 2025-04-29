@@ -35,7 +35,7 @@ You can test the server using one of the example clients:
 
 ### Using the Fetch Client
 ```bash
-cd ../clients/fetch
+cd ../../clients/fetch
 # Ensure .env is setup
 npm install
 npm dev
@@ -43,7 +43,7 @@ npm dev
 
 ### Using the Axios Client
 ```bash
-cd ../clients/axios
+cd ../../clients/axios
 # Ensure .env is setup
 npm install
 npm dev
