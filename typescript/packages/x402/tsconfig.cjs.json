@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.base.cjs.json",
+  "include": [
+    "src/index.ts",
+    "src/shared/index.ts",
+    "src/shared/evm/index.ts",
+    "src/schemes/index.ts",
+    "src/client/index.ts",
+    "src/verify/index.ts",
+    "src/facilitator/index.ts",
+    "src/types/index.ts"
+  ],
+  "exclude": [
+    "src/**/*.test.ts"
+  ],
+  "compilerOptions": {
+    "outDir": "./src/_cjs",
+    "baseUrl": ".",
+    "paths": {
+      "x402/*": [
+        "../x402/src/*"
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.esm.json",
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/**/*.test.ts"
+  ],
+  "compilerOptions": {
+    "outDir": "./src/_esm",
+    "baseUrl": ".",
+    "paths": {
+      "x402/*": [
+        "../x402/src/*"
+      ]
+    }
+  }
+}

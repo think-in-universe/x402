@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.types.json",
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/**/*.test.ts"
+  ],
+  "compilerOptions": {
+    "declarationDir": "./src/_types",
+    "baseUrl": ".",
+    "paths": {
+      "x402/*": [
+        "../x402/src/*"
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.cjs.json",
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/**/*.test.ts"
+  ],
+  "compilerOptions": {
+    "outDir": "./src/_cjs",
+    "baseUrl": ".",
+    "paths": {
+      "x402/*": [
+        "../x402/src/*"
+      ]
+    }
+  }
+}

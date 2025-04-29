@@ -1,6 +1,5 @@
 import { AxiosInstance, AxiosError } from "axios";
-import { PaymentRequirements, PaymentRequirementsSchema } from "x402/types";
-import { evm } from "x402/types";
+import { PaymentRequirements, PaymentRequirementsSchema, evm } from "x402/types";
 import {
   createPaymentHeader,
   PaymentRequirementsSelector,

@@ -2,3 +2,6 @@
 node_modules/
 dist/
 .turbo/
+**/_cjs
+**/_esm
+**/_types

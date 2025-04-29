@@ -7,7 +7,7 @@ import {
 } from "axios";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { evm, PaymentRequirements } from "x402/types";
-import { withPaymentInterceptor } from "./index";
+import { withPaymentInterceptor } from "./index.js";
 
 // Mock the createPaymentHeader function
 vi.mock("x402/client", () => ({
