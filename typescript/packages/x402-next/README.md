@@ -83,20 +83,3 @@ type FacilitatorConfig = {
   createAuthHeaders?: CreateHeaders;  // Optional function to create authentication headers
 };
 ```
-
-## Features
-
-- Route-based payment protection
-- Automatic paywall generation for web browsers
-- Payment verification and settlement
-- Payment receipt in response header
-- Customizable paywall HTML
-- Support for both API routes and page routes
-
-## Error Handling
-
-The middleware will return:
-- 402 status code when payment is required
-- 402 status code when payment verification fails
-- 402 status code when settlement fails
-

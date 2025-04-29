@@ -88,19 +88,3 @@ type FacilitatorConfig = {
   createAuthHeaders?: CreateHeaders;  // Optional function to create authentication headers
 };
 ```
-
-## Features
-
-- Payment verification and settlement
-- Automatic paywall generation for web browsers
-- Payment receipt in response header
-- Customizable paywall HTML
-- Seamless integration with Hono's middleware system
-- Support for both API and web browser requests
-
-## Error Handling
-
-The middleware will return:
-- 402 status code when payment is required
-- 402 status code when payment verification fails
-- 402 status code when settlement fails
