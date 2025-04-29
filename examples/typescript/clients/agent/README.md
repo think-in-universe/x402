@@ -26,7 +26,7 @@ This example demonstrates how to use x402 to pay for Anthropic API calls using a
    {
      "targetURL": "https://api.anthropic.com",
      "amount": 0.01,
-     "payToAddress": "address to pay to",
+     "payTo": "address to pay to",
      "headers": {
        "x-api-key": "<your-anthropic-api-key>",
        "anthropic-version": "2023-06-01",
