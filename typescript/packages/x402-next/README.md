@@ -40,7 +40,7 @@ export const config = {
 
 The `paymentMiddleware` function accepts three parameters:
 
-1. `payToAddress`: Your receiving address (`0x${string}`)
+1. `payTo`: Your receiving address (`0x${string}`)
 2. `routes`: Route configurations for protected endpoints
 3. `facilitator`: (Optional) Configuration for the x402 facilitator service
 
