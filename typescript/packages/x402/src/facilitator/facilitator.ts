@@ -1,12 +1,12 @@
-import { verify as verifyExact, settle as settleExact } from "../schemes/exact/evm";
-import { SupportedEVMNetworks } from "../types/shared";
-import { ConnectedClient, SignerWallet } from "../types/shared/evm";
+import { verify as verifyExact, settle as settleExact } from "../schemes/exact/evm/index.js";
+import { SupportedEVMNetworks } from "../types/shared/index.js";
+import { ConnectedClient, SignerWallet } from "../types/shared/evm/index.js";
 import {
   PaymentPayload,
   PaymentRequirements,
   SettleResponse,
   VerifyResponse,
-} from "../types/verify";
+} from "../types/verify/index.js";
 import { Chain, Transport, Account } from "viem";
 
 /**

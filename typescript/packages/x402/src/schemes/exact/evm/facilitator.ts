@@ -1,20 +1,20 @@
 import { Account, Address, Chain, Hex, Transport, verifyTypedData } from "viem";
-import { getNetworkId } from "../../../shared";
-import { getVersion, getERC20Balance } from "../../../shared/evm";
+import { getNetworkId } from "../../../shared/network.js";
+import { getVersion, getERC20Balance } from "../../../shared/evm/index.js";
 import {
   usdcABI as abi,
   authorizationTypes,
   config,
   ConnectedClient,
   SignerWallet,
-} from "../../../types/shared/evm";
+} from "../../../types/shared/evm/index.js";
 import {
   PaymentPayload,
   PaymentRequirements,
   SettleResponse,
   VerifyResponse,
-} from "../../../types/verify";
-import { SCHEME } from "../../exact";
+} from "../../../types/verify/index.js";
+import { SCHEME } from "../../exact/index.js";
 
 /**
  * Verifies a payment payload against the required payment details

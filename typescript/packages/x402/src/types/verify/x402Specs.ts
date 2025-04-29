@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { NetworkSchema } from "../shared";
+import { NetworkSchema } from "../shared/index.js";
 // Constants
 const EvmMaxAtomicUnits = 18;
 const EvmAddressRegex = /^0x[0-9a-fA-F]{40}$/;

@@ -7,10 +7,10 @@ import {
   ERC20TokenAmount,
   PaymentRequirements,
   PaymentPayload,
-} from "../types";
-import { RoutesConfig } from "../types";
-import { getUsdcAddressForChain } from "./evm";
-import { getNetworkId } from "./network";
+} from "../types/index.js";
+import { RoutesConfig } from "../types/index.js";
+import { getUsdcAddressForChain } from "./evm/index.js";
+import { getNetworkId } from "./network.js";
 
 /**
  * Computes the route patterns for the given routes config

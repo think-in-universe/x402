@@ -1,1 +1,1 @@
-export * from "./useFacilitator";
+export * from "./useFacilitator.js";

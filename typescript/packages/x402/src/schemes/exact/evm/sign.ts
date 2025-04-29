@@ -1,8 +1,8 @@
 import { Address, Chain, Hex, toHex, Transport } from "viem";
-import { getNetworkId } from "../../../shared";
-import { getVersion } from "../../../shared/evm";
-import { authorizationTypes, config, SignerWallet } from "../../../types/shared/evm";
-import { ExactEvmPayloadAuthorization, PaymentRequirements } from "../../../types/verify";
+import { getNetworkId } from "../../../shared/network.js";
+import { getVersion } from "../../../shared/evm/index.js";
+import { authorizationTypes, config, SignerWallet } from "../../../types/shared/evm/index.js";
+import { ExactEvmPayloadAuthorization, PaymentRequirements } from "../../../types/verify/index.js";
 import { getRandomValues } from "crypto";
 
 /**

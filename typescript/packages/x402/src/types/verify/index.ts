@@ -1,2 +1,3 @@
-export * from "./x402Specs";
-export * from "./facilitator";
+export * from "./x402Specs.js";
+export * from "./facilitator.js";
+

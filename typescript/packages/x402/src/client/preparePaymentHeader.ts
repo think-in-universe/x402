@@ -1,7 +1,7 @@
 import { Address } from "viem";
-import { preparePaymentHeader as preparePaymentHeaderExactEVM } from "../schemes/exact/evm/client";
-import { SupportedEVMNetworks } from "../types/shared";
-import { PaymentRequirements, UnsignedPaymentPayload } from "../types/verify";
+import { preparePaymentHeader as preparePaymentHeaderExactEVM } from "../schemes/exact/evm/client.js";
+import { SupportedEVMNetworks } from "../types/shared/index.js";
+import { PaymentRequirements, UnsignedPaymentPayload } from "../types/verify/index.js";
 
 /**
  * Prepares a payment header with the given sender address and payment requirements.

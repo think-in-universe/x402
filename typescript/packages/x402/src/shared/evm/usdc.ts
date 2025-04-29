@@ -1,7 +1,7 @@
 import { Account, Address, Chain, Client, Transport } from "viem";
-import { config } from "../../types/shared/evm/config";
-import { usdcABI as abi } from "../../types/shared/evm/erc20PermitABI";
-import { ConnectedClient } from "../../types/shared/evm/wallet";
+import { config } from "../../types/shared/evm/config.js";
+import { usdcABI as abi } from "../../types/shared/evm/erc20PermitABI.js";
+import { ConnectedClient } from "../../types/shared/evm/wallet.js";
 
 /**
  * Gets the USDC contract address for the current chain from the client

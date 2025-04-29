@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { safeBase64Decode, safeBase64Encode } from "../../shared";
-import { PaymentRequirementsSchema, SettleResponse } from "./x402Specs";
+import { safeBase64Decode, safeBase64Encode } from "../../shared/index.js";
+import { PaymentRequirementsSchema, SettleResponse } from "./x402Specs.js";
 
 export const facilitatorRequestSchema = z.object({
   paymentHeader: z.string(),

@@ -1,7 +1,7 @@
-import { CreateHeaders } from "../../verify";
-import { Money } from "./money";
-import { Network } from "./network";
-import { Resource } from "./resource";
+import { CreateHeaders } from "../../verify/index.js";
+import { Money } from "./money.js";
+import { Network } from "./network.js";
+import { Resource } from "./resource.js";
 
 export type FacilitatorConfig = {
   url: Resource;

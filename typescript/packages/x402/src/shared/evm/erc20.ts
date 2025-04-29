@@ -1,6 +1,6 @@
 import { Account, Address, Chain, Transport } from "viem";
-import { usdcABI as erc20PermitABI } from "../../types/shared/evm/erc20PermitABI";
-import { ConnectedClient } from "../../types/shared/evm/wallet";
+import { usdcABI as erc20PermitABI } from "../../types/shared/evm/erc20PermitABI.js";
+import { ConnectedClient } from "../../types/shared/evm/wallet.js";
 
 /**
  * Gets the USDC balance for a specific address

@@ -1,5 +1,5 @@
-import { selectPaymentRequirements } from "../client";
-import { PaymentRequirements } from "../types/verify";
+import { selectPaymentRequirements } from "../client/index.js";
+import { PaymentRequirements } from "../types/verify/index.js";
 
 interface PaywallOptions {
   amount: number;
@@ -477,9 +477,8 @@ export function getPaywallHtml({
         });
 
         if (balance === 0n) {
-          statusDiv.textContent = \`Your USDC balance is 0. Please make sure you have USDC tokens on ${
-            testnet ? "Base Sepolia" : "Base"
-          }.\`;
+          statusDiv.textContent = \`Your USDC balance is 0. Please make sure you have USDC tokens on ${testnet ? "Base Sepolia" : "Base"
+    }.\`;
           return;
         }
 

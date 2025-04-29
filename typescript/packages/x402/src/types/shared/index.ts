@@ -1,5 +1,5 @@
-export * from "./money";
-export * from "./network";
-export * from "./resource";
-export * from "./middleware";
-export * as evm from "./evm";
+export * from "./money.js";
+export * from "./network.js";
+export * from "./resource.js";
+export * from "./middleware.js";
+export * as evm from "./evm/index.js";

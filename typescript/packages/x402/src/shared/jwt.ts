@@ -1,4 +1,4 @@
-import { generateJwt } from "@coinbase/cdp-sdk/auth";
+const { generateJwt } = require("@coinbase/cdp-sdk/auth");
 
 /**
  * Creates an authorization header for a request to the Coinbase API.

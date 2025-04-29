@@ -1,7 +1,7 @@
-import { createPaymentHeader as createPaymentHeaderExactEVM } from "../schemes/exact/evm/client";
-import { SupportedEVMNetworks } from "../types/shared";
-import { SignerWallet } from "../types/shared/evm";
-import { PaymentRequirements } from "../types/verify";
+import { createPaymentHeader as createPaymentHeaderExactEVM } from "../schemes/exact/evm/client.js";
+import { SupportedEVMNetworks } from "../types/shared/index.js";
+import { SignerWallet } from "../types/shared/evm/index.js";
+import { PaymentRequirements } from "../types/verify/index.js";
 
 /**
  * Creates a payment header based on the provided client and payment requirements.
