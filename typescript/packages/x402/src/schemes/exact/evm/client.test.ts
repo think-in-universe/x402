@@ -1,12 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { preparePaymentHeader, signPaymentHeader, createPaymentHeader } from "./client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createSignerSepolia, SignerWallet } from "../../../types/shared/evm";
 import { PaymentRequirements, UnsignedPaymentPayload } from "../../../types/verify";
-import { createSignerSepolia } from "../../../types/shared/evm";
-import { signAuthorization, createNonce } from "./sign";
+import { createPaymentHeader, preparePaymentHeader, signPaymentHeader } from "./client";
+import { createNonce, signAuthorization } from "./sign";
 import { encodePayment } from "./utils/paymentUtils";
-import { SignerWallet } from "../../../types/shared/evm";
-import { baseSepolia } from "viem/chains";
-import { Transport } from "viem";
 
 vi.mock("./sign", () => ({
   signAuthorization: vi.fn(),
@@ -129,7 +126,9 @@ describe("signPaymentHeader", () => {
   const mockSignature = "0x1234567890123456789012345678901234567890123456789012345678901234";
 
   const createTestClient = () => {
-    return createSignerSepolia("0x1234567890123456789012345678901234567890123456789012345678901234");
+    return createSignerSepolia(
+      "0x1234567890123456789012345678901234567890123456789012345678901234",
+    );
   };
 
   beforeEach(() => {
@@ -144,7 +143,7 @@ describe("signPaymentHeader", () => {
     expect(signAuthorization).toHaveBeenCalledWith(
       client,
       mockUnsignedHeader.payload.authorization,
-      mockPaymentRequirements
+      mockPaymentRequirements,
     );
 
     expect(result).toEqual({
@@ -173,7 +172,7 @@ describe("signPaymentHeader", () => {
     vi.mocked(signAuthorization).mockRejectedValue(error);
 
     await expect(
-      signPaymentHeader(client, mockPaymentRequirements, mockUnsignedHeader)
+      signPaymentHeader(client, mockPaymentRequirements, mockUnsignedHeader),
     ).rejects.toThrow("Signing failed");
   });
 });
@@ -196,7 +195,8 @@ describe("createPaymentHeader", () => {
     scheme: "exact",
     network: "base-sepolia",
     payload: {
-      signature: "0x1234567890123456789012345678901234567890123456789012345678901234" as `0x${string}`,
+      signature:
+        "0x1234567890123456789012345678901234567890123456789012345678901234" as `0x${string}`,
       authorization: {
         from: "0xabcdef1234567890123456789012345678901234" as `0x${string}`,
         to: "0x1234567890123456789012345678901234567890" as `0x${string}`,
@@ -209,13 +209,17 @@ describe("createPaymentHeader", () => {
   };
 
   const createTestClient = () => {
-    const client = createSignerSepolia("0x1234567890123456789012345678901234567890123456789012345678901234" as `0x${string}`);
+    const client = createSignerSepolia(
+      "0x1234567890123456789012345678901234567890123456789012345678901234" as `0x${string}`,
+    );
     return client as unknown as SignerWallet;
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(signAuthorization).mockResolvedValue({ signature: mockSignedPayment.payload.signature });
+    vi.mocked(signAuthorization).mockResolvedValue({
+      signature: mockSignedPayment.payload.signature,
+    });
   });
 
   it("should create and encode a payment header", async () => {
@@ -223,28 +227,32 @@ describe("createPaymentHeader", () => {
     const result = await createPaymentHeader(client, 1, mockPaymentRequirements);
 
     expect(result).toBe("encoded-payment-header");
-    expect(vi.mocked(encodePayment)).toHaveBeenCalledWith(expect.objectContaining({
-      x402Version: 1,
-      scheme: "exact",
-      network: "base-sepolia",
-      payload: expect.objectContaining({
-        signature: mockSignedPayment.payload.signature,
-        authorization: expect.objectContaining({
-          from: client.account!.address,
-          to: mockPaymentRequirements.payTo,
-          value: mockPaymentRequirements.maxAmountRequired,
+    expect(vi.mocked(encodePayment)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        x402Version: 1,
+        scheme: "exact",
+        network: "base-sepolia",
+        payload: expect.objectContaining({
+          signature: mockSignedPayment.payload.signature,
+          authorization: expect.objectContaining({
+            from: client.account!.address,
+            to: mockPaymentRequirements.payTo,
+            value: mockPaymentRequirements.maxAmountRequired,
+          }),
         }),
       }),
-    }));
+    );
   });
 
   it("should handle different x402 versions", async () => {
     const client = createTestClient();
-    const result = await createPaymentHeader(client, 2, mockPaymentRequirements);
+    await createPaymentHeader(client, 2, mockPaymentRequirements);
 
-    expect(vi.mocked(encodePayment)).toHaveBeenCalledWith(expect.objectContaining({
-      x402Version: 2,
-    }));
+    expect(vi.mocked(encodePayment)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        x402Version: 2,
+      }),
+    );
   });
 
   it("should throw an error if signing fails", async () => {
@@ -252,9 +260,9 @@ describe("createPaymentHeader", () => {
     const error = new Error("Signing failed");
     vi.mocked(signAuthorization).mockRejectedValue(error);
 
-    await expect(
-      createPaymentHeader(client, 1, mockPaymentRequirements)
-    ).rejects.toThrow("Signing failed");
+    await expect(createPaymentHeader(client, 1, mockPaymentRequirements)).rejects.toThrow(
+      "Signing failed",
+    );
   });
 
   it("should throw an error if encoding fails", async () => {
@@ -264,8 +272,8 @@ describe("createPaymentHeader", () => {
       throw error;
     });
 
-    await expect(
-      createPaymentHeader(client, 1, mockPaymentRequirements)
-    ).rejects.toThrow("Encoding failed");
+    await expect(createPaymentHeader(client, 1, mockPaymentRequirements)).rejects.toThrow(
+      "Encoding failed",
+    );
   });
 });

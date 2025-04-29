@@ -1,7 +1,12 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { computeRoutePatterns, findMatchingRoute, getDefaultAsset, processPriceToAtomicAmount } from "x402/shared";
+import { describe, expect, it } from "vitest";
+import {
+  computeRoutePatterns,
+  findMatchingRoute,
+  getDefaultAsset,
+  processPriceToAtomicAmount,
+} from "x402/shared";
 import { RoutePattern, RoutesConfig } from "./middleware";
-
+import { Network } from "./network";
 
 describe("computeRoutePatterns", () => {
   it("should handle simple string price routes", () => {
@@ -237,7 +242,7 @@ describe("getDefaultAsset", () => {
   });
 
   it("should handle unknown networks", () => {
-    expect(() => getDefaultAsset("unknown" as any)).toThrow("Unsupported network: unknown");
+    expect(() => getDefaultAsset("unknown" as Network)).toThrow("Unsupported network: unknown");
   });
 });
 

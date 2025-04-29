@@ -52,7 +52,7 @@ describe("useFacilitator", () => {
           paymentPayload: mockPaymentPayload,
           paymentRequirements: mockPaymentRequirements,
         },
-        { headers: undefined }
+        { headers: undefined },
       );
     });
 
@@ -64,7 +64,7 @@ describe("useFacilitator", () => {
       expect(axios.post).toHaveBeenCalledWith(
         `${customUrl}/verify`,
         expect.any(Object),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -79,11 +79,9 @@ describe("useFacilitator", () => {
       });
       await verify(mockPaymentPayload, mockPaymentRequirements);
 
-      expect(axios.post).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.any(Object),
-        { headers: mockHeaders.verify }
-      );
+      expect(axios.post).toHaveBeenCalledWith(expect.any(String), expect.any(Object), {
+        headers: mockHeaders.verify,
+      });
     });
 
     it("should throw error on non-200 response", async () => {
@@ -91,7 +89,7 @@ describe("useFacilitator", () => {
       const { verify } = useFacilitator();
 
       await expect(verify(mockPaymentPayload, mockPaymentRequirements)).rejects.toThrow(
-        "Failed to verify payment: Bad Request"
+        "Failed to verify payment: Bad Request",
       );
     });
   });
@@ -108,7 +106,7 @@ describe("useFacilitator", () => {
           paymentPayload: mockPaymentPayload,
           paymentRequirements: mockPaymentRequirements,
         },
-        { headers: undefined }
+        { headers: undefined },
       );
     });
 
@@ -120,7 +118,7 @@ describe("useFacilitator", () => {
       expect(axios.post).toHaveBeenCalledWith(
         `${customUrl}/settle`,
         expect.any(Object),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -135,11 +133,9 @@ describe("useFacilitator", () => {
       });
       await settle(mockPaymentPayload, mockPaymentRequirements);
 
-      expect(axios.post).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.any(Object),
-        { headers: mockHeaders.settle }
-      );
+      expect(axios.post).toHaveBeenCalledWith(expect.any(String), expect.any(Object), {
+        headers: mockHeaders.settle,
+      });
     });
 
     it("should throw error on non-200 response", async () => {
@@ -147,7 +143,7 @@ describe("useFacilitator", () => {
       const { settle } = useFacilitator();
 
       await expect(settle(mockPaymentPayload, mockPaymentRequirements)).rejects.toThrow(
-        "Failed to settle payment: Bad Request"
+        "Failed to settle payment: Bad Request",
       );
     });
   });
