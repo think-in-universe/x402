@@ -15,10 +15,9 @@ import { processPriceToAtomicAmount } from "x402/shared";
 config();
 
 const facilitatorUrl = process.env.FACILITATOR_URL as Resource;
-const payToAddress = process.env.ADDRESS as `0x${string}`;
-const port = parseInt(process.env.PORT as string);
+const payTo = process.env.ADDRESS as `0x${string}`;
 
-if (!facilitatorUrl || !payToAddress || !port) {
+if (!facilitatorUrl || !payTo) {
   console.error("Missing required environment variables");
   process.exit(1);
 }
@@ -56,7 +55,7 @@ function createPaymentRequirements(
       resource,
       description,
       mimeType: "",
-      payTo: payToAddress,
+      payTo: payTo,
       maxTimeoutSeconds: 60,
       asset: asset.address,
       outputSchema: undefined,
@@ -203,6 +202,6 @@ app.get("/async-weather", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
+app.listen(4021, () => {
+  console.log(`Server listening at http://localhost:4021`);
 });
