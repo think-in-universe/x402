@@ -5,17 +5,29 @@
 ```typescript
 app.use(
   // How much you want to charge, and where you want the funds to land
-  paymentMiddleware(
-    "0x209693Bc6afc0C5328bA36FaF03C514EF312287C",
-    {
-      "/your-endpoint": {
-        price: "$0.01"
-      }
-    }
-  )
-); 
+  paymentMiddleware("0x209693Bc6afc0C5328bA36FaF03C514EF312287C", {
+    "/your-endpoint": {
+      price: "$0.01",
+    },
+  })
+);
 // Thats it! See examples/typescript/servers/express.ts for a complete example. Instruction below for running on base-sepolia.
 ```
+
+## Philosophy
+
+Payments on the internet are fundamentally flawed. Credit Cards are high friction, hard to accept, have minimum payments that are far too high, and don't fit into the programmatic nature of the internet.
+It's time for an open, internet-native form of payments. A payment rail that doesn't have high minimums + % based fee. Payments that are amazing for humans and AI agents.
+
+## Principals
+
+- **Open standard:** the x402 protocol will never force reliance on a single party
+- **HTTP Native:** x402 is meant to seemlessly compliment the existing HTTP request made by traditional web services, it should not mandate additional requests outside the scope of a typical client / server flow.
+- **Chain and token agnostic:** we welcome contributions that add support for new chains, signing standards, or schemes, so long as they meet our acceptance criteria layed out in `CONTRIBUTING.md`
+- **Trust minimizing:** all payment schemes must not allow for the facilitator or resource server to move funds, other than in accordance with client intentions
+- **Easy to use:** x402 needs to be 10x better than existing pays to pay on the internet. This means abstracting as many details of crypto as possible away from the client and resource server, and into the facilitator. This means the client/server should not need to think about gas, rpc, etc.
+
+**Roadmap:** see `ROADMAP.md`
 
 ## Terms:
 
@@ -24,7 +36,7 @@ app.use(
 - `facilitator server`: A server that facilitates verification and execution of on-chain payments.
 - `resource server`: An HTTP server that provides an API or other resource for a client.
 
-## Goals:
+## Technical Goals:
 
 - Permissionless and secure for clients and servers
 - Gassless for client and resource servers
@@ -224,11 +236,13 @@ Clients and facilitator must explicitly support different `(scheme, network)` pa
 ## Running example
 
 1. In three separate terminals, navigate to the following directories:
+
    - `examples/typescript/facilitator`
    - `examples/typescript/servers/express`
    - `examples/typescript/clients/axios`
 
 2. In each terminal:
+
    - Copy the environment file: `cp .env-local .env`
    - Fill in the required values in the `.env` file
    - Run `pnpm dev`
