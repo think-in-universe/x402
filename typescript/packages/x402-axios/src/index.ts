@@ -33,7 +33,7 @@ import {
  */
 export function withPaymentInterceptor(
   axiosClient: AxiosInstance,
-  walletClient: typeof evm.SignerWallet,
+  walletClient: evm.SignerWallet,
   paymentRequirementsSelector: PaymentRequirementsSelector = selectPaymentRequirements,
 ) {
   axiosClient.interceptors.response.use(

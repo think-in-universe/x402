@@ -1,9 +1,9 @@
 {
   "name": "x402",
   "version": "0.2.0",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/_cjs/index.js",
+  "module": "./src/_esm/index.js",
+  "types": "./src/_types/index.d.ts",
   "scripts": {
     "build": "pnpm clean && pnpm build:cjs && pnpm build:esm && pnpm build:types",
     "build:cjs": "tsc --project ./tsconfig.cjs.json && printf '{\"type\":\"commonjs\"}' > ./src/_cjs/package.json",
@@ -47,42 +47,43 @@
   "type": "module",
   "exports": {
     "./shared": {
-      "types": "./dist/esm/shared/index.d.ts",
-      "import": "./dist/esm/shared/index.js",
-      "require": "./dist/cjs/shared/index.js"
+      "types": "./src/_types/shared/index.d.ts",
+      "import": "./src/_esm/shared/index.js",
+      "require": "./src/_cjs/shared/index.js"
     },
     "./shared/evm": {
-      "types": "./dist/esm/shared/evm/index.d.ts",
-      "import": "./dist/esm/shared/evm/index.js",
-      "require": "./dist/cjs/shared/evm/index.js"
+      "types": "./src/_types/shared/evm/index.d.ts",
+      "import": "./src/_esm/shared/evm/index.js",
+      "require": "./src/_cjs/shared/evm/index.js"
     },
     "./schemes": {
-      "types": "./dist/esm/schemes/index.d.ts",
-      "import": "./dist/esm/schemes/index.js",
-      "require": "./dist/cjs/schemes/index.js"
+      "types": "./src/_types/schemes/index.d.ts",
+      "import": "./src/_esm/schemes/index.js",
+      "require": "./src/_cjs/schemes/index.js"
     },
     "./client": {
-      "types": "./dist/esm/client/index.d.ts",
-      "import": "./dist/esm/client/index.js",
-      "require": "./dist/cjs/client/index.js"
+      "types": "./src/_types/client/index.d.ts",
+      "import": "./src/_esm/client/index.js",
+      "require": "./src/_cjs/client/index.js"
     },
     "./verify": {
-      "types": "./dist/esm/verify/index.d.ts",
-      "import": "./dist/esm/verify/index.js",
-      "require": "./dist/cjs/verify/index.js"
+      "types": "./src/_types/verify/index.d.ts",
+      "import": "./src/_esm/verify/index.js",
+      "require": "./src/_cjs/verify/index.js"
     },
     "./facilitator": {
-      "types": "./dist/esm/facilitator/index.d.ts",
-      "import": "./dist/esm/facilitator/index.js",
-      "require": "./dist/cjs/facilitator/index.js"
+      "types": "./src/_types/facilitator/index.d.ts",
+      "import": "./src/_esm/facilitator/index.js",
+      "require": "./src/_cjs/facilitator/index.js"
     },
     "./types": {
-      "types": "./dist/esm/types/index.d.ts",
-      "import": "./dist/esm/types/index.js",
-      "require": "./dist/cjs/types/index.js"
+      "types": "./src/_types/types/index.d.ts",
+      "import": "./src/_esm/types/index.js",
+      "require": "./src/_cjs/types/index.js"
     }
   },
   "files": [
-    "dist"
+    "*",
+    "!**/*.test.ts"
   ]
 }

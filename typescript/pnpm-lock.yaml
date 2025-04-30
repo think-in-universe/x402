@@ -307,9 +307,6 @@ importers:
 
   packages/x402-next:
     dependencies:
-      next:
-        specifier: ^15.2.4
-        version: 15.3.1(@babel/core@7.26.10)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       viem:
         specifier: ^2.23.1
         version: 2.26.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.24.2)
@@ -344,6 +341,9 @@ importers:
       eslint-plugin-prettier:
         specifier: ^5.2.6
         version: 5.2.6(eslint@9.24.0(jiti@1.21.7))(prettier@3.5.2)
+      next:
+        specifier: ^15.2.4
+        version: 15.3.1(@babel/core@7.26.10)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       prettier:
         specifier: 3.5.2
         version: 3.5.2

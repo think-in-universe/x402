@@ -48,12 +48,13 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "types": "./_types/index.d.ts",
+      "import": "./_esm/index.js",
+      "require": "./_cjs/index.js"
     }
   },
   "files": [
-    "dist"
+    "*",
+    "!**/*.test.ts"
   ]
 }

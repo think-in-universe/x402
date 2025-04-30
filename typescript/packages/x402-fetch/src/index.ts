@@ -1,5 +1,4 @@
-import { PaymentRequirementsSchema } from "x402/types";
-import { evm } from "x402/types";
+import { PaymentRequirementsSchema, evm } from "x402/types";
 import {
   createPaymentHeader,
   PaymentRequirementsSelector,
@@ -39,7 +38,7 @@ import {
  */
 export function wrapFetchWithPayment(
   fetch: typeof globalThis.fetch,
-  walletClient: typeof evm.SignerWallet,
+  walletClient: evm.SignerWallet,
   maxValue: bigint = BigInt(0.1 * 10 ** 6), // Default to 0.10 USDC
   paymentRequirementsSelector: PaymentRequirementsSelector = selectPaymentRequirements,
 ) {

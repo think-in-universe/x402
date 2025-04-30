@@ -1,5 +1,4 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+const { NextResponse, NextRequest } = require("next/server");
 import { Address } from "viem";
 import { exact } from "x402/schemes";
 import {
@@ -76,7 +75,7 @@ export function paymentMiddleware(
   // Pre-compile route patterns to regex and extract verbs
   const routePatterns = computeRoutePatterns(routes);
 
-  return async function middleware(request: NextRequest) {
+  return async function middleware(request: typeof NextRequest) {
     const pathname = request.nextUrl.pathname;
     const method = request.method.toUpperCase();
 

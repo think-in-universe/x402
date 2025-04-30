@@ -38,23 +38,27 @@
     "typescript": "^5.7.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.5",
-    "vite": "^6.2.6"
+    "vite": "^6.2.6",
+    "next": "^15.2.4"
   },
   "dependencies": {
     "viem": "^2.23.1",
     "x402": "workspace:*",
-    "next": "^15.2.4",
     "zod": "^3.24.2"
+  },
+  "peerDependencies": {
+    "next": "^15.2.4"
   },
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "types": "./_types/index.d.ts",
+      "import": "./_esm/index.js",
+      "require": "./_cjs/index.js"
     }
   },
   "files": [
-    "dist"
+    "*",
+    "!**/*.test.ts"
   ]
 }
