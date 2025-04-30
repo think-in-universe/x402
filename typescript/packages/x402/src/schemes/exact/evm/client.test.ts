@@ -2,13 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createSignerSepolia, SignerWallet } from "../../../types/shared/evm";
 import { PaymentRequirements, UnsignedPaymentPayload } from "../../../types/verify";
 import { createPaymentHeader, preparePaymentHeader, signPaymentHeader } from "./client";
-import { createNonce, signAuthorization } from "./sign";
+import { signAuthorization } from "./sign";
 import { encodePayment } from "./utils/paymentUtils";
 
-vi.mock("./sign", () => ({
-  signAuthorization: vi.fn(),
-  createNonce: vi.fn().mockReturnValue("1234567890"),
-}));
+vi.mock("./sign", async () => {
+  const actual = await vi.importActual("./sign");
+  return {
+    ...actual,
+    signAuthorization: vi.fn(),
+  };
+});
 
 vi.mock("./utils/paymentUtils", () => ({
   encodePayment: vi.fn().mockReturnValue("encoded-payment-header"),
@@ -56,7 +59,7 @@ describe("preparePaymentHeader", () => {
           value: mockPaymentRequirements.maxAmountRequired,
           validAfter: (currentTime - 5).toString(),
           validBefore: (currentTime + mockPaymentRequirements.maxTimeoutSeconds).toString(),
-          nonce: "1234567890",
+          nonce: expect.any(String),
         },
       },
     });
@@ -66,9 +69,9 @@ describe("preparePaymentHeader", () => {
     const result1 = preparePaymentHeader(mockFromAddress, 1, mockPaymentRequirements);
     const result2 = preparePaymentHeader(mockFromAddress, 1, mockPaymentRequirements);
 
-    expect(vi.mocked(createNonce)).toHaveBeenCalledTimes(2);
-    expect(result1.payload.authorization.nonce).toBe("1234567890");
-    expect(result2.payload.authorization.nonce).toBe("1234567890");
+    expect(result1.payload.authorization.nonce.length).toBe(66);
+    expect(result2.payload.authorization.nonce.length).toBe(66);
+    expect(result1.payload.authorization.nonce).not.toBe(result2.payload.authorization.nonce);
   });
 
   it("should calculate validAfter as 5 seconds before current time", () => {

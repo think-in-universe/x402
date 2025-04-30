@@ -63,8 +63,12 @@ describe("useFacilitator", () => {
 
       expect(axios.post).toHaveBeenCalledWith(
         `${customUrl}/verify`,
-        expect.any(Object),
-        expect.any(Object),
+        {
+          x402Version: mockPaymentPayload.x402Version,
+          paymentPayload: mockPaymentPayload,
+          paymentRequirements: mockPaymentRequirements,
+        },
+        { headers: undefined },
       );
     });
 
@@ -117,8 +121,12 @@ describe("useFacilitator", () => {
 
       expect(axios.post).toHaveBeenCalledWith(
         `${customUrl}/settle`,
-        expect.any(Object),
-        expect.any(Object),
+        {
+          x402Version: mockPaymentPayload.x402Version,
+          paymentPayload: mockPaymentPayload,
+          paymentRequirements: mockPaymentRequirements,
+        },
+        { headers: undefined },
       );
     });
 
