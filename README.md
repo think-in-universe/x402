@@ -17,19 +17,6 @@ app.use(
 // Thats it! See examples/typescript/servers/express.ts for a complete example. Instruction below for running on base-sepolia.
 ```
 
-## Philosophy
-
-Payments on the internet are fundamentally flawed. Credit Cards are high friction, hard to accept, have minimum payments that are far too high, and don't fit into the programmatic nature of the internet.
-It's time for an internet-native form of payments. A payment rail that doesn't have high minimums + % based fee. Payments that are amazing for humans and AI agents.
-
-## Principals:
-
-- **Open standard:** the x402 protocol will never force reliance on a single party
-- **HTTP Native:** x402 is meant to seemlessly compliment the existing HTTP request made by traditional web services, it should not mandate additional requests outside the scope of a typical client / server flow.
-- **Chain and token agnostic:** we welcome contributions that add support for new chains, signing standards, or schemes, so long as they meet our acceptance criteria layed out in `CONTRIBUTING.md`
-- **Trust minimizing:** all payment schemes must not allow for the facilitator or resource server to move funds, other than in accordance with client intentions
-- **Easy to use:** x402 needs to be 10x better than existing pays to pay on the internet. This means abstracting as many details of crypto as possible away from the client and resource server, and into the facilitator. This means the client/server should not need to think about gas, rpc, etc.
-
 ## Terms:
 
 - `resource`: Something on the internet. This could be a webpage, file server, RPC service, API, any resource on the internet that accepts HTTP / HTTPS requests.
