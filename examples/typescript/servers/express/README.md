@@ -23,6 +23,12 @@ pnpm build
 cd servers/express
 ```
 
+3. Run the server
+```bash
+pnpm install
+pnpm dev
+```
+
 ## Testing the Server
 
 You can test the server using one of the example clients:
@@ -31,16 +37,16 @@ You can test the server using one of the example clients:
 ```bash
 cd ../clients/fetch
 # Ensure .env is setup
-npm install
-npm dev
+pnpm install
+pnpm dev
 ```
 
 ### Using the Axios Client
 ```bash
 cd ../clients/axios
 # Ensure .env is setup
-npm install
-npm dev
+pnpm install
+pnpm dev
 ```
 
 These clients will demonstrate how to:

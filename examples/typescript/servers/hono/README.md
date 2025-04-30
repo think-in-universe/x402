@@ -23,6 +23,12 @@ pnpm build
 cd servers/hono
 ```
 
+3. Run the server
+```bash
+pnpm install
+pnpm dev
+```
+
 ## Testing the Server
 
 You can test the server using one of the example clients:

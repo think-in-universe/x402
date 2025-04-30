@@ -16,6 +16,8 @@ if (!facilitatorUrl || !payTo || !network) {
 
 const app = new Hono();
 
+console.log("Server is running");
+
 app.use(
   paymentMiddleware(
     payTo,

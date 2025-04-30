@@ -46,7 +46,7 @@ cp .env-local .env
 }
 ```
 
-4. Start the example client:
+4. Start the example client (remember to be running a server or pointing to one in the .env file):
 ```bash
 pnpm dev
 ```
@@ -87,7 +87,7 @@ const server = new McpServer({
 });
 
 // Add tool for making paid requests
-server.tool("get-data-from-resource-server", {}, async () => {
+server.tool("get-data-from-resource-server", "Get data from the resource server (in this example, the weather)",  {}, async () => {
   const res = await client.post(`${ENDPOINT_PATH}`);
   return {
     content: [{ type: "text", text: JSON.stringify(res.data) }],
