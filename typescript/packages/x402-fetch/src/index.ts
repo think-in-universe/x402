@@ -65,6 +65,7 @@ export function wrapFetchWithPayment(
     const selectedPaymentRequirements = paymentRequirementsSelector(
       parsedPaymentRequirements,
       chainId ? ChainIdToNetwork[chainId] : undefined,
+      "exact",
     );
 
     if (BigInt(selectedPaymentRequirements.maxAmountRequired) > maxValue) {

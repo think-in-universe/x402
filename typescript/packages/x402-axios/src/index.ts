@@ -70,6 +70,7 @@ export function withPaymentInterceptor(
         const selectedPaymentRequirements = paymentRequirementsSelector(
           parsed,
           chainId ? ChainIdToNetwork[chainId] : undefined,
+          "exact",
         );
         const paymentHeader = await createPaymentHeader(
           walletClient,
