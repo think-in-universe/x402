@@ -4,6 +4,7 @@ import {
   CloudIcon,
   MusicalNoteIcon,
   CheckIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { FeatureItem } from './components/FeatureItem';
 import GithubIcon from './assets/github.svg';
@@ -91,12 +92,13 @@ export default function Home() {
               An open protocol for internet-native payments
             </p>
             <div className="flex flex-wrap gap-4 mb-8 justify-center">
-              <a
-                href="https://docs.google.com/forms/d/e/1FAIpQLSeESQAfvSlmjzl8JTcAOdzYjcWZ2O2GZjhuSeb8vTPpNys7FQ/viewform"
-                className="px-6 py-3 border-2 border-gray-700 hover:border-blue-600 rounded-lg font-mono transition-colors"
+              <Link
+                href="/x402-whitepaper.pdf"
+                className="px-6 py-3 border-2 border-gray-700 hover:border-blue-600 rounded-lg font-mono transition-colors flex items-center gap-2"
               >
-                Get in touch
-              </a>
+                <DocumentTextIcon className="w-5 h-5 mr-1"/>
+                Read the whitepaper
+              </Link>
               <Link
                 href="https://github.com/coinbase/x402"
                 target="_blank"
