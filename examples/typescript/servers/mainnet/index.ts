@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 import express from "express";
 import { paymentMiddleware } from "x402-express";
-// Import the facilitator from the x402 package to use the mainnet CDP API
+// Import the facilitator from the x402 package to use the mainnet facilitator
 import { facilitator } from "@coinbase/x402";
 
 config();
