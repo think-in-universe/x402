@@ -5,7 +5,9 @@ import {
   MusicalNoteIcon,
   CheckIcon,
   DocumentTextIcon,
-} from '@heroicons/react/24/outline';
+  ArrowDownTrayIcon,
+  QuestionMarkCircleIcon,
+} from "@heroicons/react/24/outline";
 import { FeatureItem } from './components/FeatureItem';
 import GithubIcon from './assets/github.svg';
 import WordmarkCondensed from './assets/x402_wordmark_dark.svg';
@@ -82,6 +84,38 @@ export default function Home() {
       </div>
 
       <div className="relative z-10">
+        {/* Header */}
+        <section className="max-w-6xl mx-auto px-4 pt-4 lg:px-12">
+          <div className="flex gap-4 md:gap-8 justify-between sm:justify-end">
+            <Link
+              href="https://docs.google.com/forms/d/e/1FAIpQLSeESQAfvSlmjzl8JTcAOdzYjcWZ2O2GZjhuSeb8vTPpNys7FQ/viewform"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono hover:text-blue-400 transition-colors flex items-center gap-1 text-sm"
+            >
+              <QuestionMarkCircleIcon className="w-5 h-5 mr-1" />
+              Learn more
+            </Link>
+            <Link
+              href="/x402.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono hover:text-blue-400 transition-colors flex items-center gap-1 text-sm"
+            >
+              <ArrowDownTrayIcon className="w-5 h-5 mr-1" />
+              One-pager
+            </Link>
+            <Link
+              href="https://github.com/coinbase/x402"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono hover:text-blue-400 transition-colors flex items-center gap-2 text-sm"
+            >
+              <GithubIcon className="w-5 h-5 mr-1" fill="currentColor" />
+              GitHub
+            </Link>
+          </div>
+        </section>
         {/* Hero Section */}
         <section className="max-w-6xl mx-auto px-4 py-20 lg:py-28">
           <div className="text-center">
@@ -94,27 +128,20 @@ export default function Home() {
             <div className="flex flex-wrap gap-4 mb-8 justify-center">
               <Link
                 href="/x402-whitepaper.pdf"
-                className="px-6 py-3 border-2 border-gray-700 hover:border-blue-600 rounded-lg font-mono transition-colors flex items-center gap-2"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-mono transition-colors flex items-center gap-2"
               >
-                <DocumentTextIcon className="w-5 h-5 mr-1"/>
+                <DocumentTextIcon className="w-5 h-5 mr-1" />
                 Read the whitepaper
               </Link>
               <Link
-                href="https://github.com/coinbase/x402"
+                href="/protected"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3 border-2 border-gray-700 hover:border-blue-600 rounded-lg font-mono transition-colors flex items-center gap-2"
+                className="px-6 py-3 border-2 border-gray-700 hover:border-blue-600 rounded-lg font-mono transition-colors"
               >
-                <GithubIcon className="w-5 h-5 mr-1" fill="currentColor" />
-                View on GitHub
-              </Link>
-            </div>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Link
-                href="/protected"
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-mono transition-colors"
-              >
-                Live demo
+                Try it out
               </Link>
             </div>
           </div>
