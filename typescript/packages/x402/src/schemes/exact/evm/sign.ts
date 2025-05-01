@@ -1,7 +1,12 @@
 import { getRandomValues } from "crypto";
 import { Account, Address, Chain, Hex, toHex, Transport } from "viem";
 import { getNetworkId } from "../../../shared";
-import { authorizationTypes, isAccount, isSignerWallet, SignerWallet } from "../../../types/shared/evm";
+import {
+  authorizationTypes,
+  isAccount,
+  isSignerWallet,
+  SignerWallet,
+} from "../../../types/shared/evm";
 import { ExactEvmPayloadAuthorization, PaymentRequirements } from "../../../types/verify";
 
 /**
@@ -56,14 +61,12 @@ export async function signAuthorization<transport extends Transport, chain exten
     return {
       signature,
     };
-  }
-  else if (isAccount(walletClient) && walletClient.signTypedData) {
+  } else if (isAccount(walletClient) && walletClient.signTypedData) {
     const signature = await walletClient.signTypedData(data);
     return {
       signature,
     };
-  }
-  else {
+  } else {
     throw new Error("Invalid wallet client provided does not support signTypedData");
   }
 }
