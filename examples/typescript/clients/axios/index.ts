@@ -2,7 +2,7 @@ import axios from "axios";
 import { config } from "dotenv";
 import { Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { withPaymentInterceptor } from "x402-axios";
+import { withPaymentInterceptor, decodeXPaymentResponse } from "x402-axios";
 
 config();
 
@@ -27,8 +27,10 @@ const api = withPaymentInterceptor(
 api
   .get(endpointPath)
   .then(response => {
-    console.log(response.headers);
     console.log(response.data);
+
+    const paymentResponse = decodeXPaymentResponse(response.headers["x-payment-response"]);
+    console.log(paymentResponse);
   })
   .catch(error => {
     console.error(error.response?.data?.error);

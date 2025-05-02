@@ -93,3 +93,5 @@ export function withPaymentInterceptor(
 
   return axiosClient;
 }
+
+export { decodeXPaymentResponse } from "x402/shared";

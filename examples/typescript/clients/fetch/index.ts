@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 import { Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { wrapFetchWithPayment } from "x402-fetch";
+import { decodeXPaymentResponse, wrapFetchWithPayment } from "x402-fetch";
 
 config();
 
@@ -25,6 +25,9 @@ fetchWithPayment(url, {
   .then(async response => {
     const body = await response.json();
     console.log(body);
+
+    const paymentResponse = decodeXPaymentResponse(response.headers.get("x-payment-response")!);
+    console.log(paymentResponse);
   })
   .catch(error => {
     console.error(error.response?.data?.error);

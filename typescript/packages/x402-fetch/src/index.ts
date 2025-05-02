@@ -100,3 +100,5 @@ export function wrapFetchWithPayment(
     return secondResponse;
   };
 }
+
+export { decodeXPaymentResponse } from "x402/shared";
