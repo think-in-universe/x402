@@ -7,3 +7,6 @@ export const NEAR_USDC_ASSET_ID = "nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398
 
 // NEAR Intents Referral
 export const NEAR_INTENTS_REFERRAL = "coinbase-intent.near";
+
+// NEAR Intents Verifying Contract
+export const NEAR_INTENTS_CONTRACT = "intents.near";
