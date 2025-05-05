@@ -4,9 +4,12 @@ import {
   NEAR_USDC_ASSET_ID,
   NEAR_INTENTS_REFERRAL,
   NEAR_INTENTS_CONTRACT,
+  POA_BRIDGE_BASE_URL,
+  NEAR_RPC_URL,
 } from "./constants";
 import { randomNonce, transformERC191Signature } from "./utils";
 import { evm } from "x402/shared";
+import { base64 } from "@scure/base";
 
 // The swap function now supports swap Base USDC to NEAR USDC.
 // TODO: The current version assumes the receiver has registered native USDC with sufficient
@@ -103,8 +106,65 @@ export async function publishSwapIntent({
   if (res.data.result.status === "OK") {
     console.log("The intent has been published");
   } else {
-    console.error("The intent has failed to publish");
+    console.error("The intent failed to publish");
   }
 
   return res;
+}
+
+/**
+ * Get the deposit address for the account
+ * @param accountId - The account ID
+ * @returns The deposit address
+ */
+export async function getDepositAddress(accountId: string) {
+  const res = await fetch(`${POA_BRIDGE_BASE_URL}/rpc`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      "id": "dontcare",
+      "jsonrpc": "2.0",
+      "method": "deposit_address",
+      "params": [{
+        "account_id": accountId,
+        "chain": "eth:8453" // Base
+      }]
+    }),
+  });
+
+  const data = await res.json();
+  return data.result;
+}
+
+export async function getDepositedBalance(accountId: string) {
+  const res = await fetch(NEAR_RPC_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      "id": "dontcare",
+      "jsonrpc": "2.0",
+      "method": "query",
+      "params": {
+        account_id: NEAR_INTENTS_CONTRACT,
+        request_type: "call_function",
+        method_name: "mt_batch_balance_of",
+        args_base64: btoa(JSON.stringify({
+          account_id: accountId,
+          token_ids: [
+            BASE_USDC_ASSET_ID,
+          ]
+        })),
+        finality: "optimistic"
+      }
+    }),
+  });
+
+  const data = await res.json();
+  const balances = data.result?.result;
+  const parsed = JSON.parse(Buffer.from(balances).toString('utf8'));
+  return parsed[0];
 }

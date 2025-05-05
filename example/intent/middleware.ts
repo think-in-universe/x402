@@ -6,12 +6,14 @@ import {
   toJsonSafe,
   settleResponseHeader,
   Resource,
-} from "../types";
+} from "x402/types";
 import { Address } from "viem";
-import { getUsdcAddressForChain } from "../shared/evm/usdc";
-import { useFacilitator } from "../client";
-import { getPaywallHtml } from "./paywall";
-export { getPaywallHtml } from "./paywall";
+import { evm } from "x402/shared";
+import { useFacilitator } from "x402/client";
+// import { getPaywallHtml } from "x402/paywall";
+// export { getPaywallHtml } from "x402/paywall";
+import { BASE_USDC_ASSET_ID } from "./constants";
+import { getDepositAddress, getDepositedBalance } from "./intents";
 
 interface PaymentMiddlewareOptions {
   description?: string;
@@ -24,9 +26,7 @@ interface PaymentMiddlewareOptions {
   resource?: Resource | null;
 }
 
-export function paymentMiddleware(
-  amount: Money,
-  address: Address,
+export function intentsPaymentMiddleware(
   {
     description = "",
     mimeType = "",
@@ -38,27 +38,59 @@ export function paymentMiddleware(
     resource = null,
   }: PaymentMiddlewareOptions = {},
 ): MiddlewareHandler {
-  const parsedAmount = moneySchema.safeParse(amount);
-  if (!parsedAmount.success) {
-    throw new Error(
-      `Invalid amount (amount: ${amount}). Must be in the form "$3.10", 0.10, "0.001", ${parsedAmount.error}`,
-    );
-  }
-
   const { verify, settle } = useFacilitator(facilitatorUrl);
 
   return async (c, next) => {
+    const body = await c.req.json();
+    const method = body.method;
+
+    if (method !== "publish_intent") {
+      console.log("Not publish intent. Skip.");
+      await next();
+      return;
+    }
+
+    const params = body.params;
+
+    const payload = params[0]?.signed_data?.payload;
+    const parsedPayload = JSON.parse(payload);
+    const signerId = parsedPayload.signer_id;
+    const intents = parsedPayload.intents;
+    const requiredBalance = intents
+        .filter((intent: any) => intent.intent === "token_diff")
+        .reduce((acc: bigint, intent: any) => {
+          return acc + BigInt(intent.diff[BASE_USDC_ASSET_ID] ?? 0);
+        }, 0n);
+      
+    const [depositAddress, depositedBalance] = await Promise.all([
+      getDepositAddress(signerId),
+      getDepositedBalance(signerId)
+    ]);
+
+    console.log("address and balance:", {
+      depositAddress,
+      requiredBalance,
+      depositedBalance
+    });
+
+    const amount = (-requiredBalance) - BigInt(depositedBalance);
+    if (amount <= 0) {
+      console.log("Enough balance. Skip.");
+      await next();
+      return;
+    }
+
     let resourceUrl = resource || (c.req.url as Resource);
     const paymentDetails: PaymentDetails = {
       scheme: "exact",
       networkId: testnet ? "84532" : "8453",
-      maxAmountRequired: BigInt(parsedAmount.data * 10 ** 6),
+      maxAmountRequired: amount,
       resource: resourceUrl,
       description,
       mimeType,
-      payToAddress: address,
+      payToAddress: depositAddress.address,
       requiredDeadlineSeconds: maxDeadlineSeconds,
-      usdcAddress: getUsdcAddressForChain(testnet ? 84532 : 8453),
+      usdcAddress: evm.usdc.getUsdcAddressForChain(testnet ? 84532 : 8453),
       outputSchema,
       extra: null,
     };
@@ -72,20 +104,6 @@ export function paymentMiddleware(
 
     if (!payment) {
       console.log("No payment header found, returning 402");
-      // If it's a browser request, serve the paywall page
-      if (isWebBrowser) {
-        const html =
-          customPaywallHtml ||
-          getPaywallHtml({
-            amount: parsedAmount.data,
-            paymentDetails: toJsonSafe(paymentDetails),
-            currentUrl: c.req.url,
-            testnet,
-          });
-
-        return c.html(html, 402);
-      }
-
       // For API requests, return JSON with payment details
       return c.json(
         {
@@ -108,9 +126,6 @@ export function paymentMiddleware(
       );
     }
 
-    console.log("Payment verified, proceeding");
-    await next();
-
     try {
       const settleResponse = await settle(payment, paymentDetails);
       const responseHeader = settleResponseHeader(settleResponse);
@@ -127,5 +142,8 @@ export function paymentMiddleware(
         402,
       );
     }
+
+    console.log("Payment settled. Proceeding...");
+    await next();
   };
 }

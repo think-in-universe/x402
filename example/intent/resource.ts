@@ -1,16 +1,17 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { logger } from "hono/logger";
-import { paymentMiddleware } from "x402/hono";
+import { intentsPaymentMiddleware } from "./middleware";
 import axios from "axios";
 import { SOLVER_RELAY_BASE_URL } from "./constants";
 
 const app = new Hono();
 const port = 4021;
 
-// app.use("/rpc", paymentMiddleware("$0.01", "0x209693Bc6afc0C5328bA36FaF03C514EF312287C", {
-//   facilitatorUrl: 'http://localhost:4020'
-// }));
+app.use("/rpc", intentsPaymentMiddleware({
+  facilitatorUrl: 'http://localhost:4020',
+  testnet: false,
+}));
 
 app.use("*", logger());
 
