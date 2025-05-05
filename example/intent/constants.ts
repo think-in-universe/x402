@@ -1,0 +1,9 @@
+// NEAR Intents Solver Relay URL
+export const SOLVER_RELAY_BASE_URL = "https://solver-relay-v2.chaindefuser.com";
+
+// NEAR Intents Asset IDs
+export const BASE_USDC_ASSET_ID = "nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near";
+export const NEAR_USDC_ASSET_ID = "nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1";
+
+// NEAR Intents Referral
+export const NEAR_INTENTS_REFERRAL = "coinbase-intent.near";

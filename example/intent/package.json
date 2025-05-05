@@ -1,5 +1,5 @@
 {
-  "name": "example",
+  "name": "near-intents-x402-example",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -12,9 +12,9 @@
   },
   "keywords": [],
   "license": "Apache-2.0",
-  "author": "Coinbase Inc.",
+  "author": "NEAR AI",
   "repository": "https://github.com/coinbase/x402",
-  "description": "x402 Payment Protocol Examples",
+  "description": "NEAR Intents x402 Payment Protocol Examples",
   "dependencies": {
     "@hono/node-server": "^1.13.8",
     "@modelcontextprotocol/sdk": "^1.6.1",
