@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { createWalletClient, Hex, http, publicActions } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { baseSepolia } from "viem/chains";
+import { base } from "viem/chains";
 
 import { verify, settle } from "x402/facilitator";
 import { paymentDetailsSchema, PaymentDetails } from "x402/types";
@@ -21,7 +21,7 @@ type SettleRequest = {
 };
 
 const wallet = createWalletClient({
-  chain: baseSepolia,
+  chain: base,
   transport: http(),
   account: privateKeyToAccount(process.env.FACILITATOR_WALLET_PRIVATE_KEY as Hex),
 }).extend(publicActions);
