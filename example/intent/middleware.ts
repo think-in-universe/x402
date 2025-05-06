@@ -131,6 +131,9 @@ export function intentsPaymentMiddleware(
       const responseHeader = settleResponseHeader(settleResponse);
 
       c.header("X-PAYMENT-RESPONSE", responseHeader);
+
+      // TODO: wait until all recent deposits are confirmed
+      await new Promise(resolve => setTimeout(resolve, 20000));
     } catch (error) {
       console.log("Settlement failed:", error);
 
