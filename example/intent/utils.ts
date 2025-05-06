@@ -39,3 +39,7 @@ export function randomNonce(): string {
 function randomBytes(length: number): Uint8Array {
   return crypto.getRandomValues(new Uint8Array(length))
 }
+
+export async function wait(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}

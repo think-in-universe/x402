@@ -13,7 +13,11 @@ import { useFacilitator } from "x402/client";
 // import { getPaywallHtml } from "x402/paywall";
 // export { getPaywallHtml } from "x402/paywall";
 import { BASE_USDC_ASSET_ID } from "./constants";
-import { getDepositAddress, getDepositedBalance } from "./intents";
+import {
+  getDepositAddress,
+  getDepositedBalance,
+  waitForDepositsConfirmation
+} from "./intents";
 
 interface PaymentMiddlewareOptions {
   description?: string;
@@ -132,8 +136,7 @@ export function intentsPaymentMiddleware(
 
       c.header("X-PAYMENT-RESPONSE", responseHeader);
 
-      // TODO: wait until all recent deposits are confirmed
-      await new Promise(resolve => setTimeout(resolve, 20000));
+      await waitForDepositsConfirmation(signerId);
     } catch (error) {
       console.log("Settlement failed:", error);
 

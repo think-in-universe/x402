@@ -7,9 +7,8 @@ import {
   POA_BRIDGE_BASE_URL,
   NEAR_RPC_URL,
 } from "./constants";
-import { randomNonce, transformERC191Signature } from "./utils";
+import { randomNonce, transformERC191Signature, wait } from "./utils";
 import { evm } from "x402/shared";
-import { base64 } from "@scure/base";
 
 // The swap function now supports swap Base USDC to NEAR USDC.
 // TODO: The current version assumes the receiver has registered native USDC with sufficient
@@ -136,6 +135,36 @@ export async function getDepositAddress(accountId: string) {
 
   const data = await res.json();
   return data.result;
+}
+
+export async function getPendingDeposits(accountId: string) {
+  const res = await fetch(`${POA_BRIDGE_BASE_URL}/rpc`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      "id": "dontcare",
+      "jsonrpc": "2.0",
+      "method": "recent_deposits",
+      "params": [{
+        "account_id": accountId
+      }]
+    }),
+  });
+
+  const data = await res.json();
+  return data.result?.deposits?.filter(d => d.status === "PENDING");
+}
+
+export async function waitForDepositsConfirmation(accountId: string) {
+  await wait(2000);
+  let deposits = await getPendingDeposits(accountId);
+  while (deposits && deposits.length > 0) {
+    await wait(1000);
+    deposits = await getPendingDeposits(accountId);
+  }
+  await wait(2000);
 }
 
 export async function getDepositedBalance(accountId: string) {
