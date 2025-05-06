@@ -3,7 +3,7 @@ import { ConnectedClient, SignerWallet } from "../shared/evm/wallet";
 import { PaymentDetails, SettleResponse, VerifyResponse } from "../types";
 import { Chain, Transport, Account } from "viem";
 
-const supportedEVMNetworks = ["84532"];
+const supportedEVMNetworks = ["84532", "8453"];
 
 /**
  * Verifies a payment payload against the required payment details regardless of the scheme

@@ -4,7 +4,7 @@ import axios from "axios";
 import { PaymentDetails, SettleResponse, VerifyResponse } from "./types";
 import { toJsonSafe } from "./types";
 
-const supportedEVMNetworks = ["84532"];
+const supportedEVMNetworks = ["84532", "8453"];
 
 export async function createPaymentHeader(
   client: SignerWallet,
