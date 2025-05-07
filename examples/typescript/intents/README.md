@@ -1,6 +1,9 @@
-# x402 Payment Proxy Demo with NEAR Intents
+# NEAR Intents x402 Payment Demo 
 
-This example demonstrates how to implement a payment proxy using x402's middleware system, showcased through a NEAR Intents integration for swapping Base USDC to NEAR USDC. The demo illustrates how to handle deposit into NEAR Intents per request using x402.
+By merging x402’s frictionless payments with NEAR intents, we allow users to confidently buy anything through their AI agent, while agent developers collect revenue through cross-chain settlements that make blockchain complexity invisible.
+
+This example demonstrates how to implement a payment proxy server using x402's middleware system, which handles deposit into NEAR Intents per intent using x402. The client demo illustrates how to swap Base USDC into NEAR USDC with x402 and NEAR Intents.
+
 
 ## Setup and Configuration
 
