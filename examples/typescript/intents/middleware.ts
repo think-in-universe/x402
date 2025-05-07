@@ -62,6 +62,7 @@ export function intentsPaymentMiddleware(
     const method = body.method;
 
     // Payment is only required for publishing intents
+    // TODO: publish_intents should be supported in the future
     if (method !== "publish_intent") {
       await next();
       return;
@@ -73,12 +74,15 @@ export function intentsPaymentMiddleware(
     const parsedPayload = JSON.parse(payload);
     const signerId = parsedPayload.signer_id;
     const intents = parsedPayload.intents;
+
+    // Calculate the required BASE USDC balance for the intents
     const requiredBalance: bigint = 0n - intents
       .filter((intent: any) => intent.intent === "token_diff")
       .reduce((acc: bigint, intent: any) => {
         return acc + BigInt(intent.diff[BASE_USDC_ASSET_ID] ?? 0);
       }, 0n);
 
+    // Get the deposit address and the deposited balance
     const [depositAddress, depositedBalance] = await Promise.all([
       getDepositAddress(signerId),
       getDepositedBalance(signerId)

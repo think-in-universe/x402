@@ -12,3 +12,6 @@ export const NEAR_INTENTS_REFERRAL = "coinbase-intent.near";
 
 // NEAR Intents Verifying Contract
 export const NEAR_INTENTS_CONTRACT = "intents.near";
+
+// NEP141 Storage Token ID
+export const NEP141_STORAGE_TOKEN_ID = "nep141:wrap.near";

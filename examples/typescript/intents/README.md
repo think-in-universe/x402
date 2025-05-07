@@ -41,11 +41,11 @@ npm run facilitator
 The resource server acts as the x402 proxy endpoint for NEAR Intents RPC:
 
 ```bash
-npm run resource
+npm run server
 ```
 
 ### 3. Run the Client Demo
-Execute the USDC swap example:
+Execute demo that swaps $0.01 Base USDC to NEAR USDC:
 
 ```bash
 npm run client

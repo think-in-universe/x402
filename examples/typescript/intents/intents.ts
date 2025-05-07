@@ -6,18 +6,17 @@ import {
   NEAR_INTENTS_CONTRACT,
   POA_BRIDGE_BASE_URL,
   NEAR_RPC_URL,
+  NEP141_STORAGE_TOKEN_ID,
 } from "./constants";
 import { randomNonce, transformERC191Signature, wait } from "./utils";
 import { Account, WalletClient } from "viem";
 
 // The swap function now supports swap Base USDC to NEAR USDC.
-// TODO: The current version assumes the receiver has registered native USDC with sufficient
-// storage balance, which needs to be improved in the next version.
 export async function publishSwapIntent({
   axiosInstance,
   url,
   signer,
-  amount,
+  amountIn,
   receiverId,
   tokenIn = BASE_USDC_ASSET_ID,
   tokenOut = NEAR_USDC_ASSET_ID,
@@ -25,16 +24,38 @@ export async function publishSwapIntent({
   axiosInstance: AxiosInstance,
   url: string,
   signer: WalletClient,
-  amount: bigint,
+  amountIn: bigint,
   receiverId: string,
   tokenIn?: string,
   tokenOut?: string,
 }) {
-  const amountIn = amount.toString();
+  const tokenOutId = tokenOut.split(":")[1];
 
-  console.log("Getting quote...");
+  let quoteStorage: any = null;
+  let storageCost = 0n;
 
-  const quote = await axiosInstance.post(url, {
+  const storageRequired = await getNearNep141StorageRequired(tokenOutId, receiverId);
+
+  if (storageRequired > 0n) {
+    const res = await axiosInstance.post(url, {
+      jsonrpc: "2.0",
+      id: crypto.randomUUID(),
+      method: "quote",
+      params: [
+        {
+          defuse_asset_identifier_in: tokenOut,
+          defuse_asset_identifier_out: NEP141_STORAGE_TOKEN_ID,
+          exact_amount_out: storageRequired.toString(),
+          min_deadline_ms: 10 * 60 * 1000, // 10 minutes
+          wait_ms: 2000 // 2 seconds
+        }
+      ]
+    });
+    quoteStorage = res.data.result[0] as any;
+    storageCost = BigInt(quoteStorage?.amount_in ?? 0);
+  }
+
+  const quoteRes = await axiosInstance.post(url, {
     jsonrpc: "2.0",
     id: crypto.randomUUID(),
     method: "quote",
@@ -42,49 +63,70 @@ export async function publishSwapIntent({
       {
         defuse_asset_identifier_in: tokenIn,
         defuse_asset_identifier_out: tokenOut,
-        exact_amount_in: amountIn,
+        exact_amount_in: amountIn.toString(),
         min_deadline_ms: 10 * 60 * 1000, // 10 minutes
         wait_ms: 2000 // 2 seconds
       }
     ]
   });
 
-  const result = quote.data.result[0];
-  if (!result) {
+  const quote = quoteRes.data.result[0];
+  if (!quote) {
     throw new Error("No quote found");
   }
 
-  const { amount_out: amountOut, quote_hash: quoteHash } = result;
+  const amountOut = BigInt(quote.amount_out);
+  const quoteHashes = quoteStorage ? [quote.quote_hash, quoteStorage.quote_hash] : [quote.quote_hash];
 
-  console.log("Publishing intent...");
+  const intents: any[] = [
+    {
+      intent: "token_diff",
+      diff: {
+        [tokenIn]: "-" + amountIn, // Base USDC for example
+        [tokenOut]: amountOut.toString(), // NEAR USDC for example
+      },
+      referral: NEAR_INTENTS_REFERRAL
+    }
+  ];
+
+  if (quoteStorage) {
+    intents.push({
+      intent: "token_diff",
+      diff: {
+        [tokenOut]: "-" + storageCost.toString(),
+        [NEP141_STORAGE_TOKEN_ID]: storageRequired.toString(),
+      },
+      referral: NEAR_INTENTS_REFERRAL
+    }, {
+      intent: "ft_withdraw",
+      token: tokenOutId, // NEAR USDC for example
+      receiver_id: receiverId,
+      amount: (amountOut - storageCost).toString(),
+      storage_deposit: storageRequired.toString(),
+    });
+  } else {
+    intents.push({
+      intent: "ft_withdraw",
+      token: tokenOutId, // NEAR USDC for example
+      receiver_id: receiverId,
+      amount: amountOut.toString(),
+    });
+  }
 
   const payload = {
     signer_id: signer.account?.address.toLowerCase(),
     verifying_contract: NEAR_INTENTS_CONTRACT,
     deadline: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 1 minute from now
     nonce: randomNonce(),
-    intents: [
-      {
-        intent: "token_diff",
-        diff: {
-          [tokenIn]: "-" + amountIn, // Base USDC
-          [tokenOut]: amountOut, // NEAR USDC
-        },
-        referral: NEAR_INTENTS_REFERRAL
-      },
-      {
-        intent: "ft_withdraw",
-        token: tokenOut.split(":")[1], // NEAR USDC
-        receiver_id: receiverId,
-        amount: amountOut,
-      }
-    ]
+    intents
   };
 
   const signature = await signer.signMessage({
     message: JSON.stringify(payload),
     account: signer.account as Account
   });
+
+  console.log("Publishing intents...\n", intents);
 
   const res = await axiosInstance.post(url, {
     jsonrpc: "2.0",
@@ -97,19 +139,36 @@ export async function publishSwapIntent({
           payload: JSON.stringify(payload),
           signature: transformERC191Signature(signature)
         },
-        quote_hashes: [quoteHash]
+        quote_hashes: quoteHashes
       }
     ],
   });
 
-  console.log(res.data.result);
   if (res.data.result.status === "OK") {
     console.log("The intent has been published");
   } else {
     console.error("The intent failed to publish");
   }
+  console.log(res.data.result);
 
-  return res;
+  const intentHash = res.data.result.intent_hash;
+  let status = "PENDING";
+  while (status !== "SETTLED") {
+    await wait(1000);
+    const res = await axiosInstance.post(url, {
+      jsonrpc: "2.0",
+      id: "dontcare",
+      method: "get_status",
+      params: [
+        {
+          intent_hash: intentHash
+        }
+      ],
+    });
+    status = res.data.result.status;
+  }
+
+  console.log(`Intent ${intentHash} has been settled`);
 }
 
 /**
@@ -189,11 +248,11 @@ export async function nearViewFunction({
   const data = await res.json();
   const result = data.result?.result;
   const parsed = JSON.parse(Buffer.from(result).toString('utf8'));
-  return parsed[0];
+  return parsed;
 }
 
 export async function getDepositedBalance(accountId: string) {
-  const balance = await nearViewFunction({
+  const balances = await nearViewFunction({
     contractId: NEAR_INTENTS_CONTRACT,
     method: "mt_batch_balance_of",
     args: {
@@ -203,7 +262,59 @@ export async function getDepositedBalance(accountId: string) {
       ]
     }
   });
-  return BigInt(balance);
+  return BigInt(balances[0]);
+}
+
+export async function getNearNep141Balance(contractId: string, accountId: string): Promise<bigint> {
+  try {
+    const result = await nearViewFunction({
+      contractId,
+      method: "ft_balance_of",
+      args: { account_id: accountId }
+    });
+
+    return BigInt(result ?? 0);
+  } catch (error) {
+    console.error("Error fetching NEP-141 fungible token balance", error);
+    return 0n;
+  }
+}
+
+export async function getNearNep141StorageBalance(contractId: string, accountId: string): Promise<bigint> {
+  try {
+    const result = await nearViewFunction({
+      contractId,
+      method: "storage_balance_of",
+      args: { account_id: accountId }
+    });
+
+    return BigInt(result?.total ?? 0);
+  } catch (error) {
+    console.error("Error fetching storage balance", error);
+    return 0n;
+  }
+}
+
+export async function getNearNep141MinStorageBalance(contractId: string): Promise<bigint> {
+  try {
+    const result = await nearViewFunction({
+      contractId,
+      method: "storage_balance_bounds",
+      args: {}
+    });
+    return BigInt(result.min) ?? 0n;
+  } catch (error) {
+    console.error("Error fetching storage balance bounds", error);
+    return 0n;
+  }
+}
+
+export async function getNearNep141StorageRequired(contractId: string, accountId: string): Promise<bigint> {
+  const [min, balance] = await Promise.all([
+    getNearNep141MinStorageBalance(contractId),
+    getNearNep141StorageBalance(contractId, accountId)
+  ]);
+  return min - balance;
 }
 
 export async function waitForDepositsConfirmation(accountId: string) {
