@@ -86,7 +86,7 @@ export async function publishSwapIntent({
     account: signer.account as Account
   });
 
-  const data = {
+  const res = await axiosInstance.post(url, {
     jsonrpc: "2.0",
     id: "dontcare",
     method: "publish_intent",
@@ -100,9 +100,7 @@ export async function publishSwapIntent({
         quote_hashes: [quoteHash]
       }
     ],
-  };
-  console.log("publishing intent", JSON.stringify(data, null, 2));
-  const res = await axiosInstance.post(url, data);
+  });
 
   console.log(res.data.result);
   if (res.data.result.status === "OK") {
@@ -160,17 +158,6 @@ export async function getPendingDeposits(accountId: string) {
   return data.result?.deposits?.filter(d => d.status === "PENDING");
 }
 
-export async function waitForDepositsConfirmation(accountId: string) {
-  console.log('waiting for deposits confirmation...');
-  await wait(2000);
-  let deposits = await getPendingDeposits(accountId);
-  while (deposits && deposits.length > 0) {
-    await wait(1000);
-    console.log('wait pending deposit 1s...')
-    deposits = await getPendingDeposits(accountId);
-  }
-}
-
 export async function nearViewFunction({
   contractId,
   method,
@@ -206,7 +193,7 @@ export async function nearViewFunction({
 }
 
 export async function getDepositedBalance(accountId: string) {
-  return nearViewFunction({
+  const balance = await nearViewFunction({
     contractId: NEAR_INTENTS_CONTRACT,
     method: "mt_batch_balance_of",
     args: {
@@ -216,17 +203,22 @@ export async function getDepositedBalance(accountId: string) {
       ]
     }
   });
+  return BigInt(balance);
+}
+
+export async function waitForDepositsConfirmation(accountId: string) {
+  await wait(2000);
+  let deposits = await getPendingDeposits(accountId);
+  while (deposits && deposits.length > 0) {
+    await wait(1000);
+    deposits = await getPendingDeposits(accountId);
+  }
 }
 
 export async function waitForDepositedBalance(accountId: string, minimumBalance: bigint) {
   let balance = await getDepositedBalance(accountId);
-  console.log('waiting for deposited balance...', balance, minimumBalance);
   while (balance < minimumBalance) {
     await wait(1000);
-    console.log('wait balance 1s...', balance, minimumBalance);
     balance = await getDepositedBalance(accountId);
   }
-  console.log('enough balance...');
-  await wait(10000);
-  console.log('wait for enough time before publishing intents...');
 }

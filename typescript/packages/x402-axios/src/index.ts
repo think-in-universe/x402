@@ -84,9 +84,6 @@ export function withPaymentInterceptor(
         originalConfig.headers["Access-Control-Expose-Headers"] = "X-PAYMENT-RESPONSE";
 
         const secondResponse = await axiosClient.request(originalConfig);
-
-        console.log("resent request", new Date().toISOString(), originalConfig.data);
-
         return secondResponse;
       } catch (paymentError) {
         return Promise.reject(paymentError);

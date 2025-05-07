@@ -70,8 +70,8 @@ export function intentsPaymentMiddleware(
     const body = await c.req.json();
     const method = body.method;
 
+    // Payment is only required for publishing intents
     if (method !== "publish_intent") {
-      console.log("Not publish intent. Skip.");
       await next();
       return;
     }
@@ -93,19 +93,21 @@ export function intentsPaymentMiddleware(
       getDepositedBalance(signerId)
     ]);
 
-    console.log("address and balance:", {
-      depositAddress,
-      requiredBalance,
-      depositedBalance
-    });
-
-    const price = Number(requiredBalance - BigInt(depositedBalance)) / 10 ** 6;
+    const price = Number(requiredBalance - depositedBalance) / 10 ** 6;
     if (price <= 0) {
-      console.log("Enough balance. Skip.");
       await next();
       return;
     }
 
+    console.log("Payment requirements:", {
+      signerId,
+      depositAddress,
+      requiredBalance,
+      availableBalance: depositedBalance,
+      requiredPayment: requiredBalance - depositedBalance
+    });
+
+    // Only Base mainnet is supported for now
     const network = "base";
     const atomicAmountForAsset = processPriceToAtomicAmount(price, network);
     if ("error" in atomicAmountForAsset) {
@@ -213,9 +215,6 @@ export function intentsPaymentMiddleware(
       );
     }
 
-    // Proceed with request
-    await next();
-
     // Settle payment after response
     try {
       const settlement = await settle(decodedPayment, paymentRequirements[0]);
@@ -230,7 +229,7 @@ export function intentsPaymentMiddleware(
           }),
         );
 
-        // await waitForDepositsConfirmation(signerId);
+        await waitForDepositsConfirmation(signerId);
         await waitForDepositedBalance(signerId, requiredBalance);
       }
     } catch (error) {
@@ -243,5 +242,9 @@ export function intentsPaymentMiddleware(
         402,
       );
     }
+
+    console.log("Payment settled. Proceeding...");
+    // Proceed with request
+    await next();
   };
 }
