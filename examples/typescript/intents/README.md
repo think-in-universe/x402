@@ -1,6 +1,6 @@
 # NEAR Intents x402 Payment Demo 
 
-By merging x402’s frictionless payments with NEAR intents, we allow users to confidently buy anything through their AI agent, while agent developers collect revenue through cross-chain settlements that make blockchain complexity invisible.
+By merging x402’s frictionless payments with [NEAR Intents](https://near.org/intents), we allow users to confidently buy anything through their AI agent, while agent developers collect revenue through cross-chain settlements that make blockchain complexity invisible.
 
 This example demonstrates how to implement a payment proxy server using x402's middleware system, which handles deposit into NEAR Intents per intent using x402. The client demo illustrates how to swap Base USDC into NEAR USDC with x402 and NEAR Intents.
 
