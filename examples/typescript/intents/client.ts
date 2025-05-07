@@ -21,11 +21,8 @@ axiosInstance = withPaymentInterceptor(axiosInstance, wallet);
 const usdcContractId = NEAR_USDC_ASSET_ID.split(":")[1];
 const receiverId = "robertyan.near";
 
-const receiverBalance = await getNearNep141Balance(usdcContractId, receiverId);
-console.log(
-  "Receiver balance:",
-  receiverBalance
-);
+const receiverBalance = Number(await getNearNep141Balance(usdcContractId, receiverId)) / 10 ** 6;
+console.log(`Receiver USDC balance on NEAR: ${receiverBalance} USDC`);
 
 // Publish an intent that swaps 0.01 Base USDC to NEAR USDC
 // The Base USDC is paid via x402 payment protocol
@@ -39,12 +36,5 @@ await publishSwapIntent({
   tokenOut: NEAR_USDC_ASSET_ID,
 });
 
-const newReceiverBalance = await getNearNep141Balance(usdcContractId, receiverId);
-console.log(
-  "Receiver new balance:",
-  newReceiverBalance
-);
-console.log(
-  "Receiver balance increase:",
-  newReceiverBalance - receiverBalance
-);
+const newReceiverBalance = Number(await getNearNep141Balance(usdcContractId, receiverId)) / 10 ** 6;
+console.log(`Receiver USDC balance on NEAR: ${newReceiverBalance} USDC (increased by ${(newReceiverBalance - receiverBalance).toFixed(6)} USDC)`);

@@ -321,6 +321,7 @@ export async function waitForDepositsConfirmation(accountId: string) {
   await wait(2000);
   let deposits = await getPendingDeposits(accountId);
   while (deposits && deposits.length > 0) {
+    console.log('wait 1s for pending deposit in NEAR Intents ...');
     await wait(1000);
     deposits = await getPendingDeposits(accountId);
   }
@@ -329,6 +330,7 @@ export async function waitForDepositsConfirmation(accountId: string) {
 export async function waitForDepositedBalance(accountId: string, minimumBalance: bigint) {
   let balance = await getDepositedBalance(accountId);
   while (balance < minimumBalance) {
+    console.log('wait 1s for deposited balance ...');
     await wait(1000);
     balance = await getDepositedBalance(accountId);
   }
