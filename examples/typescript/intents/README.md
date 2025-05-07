@@ -9,13 +9,13 @@ First, we need to build and install all necessary packages:
 
 ```bash
 # Navigate to the root directory and install root dependencies
-cd ../.. && pnpm install
+cd ../../.. && pnpm install
 
 # Build the x402 package which contains core functionality
 cd typescript && pnpm run build
 
 # Install the example's dependencies
-cd ../examples/typescript/intents && pnpm install && cd intents
+cd ../examples/typescript && pnpm install && cd intents
 ```
 
 ### 2. Configure Environment
