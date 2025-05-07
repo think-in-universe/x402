@@ -33,7 +33,7 @@ export type ConnectedClient<
 > = PublicClient<transport, chain, account>;
 
 /**
- * Creates a public client configured for the Base testnet
+ * Creates a public client configured for the Base mainnet
  *
  * @returns A public client instance connected to Base
  */
@@ -45,7 +45,7 @@ export function createClientBase(): ConnectedClient<Transport, typeof base, unde
 }
 
 /**
- * Creates a wallet client configured for the Base testnet with a private key
+ * Creates a wallet client configured for the Base mainnet with a private key
  *
  * @param privateKey - The private key to use for signing transactions
  * @returns A wallet client instance connected to Base with the provided private key
