@@ -24,7 +24,7 @@ app.post("/rpc", async c => {
   return c.json(res.data);
 });
 
-console.log(`Resource running on port ${port}`);
+console.log(`Server running on port ${port}`);
 
 serve({
   port: port,
