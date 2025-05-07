@@ -28,6 +28,7 @@ console.log(
 );
 
 // Publish an intent that swaps 0.01 Base USDC to NEAR USDC
+// The Base USDC is paid via x402 payment protocol
 await publishSwapIntent({
   axiosInstance,
   url: resourceUrl,

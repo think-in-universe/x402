@@ -30,7 +30,6 @@ const app = new Hono();
 app.use("*", logger());
 
 app.post("/verify", async c => {
-  // TODO: add zod validation
   const req: VerifyRequest = await c.req.json();
 
   const paymentRequirements = PaymentRequirementsSchema.parse(req.paymentRequirements);
