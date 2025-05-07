@@ -23,7 +23,7 @@ import { getDepositAddress, getDepositedBalance, waitForDepositedBalance, waitFo
 import { BASE_USDC_ASSET_ID } from "./constants";
 
 /**
- * Enables APIs to be paid for using the x402 payment protocol.
+ * Enables intents to be paid for using the x402 payment protocol.
  *
  * This middleware:
  * 1. Validates payment headers and requirements
@@ -32,22 +32,13 @@ import { BASE_USDC_ASSET_ID } from "./constants";
  * 4. Verifies and settles payments
  * 5. Sets appropriate response headers
  *
- * @param payTo - Address to receive payments
- * @param routes - Route configuration for payment amounts
  * @param facilitator - Configuration for the payment facilitator service
  *
  * @returns A function that creates a Hono middleware handler for a specific payment amount
  *
  * @example
  * ```typescript
- * const middleware = paymentMiddleware(
- *   '0x123...',
- *   {
- *     '/premium/*': {
- *       price: '$0.01',
- *       network: 'base'
- *     }
- *   },
+ * const middleware = intentsPaymentMiddleware(
  *   {
  *     url: 'https://facilitator.example.com',
  *     createAuthHeaders: async () => ({
@@ -57,7 +48,7 @@ import { BASE_USDC_ASSET_ID } from "./constants";
  *   }
  * );
  *
- * app.use('/premium', middleware);
+ * app.use('/rpc', middleware);
  * ```
  */
 export function intentsPaymentMiddleware(

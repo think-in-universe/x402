@@ -15,7 +15,8 @@ const wallet = createWalletClient({
 
 const resourceUrl = "http://localhost:4021/rpc";
 
-const axiosInstance = withPaymentInterceptor(axios.create({}), wallet);
+let axiosInstance = axios.create({});
+axiosInstance = withPaymentInterceptor(axiosInstance, wallet);
 
 // Publish an intent that swaps 0.01 Base USDC to NEAR USDC
 await publishSwapIntent({
