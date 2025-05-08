@@ -2,8 +2,12 @@
 
 By merging x402’s frictionless payments with [NEAR Intents](https://near.org/intents), we allow users to confidently buy anything through their AI agent, while agent developers collect revenue through cross-chain settlements that make blockchain complexity invisible.
 
-This example demonstrates how to implement a payment proxy server using x402's middleware system, which handles deposit into NEAR Intents per intent using x402. The client demo illustrates how to swap Base USDC into NEAR USDC with x402 and NEAR Intents.
+In this example, we demonstrate how agents can use intents to receive USDC on NEAR with x402 payment. 
 
+- The process looks very similar to swapping Base USDC to NEAR USDC, but the agents don't need to deposit any Base USDC manually, which will be done automatically via x402 payment [client interceptor](./client.ts) after receiving the 402 response.
+- We also implemented a server [middleware](./middleware.ts) for NEAR Intents which will calculate the amount of Base USDC that is required per each intent, and return the 402 response with the payment requirement (receiver address + USDC amount). The middleware is used in the [x402 proxy server](./server.ts) for NEAR Intents.
+
+You can find a presentation about the example in this [recording](https://www.loom.com/share/0e636838552e412e881e6fc2e9ae6dff?sid=7cc00127-5bc8-4b33-96f9-c2dc1640ba7f).
 
 ## Setup and Configuration
 
