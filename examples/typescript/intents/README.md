@@ -4,8 +4,8 @@ By merging x402’s frictionless payments with [NEAR Intents](https://near.org/i
 
 In this example, we demonstrate how agents can use intents to receive USDC on NEAR with x402 payment. 
 
-- The process looks very similar to swapping Base USDC to NEAR USDC, but the agents don't need to deposit any Base USDC manually, which will be done automatically via x402 payment [client interceptor](./client.ts) after receiving the 402 response.
-- We also implemented a server [middleware](./middleware.ts) for NEAR Intents which will calculate the amount of Base USDC that is required per each intent, and return the 402 response with the payment requirement (receiver address + USDC amount). The middleware is used in the [x402 proxy server](./server.ts) for NEAR Intents.
+- The process looks very similar to swapping Base USDC to NEAR USDC, but the agents don't need to deposit any Base USDC manually, which will be done automatically via x402 payment [client interceptor](./client.ts) after receiving the 402 response of its first request.
+- We also implemented a server [middleware](./middleware.ts) for NEAR Intents which will calculate the amount of Base USDC that is required for each intent, and return the 402 response with the payment requirement (receiver address + USDC amount). The middleware is used in the [x402 proxy server](./server.ts) that redirects requests to NEAR Intents solver relay.
 
 You can find a presentation about the example in this [recording](https://www.loom.com/share/0e636838552e412e881e6fc2e9ae6dff?sid=7cc00127-5bc8-4b33-96f9-c2dc1640ba7f).
 
