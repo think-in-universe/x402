@@ -1,4 +1,3 @@
-import axios from "axios";
 import { toJsonSafe } from "../shared";
 import { FacilitatorConfig } from "../types";
 import {
@@ -35,25 +34,28 @@ export function useFacilitator(facilitator?: FacilitatorConfig) {
   ): Promise<VerifyResponse> {
     const url = facilitator?.url || DEFAULT_FACILITATOR_URL;
 
-    const res = await axios.post(
-      `${url}/verify`,
-      {
+    let headers = { "Content-Type": "application/json" };
+    if (facilitator?.createAuthHeaders) {
+      const authHeaders = await facilitator.createAuthHeaders();
+      headers = { ...headers, ...authHeaders.verify };
+    }
+
+    const res = await fetch(`${url}/verify`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
         x402Version: payload.x402Version,
         paymentPayload: toJsonSafe(payload),
         paymentRequirements: toJsonSafe(paymentRequirements),
-      },
-      {
-        headers: facilitator?.createAuthHeaders
-          ? (await facilitator.createAuthHeaders()).verify
-          : undefined,
-      },
-    );
+      }),
+    });
 
     if (res.status !== 200) {
       throw new Error(`Failed to verify payment: ${res.statusText}`);
     }
 
-    return res.data as VerifyResponse;
+    const data = await res.json();
+    return data as VerifyResponse;
   }
 
   /**
@@ -69,25 +71,29 @@ export function useFacilitator(facilitator?: FacilitatorConfig) {
   ): Promise<SettleResponse> {
     const url = facilitator?.url || DEFAULT_FACILITATOR_URL;
 
-    const res = await axios.post(
-      `${url}/settle`,
-      {
+    let headers = { "Content-Type": "application/json" };
+    if (facilitator?.createAuthHeaders) {
+      const authHeaders = await facilitator.createAuthHeaders();
+      headers = { ...headers, ...authHeaders.settle };
+    }
+
+    const res = await fetch(`${url}/settle`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
         x402Version: payload.x402Version,
         paymentPayload: toJsonSafe(payload),
         paymentRequirements: toJsonSafe(paymentRequirements),
-      },
-      {
-        headers: facilitator?.createAuthHeaders
-          ? (await facilitator.createAuthHeaders()).settle
-          : undefined,
-      },
-    );
+      }),
+    });
 
     if (res.status !== 200) {
-      throw new Error(`Failed to settle payment: ${res.statusText}`);
+      const text = res.statusText;
+      throw new Error(`Failed to settle payment: ${res.status} ${text}`);
     }
 
-    return res.data as SettleResponse;
+    const data = await res.json();
+    return data as SettleResponse;
   }
 
   return { verify, settle };

@@ -43,6 +43,7 @@ export function computeRoutePatterns(routes: RoutesConfig): RoutePattern[] {
           .replace(/\*/g, ".*?") // Make wildcard non-greedy and optional
           .replace(/\[([^\]]+)\]/g, "[^/]+")
           .replace(/\//g, "\\/")}$`,
+        "i",
       ),
       config: routeConfig,
     };
@@ -92,7 +93,7 @@ export function getDefaultAsset(network: Network) {
     address: getUsdcAddressForChain(getNetworkId(network)),
     decimals: 6,
     eip712: {
-      name: network === "base" ? "USD Coin" : "USDC",
+      name: network === "base" ? "USD Coin" : network === "iotex" ? "Bridged USDC" : "USDC",
       version: "2",
     },
   };

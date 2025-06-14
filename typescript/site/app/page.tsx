@@ -9,6 +9,8 @@ import {
   QuestionMarkCircleIcon,
   CodeBracketIcon,
   BookOpenIcon,
+  BriefcaseIcon,
+  Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 import { FeatureItem } from './components/FeatureItem';
 import GithubIcon from './assets/github.svg';
@@ -16,12 +18,12 @@ import DiscordIcon from './assets/discord.svg';
 import WordmarkCondensed from './assets/x402_wordmark_dark.svg';
 import { Section } from './components/Section';
 import { BackgroundVideo } from './components/BackgroundVideo';
+import NavBar from './components/NavBar';
 
 const whatIsItFeatures = [
   {
     title: 'No fees',
-    description:
-      'x402 as a protocol has 0 fees for either the customer or the merchant.',
+    description: 'x402 as a protocol has 0 fees for either the customer or the merchant.',
     icon: <CheckIcon className="w-5 h-5 text-indigo-400" />,
   },
   {
@@ -31,9 +33,15 @@ const whatIsItFeatures = [
     icon: <CheckIcon className="w-5 h-5 text-indigo-400" />,
   },
   {
+    title: 'Blockchain Agnostic',
+    description:
+      'x402 is not tied to any specific blockchain or token, its a neutral standard open to integration by all.',
+    icon: <CheckIcon className="w-5 h-5 text-indigo-400" />,
+  },
+  {
     title: 'Frictionless',
     description:
-      'As little as 1 line of middleware code or configuration in your existing web server stack and you can start accepting payments. Customers and agents aren\'t required to create an account or provide any personal information.',
+      "As little as 1 line of middleware code or configuration in your existing web server stack and you can start accepting payments. Customers and agents aren't required to create an account or provide any personal information.",
     icon: <CheckIcon className="w-5 h-5 text-indigo-400" />,
   },
 
@@ -46,21 +54,14 @@ const whatIsItFeatures = [
   {
     title: 'Web native',
     description:
-      "Activates the dormant 402 HTTP status code and works with any HTTP stack. It works simply via headers and status codes on your existing HTTP server.",
-    icon: <CheckIcon className="w-5 h-5 text-indigo-400" />,
-  },
-  {
-    title: 'Blockchain Agnostic',
-    description:
-      'x402 is not tied to any specific blockchain, its a neutral standard open to integration by all.',
+      'Activates the dormant 402 HTTP status code and works with any HTTP stack. It works simply via headers and status codes on your existing HTTP server.',
     icon: <CheckIcon className="w-5 h-5 text-indigo-400" />,
   },
 ];
 const whyItMattersFeatures = [
   {
     title: 'AI Agents',
-    description:
-      'Agents can use the x402 Protocol to pay for API requests in real-time.',
+    description: 'Agents can use the x402 Protocol to pay for API requests in real-time.',
     icon: <BoltIcon className="w-5 h-5 text-indigo-400" />,
   },
   {
@@ -71,8 +72,7 @@ const whyItMattersFeatures = [
   },
   {
     title: 'Content Creators',
-    description:
-      'x402 unlocks instant transactions, enabling true micropayments for content.',
+    description: 'x402 unlocks instant transactions, enabling true micropayments for content.',
     icon: <MusicalNoteIcon className="w-5 h-5 text-indigo-400" />,
   },
 ];
@@ -88,46 +88,7 @@ export default function Home() {
 
       <div className="relative z-10">
         {/* Top nav */}
-        <section className="max-w-6xl mx-auto px-4 pt-4 lg:px-12">
-          <div className="flex gap-4 md:gap-8 justify-between sm:justify-end">
-            <Link
-              href="https://docs.google.com/forms/d/e/1FAIpQLSeESQAfvSlmjzl8JTcAOdzYjcWZ2O2GZjhuSeb8vTPpNys7FQ/viewform"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono hover:text-blue-400 transition-colors flex items-center gap-1 text-sm"
-            >
-              <QuestionMarkCircleIcon className="w-4 h-4 mr-1" />
-              Learn more
-            </Link>
-            <Link
-              href="/x402.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono hover:text-blue-400 transition-colors flex items-center gap-1 text-sm"
-            >
-              <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
-              One-pager
-            </Link>
-            <Link
-              href="https://github.com/coinbase/x402"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono hover:text-blue-400 transition-colors flex items-center gap-2 text-sm"
-            >
-              <GithubIcon className="w-4 h-4 mr-1" fill="currentColor" />
-              GitHub
-            </Link>
-            <Link
-              href="https://discord.gg/invite/cdp"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono hover:text-blue-400 transition-colors flex items-center gap-2 text-sm"
-            >
-              <DiscordIcon className="w-4 h-4 mr-1" fill="currentColor" />
-              Discord
-            </Link>
-          </div>
-        </section>
+        <NavBar />
         {/* Hero Section */}
         <section className="max-w-6xl mx-auto px-4 py-20 lg:py-28">
           <div className="text-center">
@@ -167,6 +128,13 @@ export default function Home() {
                 <CodeBracketIcon className="w-5 h-5 mr-1" />
                 Try it out
               </Link>
+              <Link
+                href="/ecosystem"
+                className="px-4 py-3 border-2 border-transparent hover:border-blue-600 rounded-lg font-mono transition-colors flex items-center gap-2 text-sm"
+              >
+                <Squares2X2Icon className="w-5 h-5 mr-1" />
+                View Ecosystem
+              </Link>
             </div>
           </div>
         </section>
@@ -191,9 +159,7 @@ export default function Home() {
                   HTTP 402
                 </Link>{' '}
                 status code,{' '}
-                <span className="font-bold">
-                  x402 enables users to pay for resources via API
-                </span>{' '}
+                <span className="font-bold">x402 enables users to pay for resources via API</span>{' '}
                 without registration, emails, OAuth, or complex signatures.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-gray-400">
@@ -215,20 +181,13 @@ export default function Home() {
             </div>
             <div className="bg-gray-800/30 rounded-2xl p-8  backdrop-blur-xl border border-gray-700/50">
               <p className="text-gray-300 leading-relaxed text-xl mb-8">
-                <span className="font-bold">
-                  x402 unlocks new monetization models,
-                </span>{' '}
-                offering developers and content creators a frictionless way to
-                earn revenue from small transactions without forcing
-                subscriptions or showing ads.
+                <span className="font-bold">x402 unlocks new monetization models,</span> offering
+                developers and content creators a frictionless way to earn revenue from small
+                transactions without forcing subscriptions or showing ads.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {whyItMattersFeatures.map((feature, index) => (
-                  <FeatureItem
-                    key={index}
-                    {...feature}
-                    iconBgColor="bg-indigo-500/10"
-                  />
+                  <FeatureItem key={index} {...feature} iconBgColor="bg-indigo-500/10" />
                 ))}
               </div>
             </div>
@@ -245,10 +204,8 @@ export default function Home() {
             </div>
             <div className="bg-gray-800/30 rounded-2xl p-8 backdrop-blur-xl border border-gray-700/50">
               <p className="text-gray-300 leading-relaxed text-xl mb-8">
-                Just add a{' '}
-                <span className="font-bold">single line of code</span> in your
-                app, and you can require a USDC payment for each incoming
-                request.
+                Just add a <span className="font-bold">single line of code</span> in your app, and
+                you can require a USDC payment for each incoming request.
               </p>
               <div className="mb-8">
                 <div className="bg-black/50 rounded-lg p-4 font-mono text-sm text-gray-300 relative overflow-hidden">
@@ -256,21 +213,21 @@ export default function Home() {
                     <span className="text-green-400">paymentMiddleware</span>
                     <span className="text-gray-300">(</span>
                     <span className="text-amber-300">&quot;0xYourAddress&quot;</span>
-                    <span className="text-gray-300">, {"{"}</span>
+                    <span className="text-gray-300">, {'{'}</span>
                     <span className="text-amber-300">&quot;/your-endpoint&quot;</span>
                     <span className="text-gray-300">: </span>
                     <span className="text-amber-300">&quot;$0.01&quot;</span>
-                    <span className="text-gray-300">{"}"}</span>
+                    <span className="text-gray-300">{'}'}</span>
                     <span className="text-gray-300">);</span>
-                    {"\n"}
+                    {'\n'}
                     {/* eslint-disable-next-line react/jsx-no-comment-textnodes */}
                     <span className="text-gray-400">// and thats it!</span>
                   </pre>
                 </div>
               </div>
               <p className="text-gray-300 leading-relaxed text-lg mb-8">
-                If a request arrives without payment, the server responds with
-                HTTP 402, prompting the client to pay and retry.
+                If a request arrives without payment, the server responds with HTTP 402, prompting
+                the client to pay and retry.
               </p>
               <div className="mb-8">
                 <div className="bg-black/50 rounded-lg p-4 font-mono text-sm text-gray-300 relative overflow-hidden">
@@ -284,8 +241,8 @@ export default function Home() {
               </div>
 
               <p className="text-gray-300 leading-relaxed text-lg">
-                x402 allows any web developer to accept crypto payments without
-                the complexity of having to interact with the blockchain.
+                x402 allows any web developer to accept crypto payments without the complexity of
+                having to interact with the blockchain.
               </p>
             </div>
           </div>

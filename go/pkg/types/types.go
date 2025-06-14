@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // PaymentRequirements represents the payment requirements for a resource
@@ -108,4 +109,11 @@ func (p *PaymentRequirements) SetUSDCInfo(isTestnet bool) error {
 	rawMessage := json.RawMessage(jsonBytes)
 	p.Extra = &rawMessage
 	return nil
+}
+
+// FacilitatorConfig represents configuration for the facilitator service
+type FacilitatorConfig struct {
+	URL               string
+	Timeout           func() time.Duration
+	CreateAuthHeaders func() (map[string]map[string]string, error)
 }

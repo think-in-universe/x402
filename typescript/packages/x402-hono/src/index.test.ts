@@ -132,7 +132,7 @@ describe("paymentMiddleware()", () => {
 
     mockContext = {
       req: {
-        url: "/weather",
+        url: "http://localhost:3000/weather",
         path: "/weather",
         method: "GET",
         header: vi.fn(),
@@ -307,13 +307,19 @@ describe("paymentMiddleware()", () => {
       throw new Error("Response already sent");
     });
 
+    // Spy on the Headers.set method
+    const headersSpy = vi.spyOn(mockContext.res.headers, "set");
+
     await middleware(mockContext, mockNext);
 
     expect(exact.evm.decodePayment).toHaveBeenCalledWith(encodedValidPayment);
     expect(mockSettle).toHaveBeenCalledWith(validPayment, expect.any(Object));
-    expect(mockContext.header).toHaveBeenCalledWith("X-PAYMENT-RESPONSE", expect.any(String));
+    expect(headersSpy).toHaveBeenCalledWith("X-PAYMENT-RESPONSE", expect.any(String));
+
     // Restore original json method
     mockContext.json = originalJson;
+    // Restore the spy
+    headersSpy.mockRestore();
   });
 
   it("should handle settlement failure before response is sent", async () => {
@@ -352,5 +358,26 @@ describe("paymentMiddleware()", () => {
       },
       402,
     );
+  });
+
+  it("should not settle payment if protected route returns status >= 400", async () => {
+    (mockContext.req.header as ReturnType<typeof vi.fn>).mockImplementation((name: string) => {
+      if (name === "X-PAYMENT") return encodedValidPayment;
+      return undefined;
+    });
+    (mockVerify as ReturnType<typeof vi.fn>).mockResolvedValue({ isValid: true });
+    (mockSettle as ReturnType<typeof vi.fn>).mockResolvedValue({
+      success: true,
+      transaction: "0x123",
+      network: "base-sepolia",
+    });
+
+    // Simulate downstream handler setting status 500
+    Object.defineProperty(mockContext.res, "status", { value: 500, writable: true });
+
+    await middleware(mockContext, mockNext);
+
+    expect(mockSettle).not.toHaveBeenCalled();
+    expect(mockContext.res.status).toBe(500);
   });
 });

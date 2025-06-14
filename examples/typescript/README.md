@@ -23,7 +23,8 @@ Examples of different client implementations for interacting with X402 services:
 - `agent/` - Example using an Anthropic agent implementation using `x402-fetch`
 - `axios/` - Example using the Axios interceptor from `x402-axios`
 - `fetch/` - Example using the fetch wrapper from `x402-fetch`
-- `mcp/` - Example using MCP (Multi-Chain Protocol) as a client using `x402-axios`
+- `mcp/` - Example using MCP (Model Context Protocol) as a client using `x402-axios`
+- `vrfnft/` - Example using [Chainlink](docs.chain.link) to mint a randomized NFT (See them on [Opensea](https://testnets.opensea.io/collection/vrfnft-1)) which uses `x402-axios`.
 
 ### Facilitator
 
@@ -58,7 +59,7 @@ The examples are designed to work with the main X402 packages, so they must be b
 
 The examples in this folder commonly use private keys to sign messages. **Never put a private key with mainnet funds in a `.env` file**. This can result in keys getting checked into codebases and being drained.
 
-There are many ways to generate a keypair to use exclusively for development, on way is via foundry:
+There are many ways to generate a keypair to use exclusively for development, one way is via foundry:
 
 ```
 # install foundry

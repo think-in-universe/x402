@@ -1,4 +1,4 @@
-import { Account, Address, Chain, Hex, Transport, verifyTypedData } from "viem";
+import { Account, Address, Chain, getAddress, Hex, Transport, verifyTypedData } from "viem";
 import { getNetworkId } from "../../../shared";
 import { getVersion, getERC20Balance } from "../../../shared/evm";
 import {
@@ -58,7 +58,7 @@ export async function verify<
   if (payload.scheme !== SCHEME || paymentRequirements.scheme !== SCHEME) {
     return {
       isValid: false,
-      invalidReason: `Incompatible payload scheme. payload: ${payload.scheme}, paymentRequirements: ${paymentRequirements.scheme}, supported: ${SCHEME}`,
+      invalidReason: `unsupported_scheme`,
       payer: payload.payload.authorization.from,
     };
   }
@@ -106,7 +106,16 @@ export async function verify<
   if (!recoveredAddress) {
     return {
       isValid: false,
-      invalidReason: "invalid_scheme", //"Invalid permit signature",
+      invalidReason: "invalid_exact_evm_payload_signature", //"Invalid permit signature",
+      payer: payload.payload.authorization.from,
+    };
+  }
+
+  // Verify that payment was made to the correct address
+  if (getAddress(payload.payload.authorization.to) !== getAddress(paymentRequirements.payTo)) {
+    return {
+      isValid: false,
+      invalidReason: "invalid_exact_evm_payload_recipient_mismatch",
       payer: payload.payload.authorization.from,
     };
   }
@@ -118,7 +127,7 @@ export async function verify<
   ) {
     return {
       isValid: false,
-      invalidReason: "invalid_scheme", //"Deadline on permit isn't far enough in the future",
+      invalidReason: "invalid_exact_evm_payload_authorization_valid_before", //"Deadline on permit isn't far enough in the future",
       payer: payload.payload.authorization.from,
     };
   }
@@ -126,7 +135,7 @@ export async function verify<
   if (BigInt(payload.payload.authorization.validAfter) > BigInt(Math.floor(Date.now() / 1000))) {
     return {
       isValid: false,
-      invalidReason: "invalid_scheme", //"Deadline on permit is in the future",
+      invalidReason: "invalid_exact_evm_payload_authorization_valid_after", //"Deadline on permit is in the future",
       payer: payload.payload.authorization.from,
     };
   }
@@ -147,7 +156,7 @@ export async function verify<
   if (BigInt(payload.payload.authorization.value) < BigInt(paymentRequirements.maxAmountRequired)) {
     return {
       isValid: false,
-      invalidReason: "invalid_scheme", //"Value in payload is not enough to cover paymentRequirements.maxAmountRequired",
+      invalidReason: "invalid_exact_evm_payload_authorization_value", //"Value in payload is not enough to cover paymentRequirements.maxAmountRequired",
       payer: payload.payload.authorization.from,
     };
   }
@@ -182,7 +191,7 @@ export async function settle<transport extends Transport, chain extends Chain>(
       success: false,
       network: paymentPayload.network,
       transaction: "",
-      errorReason: "invalid_scheme", //`Payment is no longer valid: ${valid.invalidReason}`,
+      errorReason: valid.invalidReason ?? "invalid_scheme", //`Payment is no longer valid: ${valid.invalidReason}`,
       payer: paymentPayload.payload.authorization.from,
     };
   }
@@ -208,7 +217,7 @@ export async function settle<transport extends Transport, chain extends Chain>(
   if (receipt.status !== "success") {
     return {
       success: false,
-      errorReason: "invalid_scheme", //`Transaction failed`,
+      errorReason: "invalid_transaction_state", //`Transaction failed`,
       transaction: tx,
       network: paymentPayload.network,
       payer: paymentPayload.payload.authorization.from,
